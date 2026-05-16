@@ -18,17 +18,30 @@ different angles, the task is to count the **unique number of bunches per maturi
 
 ---
 
+## Artifact Links
+
+| Category | Clickable files |
+|----------|-----------------|
+| Model weights | [`models/y26n.pt`](models/y26n.pt), [`models/y26s.pt`](models/y26s.pt), [`models/y26m.pt`](models/y26m.pt) |
+| Training logs | [`models/y26n_train_log.txt`](models/y26n_train_log.txt), [`models/y26s_train_log.txt`](models/y26s_train_log.txt), [`models/y26m_train_log.txt`](models/y26m_train_log.txt) |
+| Heuristic benchmark | [`benchmarks/results/accuracy_953.csv`](benchmarks/results/accuracy_953.csv), [`benchmarks/results/per_tree.csv`](benchmarks/results/per_tree.csv), [`benchmarks/results/totals.csv`](benchmarks/results/totals.csv), [`benchmarks/results/mean_per_tree.csv`](benchmarks/results/mean_per_tree.csv) |
+| E2E metrics | [`benchmarks/e2e/e2e_y26s_svm/metrics.json`](benchmarks/e2e/e2e_y26s_svm/metrics.json), [`benchmarks/e2e/e2e_y26m_m01/metrics.json`](benchmarks/e2e/e2e_y26m_m01/metrics.json), [`benchmarks/e2e/e2e_y26n_svm/metrics.json`](benchmarks/e2e/e2e_y26n_svm/metrics.json) |
+| E2E predictions | [`benchmarks/e2e/e2e_y26s_svm/predictions.csv`](benchmarks/e2e/e2e_y26s_svm/predictions.csv), [`benchmarks/e2e/e2e_y26m_m01/predictions.csv`](benchmarks/e2e/e2e_y26m_m01/predictions.csv), [`benchmarks/e2e/e2e_y26n_svm/predictions.csv`](benchmarks/e2e/e2e_y26n_svm/predictions.csv) |
+| YOLO predictions | [`predictions/y26n_inference/`](predictions/y26n_inference/), [`predictions/y26s_inference/`](predictions/y26s_inference/), [`predictions/y26m_inference/`](predictions/y26m_inference/) |
+| Pipeline scripts | [`pipeline/run_e2e_pipeline.py`](pipeline/run_e2e_pipeline.py), [`pipeline/run_e2e_per_image.py`](pipeline/run_e2e_per_image.py), [`pipeline/build_counting_features.py`](pipeline/build_counting_features.py) |
+| Validation script | [`benchmarks/check_release_claims.py`](benchmarks/check_release_claims.py) |
+
 ## Results at a Glance
 
 ### Heuristic Deduplication (953 trees, no training required)
 
 | Rank | Algorithm | Acc ±1 | Macro MAE | Approach |
 |:----:|-----------|:------:|:---------:|----------|
-| 🥇 1 | `M01_selector_b2b3` | **87.62%** | 0.375 | Trifurcation selector + B2↔B3 correction |
-| 🥈 2 | `M02_selector_trifurc` | 87.62% | 0.376 | Trifurcation selector (base) |
-| 🥉 3 | `M03_blend_geometric` | 86.99% | 0.377 | Geometric mean blend |
-| 4 | `M04_blend_floor_clamped` | 86.99% | 0.385 | Floor-clamped weighted blend |
-| 5 | `M05_blend_vis_divide` | 86.99% | 0.388 | Visibility + adaptive divide |
+| 🥇 1 | [`M01_selector_b2b3.py`](algorithms/M01_selector_b2b3.py) | **87.62%** | 0.375 | Trifurcation selector + B2↔B3 correction |
+| 🥈 2 | [`M02_selector_trifurc.py`](algorithms/M02_selector_trifurc.py) | 87.62% | 0.376 | Trifurcation selector (base) |
+| 🥉 3 | [`M03_blend_geometric.py`](algorithms/M03_blend_geometric.py) | 86.99% | 0.377 | Geometric mean blend |
+| 4 | [`M04_blend_floor_clamped.py`](algorithms/M04_blend_floor_clamped.py) | 86.99% | 0.385 | Floor-clamped weighted blend |
+| 5 | [`M05_blend_vis_divide.py`](algorithms/M05_blend_vis_divide.py) | 86.99% | 0.388 | Visibility + adaptive divide |
 | — | Naive sum (baseline) | 3.78% | 2.287 | No deduplication |
 
 **Acc ±1** = percentage of trees where predicted count per class is within ±1 of ground truth (macro-averaged across 4 classes). Evaluated on 953 trees from `Brand-New-Dataset-YOLO`.
@@ -39,9 +52,9 @@ All 3 models trained 60 epochs, seed=42, pretrained=True, standard augmentation 
 
 | Model | mAP50 | Speed | Size | Notes |
 |-------|:-----:|:-----:|:----:|-------|
-| `y26m` | **0.528** | 1.0 ms | 42 MB | Best detection accuracy |
-| `y26n` | 0.515 | **0.3 ms** | **5.2 MB** | **Best efficiency (recommended)** |
-| `y26s` | 0.511 | 0.4 ms | 20 MB | Balanced size/speed |
+| [`y26m.pt`](models/y26m.pt) | **0.528** | 1.0 ms | 42 MB | Best detection accuracy; log: [`y26m_train_log.txt`](models/y26m_train_log.txt) |
+| [`y26n.pt`](models/y26n.pt) | 0.515 | **0.3 ms** | **5.2 MB** | **Best efficiency (recommended)**; log: [`y26n_train_log.txt`](models/y26n_train_log.txt) |
+| [`y26s.pt`](models/y26s.pt) | 0.511 | 0.4 ms | 20 MB | Balanced size/speed; log: [`y26s_train_log.txt`](models/y26s_train_log.txt) |
 
 ### E2E — Per-Image Approach (complete pipeline, 95 test trees)
 
@@ -87,18 +100,18 @@ Sorted by Acc±1. **4 counters × 3 detectors = 12 combinations.**
 
 | Rank | Detector | Counter | Acc ±1 ↑ | MAE ↓ | B1 | B2 | B3 | B4 |
 |:----:|----------|---------|:--------:|:-----:|:--:|:--:|:--:|:--:|
-| 🥇 1 | y26s | **SVM** | **70.8%** | 1.147 | 93.7% | 66.3% | 53.7% | 69.5% |
-| 2 | y26m | M01 | 69.2% | 1.295 | 91.6% | 69.5% | 48.4% | 67.4% |
-| 3 | y26n | SVM | 68.9% | 1.168 | 91.6% | 68.4% | 54.7% | 61.1% |
-| 4 | y26m | SVM | 68.9% | 1.168 | 93.7% | 70.5% | 50.5% | 61.1% |
-| 5 | y26s | LR | 68.7% | 1.161 | 92.6% | 67.4% | 54.7% | 60.0% |
-| 6 | y26n | LR | 68.2% | 1.171 | 92.6% | 72.6% | 53.7% | 53.7% |
-| 7 | y26m | LR | 67.9% | 1.174 | 92.6% | 70.5% | 51.6% | 56.8% |
-| 8 | y26m | RF | 66.8% | 1.216 | 90.5% | 64.2% | 54.7% | 57.9% |
-| 9 | y26n | RF | 66.8% | 1.184 | 91.6% | 68.4% | 49.5% | 57.9% |
-| 10 | y26s | M01 | 64.2% | 1.313 | 89.5% | 55.8% | 49.5% | 62.1% |
-| 11 | y26s | RF | 64.2% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
-| 12 | y26n | M01 | 63.9% | 1.342 | 89.5% | 64.2% | 43.2% | 58.9% |
+| 🥇 1 | [`y26s.pt`](models/y26s.pt) | [SVM](benchmarks/e2e/e2e_y26s_svm/metrics.json) | **70.8%** | 1.147 | 93.7% | 66.3% | 53.7% | 69.5% |
+| 2 | [`y26m.pt`](models/y26m.pt) | [M01](benchmarks/e2e/e2e_y26m_m01/metrics.json) | 69.2% | 1.295 | 91.6% | 69.5% | 48.4% | 67.4% |
+| 3 | [`y26n.pt`](models/y26n.pt) | [SVM](benchmarks/e2e/e2e_y26n_svm/metrics.json) | 68.9% | 1.168 | 91.6% | 68.4% | 54.7% | 61.1% |
+| 4 | [`y26m.pt`](models/y26m.pt) | [SVM](benchmarks/e2e/e2e_y26m_svm/metrics.json) | 68.9% | 1.168 | 93.7% | 70.5% | 50.5% | 61.1% |
+| 5 | [`y26s.pt`](models/y26s.pt) | [LR](benchmarks/e2e/e2e_y26s_lr/metrics.json) | 68.7% | 1.161 | 92.6% | 67.4% | 54.7% | 60.0% |
+| 6 | [`y26n.pt`](models/y26n.pt) | [LR](benchmarks/e2e/e2e_y26n_lr/metrics.json) | 68.2% | 1.171 | 92.6% | 72.6% | 53.7% | 53.7% |
+| 7 | [`y26m.pt`](models/y26m.pt) | [LR](benchmarks/e2e/e2e_y26m_lr/metrics.json) | 67.9% | 1.174 | 92.6% | 70.5% | 51.6% | 56.8% |
+| 8 | [`y26m.pt`](models/y26m.pt) | [RF](benchmarks/e2e/e2e_y26m_rf/metrics.json) | 66.8% | 1.216 | 90.5% | 64.2% | 54.7% | 57.9% |
+| 9 | [`y26n.pt`](models/y26n.pt) | [RF](benchmarks/e2e/e2e_y26n_rf/metrics.json) | 66.8% | 1.184 | 91.6% | 68.4% | 49.5% | 57.9% |
+| 10 | [`y26s.pt`](models/y26s.pt) | [M01](benchmarks/e2e/e2e_y26s_m01/metrics.json) | 64.2% | 1.313 | 89.5% | 55.8% | 49.5% | 62.1% |
+| 11 | [`y26s.pt`](models/y26s.pt) | [RF](benchmarks/e2e/e2e_y26s_rf/metrics.json) | 64.2% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
+| 12 | [`y26n.pt`](models/y26n.pt) | [M01](benchmarks/e2e/e2e_y26n_m01/metrics.json) | 63.9% | 1.342 | 89.5% | 64.2% | 43.2% | 58.9% |
 | — | **M01 on GT** (upper bound) | — | **87.6%** | **0.375** | — | — | — | — |
 
 > Full analysis in [`docs/e2e_pipeline.md`](docs/e2e_pipeline.md).
@@ -251,6 +264,21 @@ Baseline-SawitMVC/
 ```
 
 ---
+
+Clickable repository paths:
+[`README.md`](README.md),
+[`CONTRIBUTING.md`](CONTRIBUTING.md),
+[`CHANGELOG.md`](CHANGELOG.md),
+[`requirements.txt`](requirements.txt),
+[`algorithms/`](algorithms/),
+[`models/`](models/),
+[`benchmarks/`](benchmarks/),
+[`benchmarks/results/accuracy_953.csv`](benchmarks/results/accuracy_953.csv),
+[`benchmarks/e2e/`](benchmarks/e2e/),
+[`pipeline/`](pipeline/),
+[`predictions/`](predictions/),
+[`figures/`](figures/),
+[`docs/`](docs/).
 
 ## Dataset
 
