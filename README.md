@@ -40,29 +40,49 @@ different angles, the task is to count the **unique number of bunches per maturi
 | `y26s_vanilla_local` | 0.506 | 0.5 ms | 20 MB | Standard small |
 | `y26s_noaug` | 0.465 | 0.5 ms | 20 MB | Ablation: no augmentation |
 
-### E2E — Per-Image Approach (simple, no tree grouping)
+### E2E — Per-Image Approach (complete pipeline, 95 test trees)
 
-Each image is processed independently. Detections per class are aggregated across images
-of the same tree using `max` (default), `mean`, or `sum`. Results below use
-`y26n_vanilla_local` (recommended model, mAP50=0.521) on 166 test trees.
+Each image is processed independently by YOLO, then grouped per tree. Counting is done
+with either simple aggregation (`max`/`mean`/`sum`) or the same ML/heuristic counters
+as the per-tree approach. Results on test split (95 trees, `split_manifest.csv`).
 
-> Run: `python pipeline/run_e2e_per_image.py --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt --agg max`
+> **Key finding:** Per-image + ML counter achieves **identical accuracy** to per-tree + ML counter,
+> because the 13-dim features are derived from the same per-image detection counts either way.
+> Per-image inference is therefore sufficient — no need to group images before YOLO runs.
 
-| Aggregation | Acc ±1 | MAE | B1 | B2 | B3 | B4 | Description |
-|-------------|:------:|:---:|:--:|:--:|:--:|:--:|-------------|
-| **max** | **67.8%** | 1.340 | 96.4% | 78.9% | 36.1% | 59.6% | `count[c] = max detections in any single image` |
-| **mean** | 56.2% | 1.773 | 93.4% | 62.0% | 22.3% | 47.0% | `count[c] = round(mean detections per image)` |
-| **sum** | 53.8% | 2.083 | 62.7% | 66.9% | 21.7% | 63.9% | Naive sum — overcounts visible-from-multiple-sides |
+```bash
+# Run all counters for one model (derives per-image JSONs from existing per-tree predictions)
+python pipeline/run_e2e_per_image.py \
+    --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt \
+    --data ./SawitMVC-YOLO --skip-inference
+```
 
-`max` is the best simple dedup strategy: a bunch visible from N sides is counted once.
-All 5 model results in [`benchmarks/e2e/_per_image_summary.json`](benchmarks/e2e/_per_image_summary.json).
+**Simple aggregation (no training):** all 5 models, sorted by Acc±1
+
+| Rank | Detector | Agg | Acc ±1 | MAE | B1 | B2 | B3 | B4 |
+|:----:|----------|-----|:------:|:---:|:--:|:--:|:--:|:--:|
+| 1 | y26s_noaug | **max** | **67.1%** | 1.305 | 89.5% | 67.4% | 49.5% | 62.1% |
+| 1 | y26s_nopretrained | max | 67.1% | 1.318 | 92.6% | 65.3% | 41.1% | 69.5% |
+| 1 | y26s_vanilla | max | 67.1% | 1.374 | 94.7% | 62.1% | 45.3% | 66.3% |
+| 4 | y26n_vanilla | max | 65.0% | 1.379 | 89.5% | 63.2% | 42.1% | 65.3% |
+| 5 | y26m_vanilla | max | 63.7% | 1.458 | 92.6% | 60.0% | 34.7% | 67.4% |
+| — | *(all models)* | mean | 52.9–58.2% | 1.70–1.85 | — | — | — | — |
+| — | *(all models)* | sum | 47.1–51.3% | 2.27–2.73 | — | — | — | — |
+
+`max` is the best simple dedup: a bunch visible from multiple sides is counted once (best view).
+`sum` is worst: overcounts the same bunch detected from each side.
+
+**With ML/heuristic counter:** per-image achieves the same results as per-tree (see table below).
+All 35 per-image results (5 models × 7 counters) in [`benchmarks/e2e/`](benchmarks/e2e/) as
+`e2e_{model}_per_image_{counter}/metrics.json`.
 
 ---
 
 ### E2E — Per-Tree Approach (full pipeline, pre-computed)
 
-All images of a tree are grouped, detections aggregated, then a ML counter is applied.
-Results on test split (166 trees). Sorted by Acc±1. **4 counters × 5 detectors = 20 combinations.**
+All images of a tree are grouped, detections aggregated into 13-dim features, then a ML
+counter is applied. Results on test split (95 trees, `split_manifest.csv`).
+Sorted by Acc±1. **4 counters × 5 detectors = 20 combinations.**
 
 | Rank | Detector | Counter | Acc ±1 ↑ | MAE ↓ | B1 | B2 | B3 | B4 |
 |:----:|----------|---------|:--------:|:-----:|:--:|:--:|:--:|:--:|

@@ -1,11 +1,14 @@
 # Pipeline — End-to-End Replication Scripts
 
-Two E2E approaches available:
+Two E2E approaches available (produce identical ML-counter results since features are the same):
 
 | Approach | Script | Description |
 |----------|--------|-------------|
 | **Per-tree** | `run_e2e_pipeline.py` | Groups all 4-8 images per tree → 1 JSON → ML counting |
-| **Per-image** | `run_e2e_per_image.py` | Each image processed independently → aggregate by tree |
+| **Per-image** | `run_e2e_per_image.py` | Each image processed independently → group → ML counting |
+
+Both approaches support the same 7 counters: `max`, `mean`, `sum`, `m01`, `svm`, `rf`, `lr`.
+The per-image approach additionally supports simple aggregation (`max`/`mean`/`sum`) before ML.
 
 ---
 
@@ -14,7 +17,7 @@ Two E2E approaches available:
 | Script | Purpose |
 |--------|---------|
 | `run_e2e_inference.py` | YOLO inference grouped per tree (4-8 images → 1 JSON) |
-| `run_e2e_per_image.py` | **Simpler**: YOLO per image → aggregate with max/mean/sum |
+| `run_e2e_per_image.py` | **Complete per-image pipeline**: YOLO per image → group → max/mean/sum/M01/SVM/RF/LR |
 | `build_counting_features.py` | Extract 13-dim feature vectors from inference JSONs |
 | `run_counting_svm.py` | SVM counter (RBF kernel, GridSearchCV) |
 | `run_counting_rf.py` | Random Forest counter (n=200, max_depth=10) |
@@ -25,6 +28,7 @@ Two E2E approaches available:
 
 ## Quick Start (Full Pipeline in One Command)
 
+**Per-tree approach** (groups all images per tree before counting):
 ```bash
 # From repo root — download dataset first (see docs/dataset.md)
 python pipeline/run_e2e_pipeline.py \
@@ -32,10 +36,31 @@ python pipeline/run_e2e_pipeline.py \
     --weights models/y26n_vanilla_local.pt
 
 # Output:
-#   predictions/y26n_vanilla_local_inference/   ← 953 JSON files (skipped if exists)
-#   benchmarks/e2e/e2e_y26n_vanilla_local_svm/  ← SVM metrics.json + predictions.csv
-#   benchmarks/e2e/e2e_y26n_vanilla_local_rf/   ← RF metrics.json + predictions.csv
-#   benchmarks/e2e/e2e_y26n_vanilla_local_m01/  ← M01 heuristic metrics.json
+#   predictions/y26n_vanilla_local_inference/        ← 953 JSON files (skipped if exists)
+#   benchmarks/e2e/e2e_y26n_vanilla_local_svm/       ← SVM metrics.json + predictions.csv
+#   benchmarks/e2e/e2e_y26n_vanilla_local_rf/        ← RF  metrics.json + predictions.csv
+#   benchmarks/e2e/e2e_y26n_vanilla_local_lr/        ← LR  metrics.json + predictions.csv
+#   benchmarks/e2e/e2e_y26n_vanilla_local_m01/       ← M01 metrics.json
+```
+
+**Per-image approach** (each image processed independently, then grouped):
+```bash
+# Using pre-computed per-tree predictions (no GPU needed — derives per-image data automatically)
+python pipeline/run_e2e_per_image.py \
+    --name y26n_vanilla_local \
+    --weights models/y26n_vanilla_local.pt \
+    --data ./SawitMVC-YOLO \
+    --skip-inference
+
+# Output (7 counters):
+#   predictions/y26n_vanilla_local_per_image/        ← 3992 per-image JSONs
+#   benchmarks/e2e/e2e_y26n_vanilla_local_per_image_max/   ← simple max agg
+#   benchmarks/e2e/e2e_y26n_vanilla_local_per_image_mean/
+#   benchmarks/e2e/e2e_y26n_vanilla_local_per_image_sum/
+#   benchmarks/e2e/e2e_y26n_vanilla_local_per_image_m01/   ← M01 heuristic
+#   benchmarks/e2e/e2e_y26n_vanilla_local_per_image_svm/   ← SVM counter
+#   benchmarks/e2e/e2e_y26n_vanilla_local_per_image_lr/    ← LR counter
+#   benchmarks/e2e/e2e_y26n_vanilla_local_per_image_rf/    ← RF counter
 ```
 
 ---

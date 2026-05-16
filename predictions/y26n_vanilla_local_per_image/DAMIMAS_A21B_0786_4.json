@@ -1,0 +1,1 @@
+{"image": "DAMIMAS_A21B_0786_4.jpg", "detector": "y26n_vanilla_local", "detections": [{"box_index": 0, "class_id": 2, "class_name": "B3", "bbox_yolo": [0.38184258341789246, 0.20259304344654083, 0.13065595924854279, 0.10468094795942307], "conf": 0.6245033144950867}], "count_per_class": {"B1": 0, "B2": 0, "B3": 1, "B4": 0}, "side_index": 3}
