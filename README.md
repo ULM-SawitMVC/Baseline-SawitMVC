@@ -43,43 +43,49 @@ different angles, the task is to count the **unique number of bunches per maturi
 ### E2E — Per-Image Approach (simple, no tree grouping)
 
 Each image is processed independently. Detections per class are aggregated across images
-of the same tree using `max` (default), `mean`, or `sum`.
+of the same tree using `max` (default), `mean`, or `sum`. Results below use
+`y26n_vanilla_local` (recommended model, mAP50=0.521) on 166 test trees.
 
 > Run: `python pipeline/run_e2e_per_image.py --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt --agg max`
 
-| Aggregation | Acc ±1 | MAE | Description |
-|-------------|:------:|:---:|-------------|
-| **max** | TBD | TBD | `count[c] = max detections in any single image` |
-| **mean** | TBD | TBD | `count[c] = round(mean detections per image)` |
-| **sum** | ~3.8% | ~2.3 | Naive sum (no dedup) — known baseline from heuristic bench |
+| Aggregation | Acc ±1 | MAE | B1 | B2 | B3 | B4 | Description |
+|-------------|:------:|:---:|:--:|:--:|:--:|:--:|-------------|
+| **max** | **67.8%** | 1.340 | 96.4% | 78.9% | 36.1% | 59.6% | `count[c] = max detections in any single image` |
+| **mean** | 56.2% | 1.773 | 93.4% | 62.0% | 22.3% | 47.0% | `count[c] = round(mean detections per image)` |
+| **sum** | 53.8% | 2.083 | 62.7% | 66.9% | 21.7% | 63.9% | Naive sum — overcounts visible-from-multiple-sides |
 
-Generate results: `python pipeline/run_e2e_per_image.py --name {model} --weights models/{model}.pt`
+`max` is the best simple dedup strategy: a bunch visible from N sides is counted once.
+All 5 model results in [`benchmarks/e2e/_per_image_summary.json`](benchmarks/e2e/_per_image_summary.json).
 
 ---
 
 ### E2E — Per-Tree Approach (full pipeline, pre-computed)
 
 All images of a tree are grouped, detections aggregated, then a ML counter is applied.
-Results on test split (95 trees). Sorted by Acc±1.
+Results on test split (166 trees). Sorted by Acc±1. **4 counters × 5 detectors = 20 combinations.**
 
 | Rank | Detector | Counter | Acc ±1 ↑ | MAE ↓ | B1 | B2 | B3 | B4 |
 |:----:|----------|---------|:--------:|:-----:|:--:|:--:|:--:|:--:|
-| 🥇 1 | y26m_vanilla | SVM | **71.6%** | 1.118 | 92.6% | 63.2% | 60.0% | 70.5% |
-| 2 | y26s_noaug | SVM | 70.5% | 1.126 | 91.6% | 69.5% | 56.8% | 64.2% |
-| 3 | y26n_vanilla | SVM | 70.0% | 1.145 | 90.5% | 68.4% | 56.8% | 64.2% |
-| 4 | y26s_nopretrained | M01 | 69.2% | 1.266 | 91.6% | 63.2% | 52.6% | 69.5% |
-| 5 | y26s_nopretrained | SVM | 69.0% | 1.145 | 90.5% | 68.4% | 51.6% | 65.3% |
-| 6 | y26s_vanilla | SVM | 69.0% | 1.163 | 93.7% | 68.4% | 48.4% | 65.3% |
-| 7 | y26s_noaug | RF | 68.4% | 1.184 | 92.6% | 66.3% | 55.8% | 58.9% |
-| 8 | y26n_vanilla | RF | 68.2% | 1.218 | 90.5% | 68.4% | 54.7% | 58.9% |
-| 9 | y26m_vanilla | RF | 67.9% | 1.211 | 95.8% | 68.4% | 49.5% | 57.9% |
-| 10 | y26s_nopretrained | RF | 67.9% | 1.229 | 93.7% | 65.3% | 55.8% | 56.8% |
-| 11 | y26n_vanilla | M01 | 67.1% | 1.337 | 87.4% | 65.3% | 51.6% | 64.2% |
-| 12 | y26s_noaug | M01 | 66.6% | 1.384 | 90.5% | 68.4% | 43.2% | 64.2% |
-| 13 | y26s_vanilla | RF | 66.6% | 1.216 | 96.8% | 68.4% | 48.4% | 52.6% |
-| 14 | y26s_vanilla | M01 | 65.5% | 1.403 | 89.5% | 66.3% | 38.9% | 67.4% |
-| 15 | y26m_vanilla | M01 | 64.5% | 1.400 | 90.5% | 56.8% | 40.0% | 70.5% |
-| — | **LR counter** | all models | TBD | TBD | Run `run_e2e_pipeline.py` | | | |
+| 🥇 1 | y26m_vanilla | **LR** | **72.4%** | 1.132 | 92.6% | 69.5% | 56.8% | 70.5% |
+| 2 | y26m_vanilla | SVM | 71.6% | 1.118 | 92.6% | 63.2% | 60.0% | 70.5% |
+| 3 | y26s_noaug | SVM | 70.5% | 1.126 | 91.6% | 69.5% | 56.8% | 64.2% |
+| 4 | y26n_vanilla | SVM | 70.0% | 1.145 | 90.5% | 68.4% | 56.8% | 64.2% |
+| 5 | y26s_nopretrained | **LR** | 69.5% | 1.171 | 91.6% | 65.3% | 56.8% | 64.2% |
+| 6 | y26s_noaug | **LR** | 69.2% | 1.155 | 90.5% | 71.6% | 56.8% | 57.9% |
+| 7 | y26s_nopretrained | M01 | 69.2% | 1.266 | 91.6% | 63.2% | 52.6% | 69.5% |
+| 8 | y26s_nopretrained | SVM | 69.0% | 1.145 | 90.5% | 68.4% | 51.6% | 65.3% |
+| 9 | y26s_vanilla | SVM | 69.0% | 1.163 | 93.7% | 68.4% | 48.4% | 65.3% |
+| 10 | y26s_vanilla | **LR** | 68.7% | 1.155 | 93.7% | 67.4% | 51.6% | 62.1% |
+| 11 | y26n_vanilla | **LR** | 68.4% | 1.171 | 92.6% | 66.3% | 55.8% | 58.9% |
+| 12 | y26s_noaug | RF | 68.4% | 1.184 | 92.6% | 66.3% | 55.8% | 58.9% |
+| 13 | y26n_vanilla | RF | 68.2% | 1.218 | 90.5% | 68.4% | 54.7% | 58.9% |
+| 14 | y26m_vanilla | RF | 67.9% | 1.211 | 95.8% | 68.4% | 49.5% | 57.9% |
+| 15 | y26s_nopretrained | RF | 67.9% | 1.229 | 93.7% | 65.3% | 55.8% | 56.8% |
+| 16 | y26n_vanilla | M01 | 67.1% | 1.337 | 87.4% | 65.3% | 51.6% | 64.2% |
+| 17 | y26s_noaug | M01 | 66.6% | 1.384 | 90.5% | 68.4% | 43.2% | 64.2% |
+| 18 | y26s_vanilla | RF | 66.6% | 1.216 | 96.8% | 68.4% | 48.4% | 52.6% |
+| 19 | y26s_vanilla | M01 | 65.5% | 1.403 | 89.5% | 66.3% | 38.9% | 67.4% |
+| 20 | y26m_vanilla | M01 | 64.5% | 1.400 | 90.5% | 56.8% | 40.0% | 70.5% |
 | — | **M01 on GT** (upper bound) | — | **87.6%** | **0.375** | — | — | — | — |
 
 > Full analysis in [`docs/e2e_pipeline.md`](docs/e2e_pipeline.md).
