@@ -4,7 +4,7 @@ Unified E2E pipeline — inference + SVM + RF + M01 heuristic for one detector.
 Steps:
   1. YOLO inference on all 953 trees (grouped per tree, 4-8 images each)
   2. Extract 13-dim features per tree from inference JSONs
-  3. Train + evaluate SVM, RF, and M01 heuristic counters
+  3. Train + evaluate SVM, RF, Linear Regression, and M01 heuristic counters
   4. Save results to benchmarks/e2e/
 
 Usage:
@@ -210,7 +210,15 @@ def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, out_dir: Pat
         gs.fit(X_tr, y_tr)
         predict_fn = gs.predict
         extra = {"best_params": str(gs.best_params_), "cv_mae": float(-gs.best_score_)}
-    else:
+    elif counter == "lr":
+        from sklearn.linear_model import LinearRegression
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.pipeline import Pipeline
+        pipe = Pipeline([("sc", StandardScaler()), ("lr", LinearRegression())])
+        pipe.fit(X_tr, y_tr)
+        predict_fn = pipe.predict
+        extra = {}
+    else:  # rf
         from sklearn.ensemble import RandomForestRegressor
         rf = RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42, n_jobs=-1)
         rf.fit(X_tr, y_tr)
@@ -264,8 +272,8 @@ def main() -> None:
     p.add_argument("--conf", type=float, default=0.25, help="Detection confidence threshold")
     p.add_argument("--skip-inference", action="store_true",
                    help="Skip Step 1 and use existing predictions/{name}_inference/")
-    p.add_argument("--counters", nargs="+", default=["svm", "rf", "m01"],
-                   choices=["svm", "rf", "m01"], help="Which counters to run")
+    p.add_argument("--counters", nargs="+", default=["svm", "rf", "lr", "m01"],
+                   choices=["svm", "rf", "lr", "m01"], help="Which counters to run")
     args = p.parse_args()
 
     infer_dir = ROOT / "predictions" / f"{args.name}_inference"
@@ -288,6 +296,8 @@ def main() -> None:
         step_m01(args.name, infer_dir, gt_dir, e2e_base / f"e2e_{args.name}_m01")
     if "svm" in args.counters:
         step_ml(args.name, "svm", infer_dir, gt_dir, e2e_base / f"e2e_{args.name}_svm")
+    if "lr" in args.counters:
+        step_ml(args.name, "lr",  infer_dir, gt_dir, e2e_base / f"e2e_{args.name}_lr")
     if "rf" in args.counters:
         step_ml(args.name, "rf",  infer_dir, gt_dir, e2e_base / f"e2e_{args.name}_rf")
 

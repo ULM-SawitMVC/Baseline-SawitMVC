@@ -1,7 +1,11 @@
 # Pipeline — End-to-End Replication Scripts
 
-Scripts for reproducing and extending the full E2E pipeline:
-**YOLO detection → feature extraction → counting (M01 / SVM / RF) → evaluation**
+Two E2E approaches available:
+
+| Approach | Script | Description |
+|----------|--------|-------------|
+| **Per-tree** | `run_e2e_pipeline.py` | Groups all 4-8 images per tree → 1 JSON → ML counting |
+| **Per-image** | `run_e2e_per_image.py` | Each image processed independently → aggregate by tree |
 
 ---
 
@@ -9,11 +13,13 @@ Scripts for reproducing and extending the full E2E pipeline:
 
 | Script | Purpose |
 |--------|---------|
-| `run_e2e_inference.py` | Run YOLO inference on all 953 trees → JSON per tree |
+| `run_e2e_inference.py` | YOLO inference grouped per tree (4-8 images → 1 JSON) |
+| `run_e2e_per_image.py` | **Simpler**: YOLO per image → aggregate with max/mean/sum |
 | `build_counting_features.py` | Extract 13-dim feature vectors from inference JSONs |
-| `run_counting_svm.py` | Train + evaluate SVM counter on extracted features |
-| `run_counting_rf.py` | Train + evaluate Random Forest counter |
-| `run_e2e_pipeline.py` | **Unified harness** — runs all 3 steps in one command |
+| `run_counting_svm.py` | SVM counter (RBF kernel, GridSearchCV) |
+| `run_counting_rf.py` | Random Forest counter (n=200, max_depth=10) |
+| `run_counting_lr.py` | **Linear Regression** counter (interpretable baseline) |
+| `run_e2e_pipeline.py` | Unified harness: inference → SVM + RF + LR + M01 |
 
 ---
 
