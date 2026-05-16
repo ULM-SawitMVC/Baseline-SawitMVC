@@ -40,15 +40,24 @@ different angles, the task is to count the **unique number of bunches per maturi
 | `y26s_vanilla_local` | 0.506 | 0.5 ms | 20 MB | Standard small |
 | `y26s_noaug` | 0.465 | 0.5 ms | 20 MB | Ablation: no augmentation |
 
-### End-to-End Pipeline (detection → counting)
+### End-to-End Pipeline — All 15 Combinations (test split, 95 trees)
 
-| Pipeline | Acc ±1 | Macro MAE | Notes |
-|----------|:------:|:---------:|-------|
-| `y26m` → SVM | **71.6%** | 1.118 | Best E2E combination |
-| Heuristic M01 (GT input) | 87.62% | 0.375 | Upper bound on counting |
+| Rank | Detector | Counter | Acc ±1 ↑ | MAE ↓ | B1 | B2 | B3 | B4 |
+|:----:|----------|---------|:--------:|:-----:|:--:|:--:|:--:|:--:|
+| 🥇 1 | y26m_vanilla | SVM | **71.6%** | 1.118 | 92.6% | 63.2% | 60.0% | 70.5% |
+| 2 | y26s_noaug | SVM | 70.5% | 1.126 | 91.6% | 69.5% | 56.8% | 64.2% |
+| 3 | y26n_vanilla | SVM | 70.0% | 1.145 | 90.5% | 68.4% | 56.8% | 64.2% |
+| 4 | y26s_nopretrained | M01 | 69.2% | 1.266 | 91.6% | 63.2% | 52.6% | 69.5% |
+| 5 | y26s_nopretrained | SVM | 69.0% | 1.145 | 90.5% | 68.4% | 51.6% | 65.3% |
+| … | … | … | … | … | | | | |
+| 15 | y26m_vanilla | M01 | 64.5% | 1.400 | 90.5% | 56.8% | 40.0% | 70.5% |
+| — | **M01 on GT** (upper bound) | — | **87.6%** | **0.375** | — | — | — | — |
 
-The ~16 pp gap between E2E and heuristic represents **detector error propagation** —
-the counting algorithm is not the bottleneck. See [`docs/findings.md`](docs/findings.md).
+> Full 15-row table and analysis in [`docs/e2e_pipeline.md`](docs/e2e_pipeline.md).
+> All `metrics.json` files in [`benchmarks/e2e/`](benchmarks/e2e/).
+
+The ~16 pp gap between best E2E and heuristic-on-GT represents **detector error
+propagation** — improving the detector is the highest-leverage path. See [`docs/findings.md`](docs/findings.md).
 
 ---
 
@@ -149,13 +158,30 @@ Baseline-SawitMVC/
 ├── benchmarks/                  Reproducible benchmark suite
 │   ├── README.md                How to run, metric definitions
 │   ├── run_benchmark.py         Entry point: load data → run → print table
-│   ├── results/                 Pre-computed results (953 trees)
+│   ├── results/                 Pre-computed results (953 trees, 29 methods)
 │   │   ├── accuracy_953.csv     Full 29-method ranking
 │   │   ├── per_tree.csv         Per-tree predictions
 │   │   ├── totals.csv           Aggregate counts
 │   │   └── mean_per_tree.csv    Mean per-tree statistics
-│   └── e2e/
-│       └── y26m_svm_metrics.json  Best E2E: 71.6% Acc±1
+│   └── e2e/                     All 15 E2E results (5 detectors × 3 counters)
+│       ├── e2e_y26m_vanilla_local_svm/   metrics.json + predictions.csv
+│       ├── e2e_y26n_vanilla_local_svm/
+│       └── … (15 folders total)
+│
+├── pipeline/                    E2E pipeline scripts
+│   ├── README.md                Step-by-step replication + ablation guide
+│   ├── run_e2e_pipeline.py      Unified harness (inference → features → eval)
+│   ├── run_e2e_inference.py     YOLO inference → JSON per tree
+│   ├── build_counting_features.py  Extract 13-dim features
+│   ├── run_counting_svm.py      SVM counter (train + evaluate)
+│   └── run_counting_rf.py       RF counter (train + evaluate)
+│
+├── predictions/                 Pre-computed YOLO inference (~28 MB)
+│   ├── y26n_vanilla_local_inference/  953 JSON files per detector
+│   ├── y26s_vanilla_local_inference/
+│   ├── y26m_vanilla_local_inference/
+│   ├── y26s_nopretrained_inference/
+│   └── y26s_noaug_inference/
 │
 ├── figures/                     All visualizations
 │   ├── README.md                Figure index and descriptions
@@ -167,6 +193,7 @@ Baseline-SawitMVC/
     ├── algorithms.md            How algorithms work, design rationale
     ├── training.md              Reproduce YOLO training experiments
     ├── evaluation.md            Metric definitions, evaluation protocol
+    ├── e2e_pipeline.md          Full E2E guide + 15-combo results + ablation recipes
     └── findings.md              Key research findings and future work
 ```
 

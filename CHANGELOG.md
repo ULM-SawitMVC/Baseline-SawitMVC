@@ -6,6 +6,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.0] — 2026-05-16
+
+### Added
+
+**E2E Pipeline (complete)**
+- `pipeline/` folder with 5 runnable scripts for full E2E replication
+- `pipeline/README.md` — step-by-step guide + ablation recipes
+- `predictions/` — pre-computed YOLO inference for all 5 models (4,765 JSON, ~28 MB)
+- All 15 E2E result folders in `benchmarks/e2e/` (5 detectors × 3 counters)
+- `docs/e2e_pipeline.md` — complete guide with 15-combination results table, key
+  findings, and 4 ablation scenarios with exact commands
+
+**Documentation**
+- Complete E2E results table in README (all 15 combinations, per-class breakdown)
+- Updated Repository Structure section with `pipeline/` and `predictions/`
+
+---
+
 ## [1.0.0] — 2026-05-16
 
 ### Added
