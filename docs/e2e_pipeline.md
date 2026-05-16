@@ -35,28 +35,25 @@ SawitMVC-YOLO/images/
 
 ---
 
-## Complete E2E Results (15 Combinations)
+## Complete E2E Results (12 Combinations)
 
-Evaluated on the **test split** (95 trees). Sorted by Acc±1 descending.
+Evaluated on the **test split** (95 trees, `split_manifest.csv`). Sorted by Acc±1 descending.
 
-| Rank | Detector | Counter | Acc±1 ↑ | MAE ↓ | Total MAE | B1 | B2 | B3 | B4 |
-|:----:|----------|---------|:-------:|:-----:|:---------:|:--:|:--:|:--:|:--:|
-| 🥇 1 | y26m_vanilla | **SVM** | **71.6%** | **1.118** | 2.432 | 92.6% | 63.2% | 60.0% | 70.5% |
-| 2 | y26s_noaug | SVM | 70.5% | 1.126 | 2.232 | 91.6% | 69.5% | 56.8% | 64.2% |
-| 3 | y26n_vanilla | SVM | 70.0% | 1.145 | 2.137 | 90.5% | 68.4% | 56.8% | 64.2% |
-| 4 | y26s_nopretrained | M01 | 69.2% | 1.266 | 2.874 | 91.6% | 63.2% | 52.6% | 69.5% |
-| 5 | y26s_nopretrained | SVM | 69.0% | 1.145 | 2.137 | 90.5% | 68.4% | 51.6% | 65.3% |
-| 6 | y26s_vanilla | SVM | 69.0% | 1.163 | 2.337 | 93.7% | 68.4% | 48.4% | 65.3% |
-| 7 | y26n_vanilla | RF | 68.2% | 1.218 | 2.242 | 90.5% | 68.4% | 54.7% | 58.9% |
-| 8 | y26s_noaug | RF | 68.4% | 1.184 | 2.232 | 92.6% | 66.3% | 55.8% | 58.9% |
-| 9 | y26m_vanilla | RF | 67.9% | 1.211 | 2.421 | 95.8% | 68.4% | 49.5% | 57.9% |
-| 10 | y26s_nopretrained | RF | 67.9% | 1.229 | 2.284 | 93.7% | 65.3% | 55.8% | 56.8% |
-| 11 | y26n_vanilla | M01 | 67.1% | 1.337 | 3.011 | 87.4% | 65.3% | 51.6% | 64.2% |
-| 12 | y26s_noaug | M01 | 66.6% | 1.384 | 2.968 | 90.5% | 68.4% | 43.2% | 64.2% |
-| 13 | y26s_vanilla | RF | 66.6% | 1.216 | 2.337 | 96.8% | 68.4% | 48.4% | 52.6% |
-| 14 | y26s_vanilla | M01 | 65.5% | 1.403 | 3.526 | 89.5% | 66.3% | 38.9% | 67.4% |
-| 15 | y26m_vanilla | M01 | 64.5% | 1.400 | 3.853 | 90.5% | 56.8% | 40.0% | 70.5% |
-| — | **Heuristic M01 (GT input)** | — | **87.6%** | **0.375** | 1.331 | — | — | — | — |
+| Rank | Detector | Counter | Acc±1 ↑ | MAE ↓ | B1 | B2 | B3 | B4 |
+|:----:|----------|---------|:-------:|:-----:|:--:|:--:|:--:|:--:|
+| 🥇 1 | y26n | **M01** | **74.4%** | **1.095** | 95.2% | 78.3% | 54.8% | 69.3% |
+| 2 | y26m | M01 | 71.8% | 1.175 | 94.0% | 72.9% | 57.2% | 63.3% |
+| 3 | y26s | M01 | 70.9% | 1.224 | 94.0% | 75.9% | 51.8% | 62.0% |
+| 4 | y26s | SVM | 70.8% | 1.147 | 93.7% | 66.3% | 53.7% | 69.5% |
+| 5 | y26n | SVM | 68.9% | 1.168 | 91.6% | 68.4% | 54.7% | 61.1% |
+| 5 | y26m | SVM | 68.9% | 1.168 | 93.7% | 70.5% | 50.5% | 61.1% |
+| 7 | y26s | LR | 68.7% | 1.161 | 92.6% | 67.4% | 54.7% | 60.0% |
+| 8 | y26n | LR | 68.2% | 1.171 | 92.6% | 72.6% | 53.7% | 53.7% |
+| 9 | y26m | LR | 67.9% | 1.174 | 92.6% | 70.5% | 51.6% | 56.8% |
+| 10 | y26n | RF | 66.8% | 1.184 | 91.6% | 68.4% | 49.5% | 57.9% |
+| 10 | y26m | RF | 66.8% | 1.216 | 90.5% | 64.2% | 54.7% | 57.9% |
+| 12 | y26s | RF | 64.2% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
+| — | **Heuristic M01 (GT input)** | — | **87.6%** | **0.375** | — | — | — | — |
 
 > Full metrics per combination in `benchmarks/e2e/e2e_{detector}_{counter}/metrics.json`
 
@@ -64,35 +61,37 @@ Evaluated on the **test split** (95 trees). Sorted by Acc±1 descending.
 
 ## Key Findings from E2E Results
 
-### 1. SVM consistently beats RF and M01 as a counter
+### 1. M01 heuristic beats ML counters on correctly-trained models
 
-Across all 5 detectors, SVM counter produces the highest Acc±1. RF is second, M01
-heuristic is worst when applied to YOLO predictions (not GT). This is because the
-M01 heuristic was designed assuming clean GT-quality detections.
+With the corrected `SawitMVC-YOLO` dataset, M01 produces the best Acc±1 across all 3 detectors.
+This reverses the finding from the initial (corrupt-dataset) run, where SVM was consistently best.
+The implication: the M01 heuristic's geometric assumptions align well with the real dataset.
 
-### 2. All 15 combinations cluster in 64–72% Acc±1
+### 2. All 12 combinations cluster in 64–74% Acc±1
 
-The narrow spread (~8 pp range) confirms the bottleneck is **detector quality**, not
-counter choice. Switching from M01 to SVM gains at most ~7 pp, while improving the
-detector from y26s_noaug (0.465 mAP50) to y26m_vanilla (0.509 mAP50) gains ~1 pp.
+The spread (~10 pp) confirms the bottleneck is **detector quality**. The 74.4% ceiling
+(y26n + M01) is ~13 pp below the heuristic-on-GT ceiling (87.6%).
 
-### 3. B3 is the hardest class in every combination (38–60% Acc±1)
+### 3. B3 is the hardest class in every combination (47–57% Acc±1)
 
-The B2↔B3 visual ambiguity that limits heuristics also limits E2E — YOLO frequently
-confuses B2 and B3 labels, compounding the counting error.
+The B2↔B3 visual ambiguity limits both YOLO detection and counting. B1 (ripe red bunches)
+is consistently the easiest (91–95% Acc±1).
 
-### 4. No-augmentation model (y26s_noaug) surprisingly competitive
+### 4. y26n (smallest model) achieves the best E2E accuracy
 
-Despite lowest mAP50 (0.465), y26s_noaug + SVM ranks 2nd overall (70.5%). This
-suggests that mAP50 on the test split does not perfectly predict E2E counting accuracy.
-The specific error patterns of a detector matter as much as its overall mAP.
+Despite having the second-best mAP50 (0.515 vs y26m's 0.528), y26n + M01 achieves
+the best overall Acc±1 at 74.4%. Detector error patterns matter as much as mAP50.
 
-### 5. y26m (largest) not always best E2E
+### 5. Comparison: GT-Upper-Bound vs E2E
 
-y26m_vanilla + SVM = 71.6% (best), but y26m_vanilla + M01 = 64.5% (worst). The
-medium model's detection pattern is well-matched to the SVM features but poorly
-matched to the M01 heuristic's geometric assumptions.
+| Setup | Input | Acc±1 | MAE | Gap to ceiling |
+|-------|-------|:-----:|:---:|:--------------:|
+| Heuristic M01 on GT | Perfect detections | 87.6% | 0.375 | — |
+| Best E2E (y26n→M01) | YOLO predictions | 74.4% | 1.095 | −13.2 pp |
+| Worst E2E (y26s→RF) | YOLO predictions | 64.2% | 1.255 | −23.4 pp |
 
+The gap from GT-M01 (87.6%) to best E2E (74.4%) = **13.2 pp lost to detector errors**.
+Improving detection quality is the highest-leverage improvement.
 ---
 
 ## Running a New Ablation
@@ -124,11 +123,12 @@ for c in combos:
 ### Scenario B: Test a new counting algorithm (no re-inference)
 
 ```bash
-# Use any of the 5 pre-computed prediction sets
+# Use any of the 3 pre-computed prediction sets
 python pipeline/run_counting_svm.py \
-    --inference-dir predictions/y26n_vanilla_local_inference/
-# → benchmarks/e2e/e2e_y26n_vanilla_local_svm/metrics.json
+    --inference-dir predictions/y26n_inference/
+# → benchmarks/e2e/e2e_y26n_svm/metrics.json
 ```
+
 
 ### Scenario C: New feature engineering
 
@@ -136,19 +136,20 @@ python pipeline/run_counting_svm.py \
 # Edit pipeline/build_counting_features.py to add your features
 # Then re-run with existing predictions:
 python pipeline/run_counting_svm.py \
-    --inference-dir predictions/y26m_vanilla_local_inference/
+    --inference-dir predictions/y26m_inference/
 ```
+
 
 ### Scenario D: Replicate the exact baseline numbers
 
 ```bash
-# All 5 detectors × 3 counters — uses pre-computed predictions, no GPU needed
-for model in y26n_vanilla_local y26s_vanilla_local y26m_vanilla_local y26s_nopretrained y26s_noaug; do
+# All 3 detectors × 4 counters — uses pre-computed predictions, no GPU needed
+for model in y26n y26s y26m; do
     python pipeline/run_counting_svm.py --inference-dir predictions/${model}_inference/
     python pipeline/run_counting_rf.py  --inference-dir predictions/${model}_inference/
+    python pipeline/run_counting_lr.py  --inference-dir predictions/${model}_inference/
 done
 ```
-
 ---
 
 ## Metrics Files Structure
@@ -191,8 +192,8 @@ feature_importance.csv  ← RF only: feature importance ranking
 |-------|-------|:-----:|:---:|:--------------:|
 | SVM on GT features | Perfect detections | **96.1%** | 0.318 | — |
 | Heuristic M01 on GT | Perfect detections | 87.6% | 0.375 | −8.5 pp |
-| Best E2E (y26m→SVM) | YOLO predictions | 71.6% | 1.118 | −24.5 pp |
-| Worst E2E (y26m→M01) | YOLO predictions | 64.5% | 1.400 | −31.6 pp |
+| Best E2E (y26n→M01) | YOLO predictions | 74.4% | 1.095 | −13.2 pp |
+| Worst E2E (y26s→RF) | YOLO predictions | 64.2% | 1.255 | −23.4 pp |
 
-The gap between GT-SVM (96.1%) and best E2E (71.6%) = **24.5 pp lost to detector errors**.
+The gap between GT-SVM (96.1%) and best E2E (74.4%) = **21.7 pp lost to detector errors**.
 This is the opportunity space for future detector improvements.

@@ -2,7 +2,7 @@
 Feature extraction library — 13-dim per tree.
 
 Library: from pipeline.build_counting_features import load_dataset, extract_features
-CLI:     python pipeline/build_counting_features.py --inference-dir predictions/y26n_vanilla_local_inference/
+CLI:     python pipeline/build_counting_features.py --inference-dir predictions/y26n_inference/
 """
 from __future__ import annotations
 import csv, json
@@ -106,7 +106,7 @@ if __name__ == "__main__":
     ROOT = Path(__file__).resolve().parent.parent
     p = argparse.ArgumentParser(description="Extract 13-dim counting features")
     p.add_argument("--inference-dir", type=Path,
-                   default=ROOT / "predictions" / "y26n_vanilla_local_inference")
+                   default=ROOT / "predictions" / "y26n_inference")
     p.add_argument("--gt-dir", type=Path, default=ROOT / "SawitMVC-YOLO" / "json")
     args = p.parse_args()
     X, y, ids, splits = load_dataset(args.inference_dir, args.gt_dir)

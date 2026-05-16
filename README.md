@@ -13,6 +13,9 @@ different angles, the task is to count the **unique number of bunches per maturi
 > detected across multiple camera angles. This repository provides 5 deterministic
 > heuristic algorithms that reduce the error to ≤13% without any training.
 
+> **Note:** All YOLO baselines were retrained on the correct `SawitMVC-YOLO` dataset
+> (3 models: `y26n`, `y26s`, `y26m`). Previous 5-model results have been superseded.
+
 ---
 
 ## Results at a Glance
@@ -30,15 +33,15 @@ different angles, the task is to count the **unique number of bunches per maturi
 
 **Acc ±1** = percentage of trees where predicted count per class is within ±1 of ground truth (macro-averaged across 4 classes). Evaluated on 953 trees from `Brand-New-Dataset-YOLO`.
 
-### YOLO26 Detection (mAP50, test split)
+### YOLO26 Detection (mAP50, val split)
+
+All 3 models trained 60 epochs, seed=42, pretrained=True, standard augmentation on `SawitMVC-YOLO`.
 
 | Model | mAP50 | Speed | Size | Notes |
 |-------|:-----:|:-----:|:----:|-------|
-| `y26n_vanilla_local` | **0.521** | **0.2 ms** | 5.2 MB | **Recommended for production** |
-| `y26s_nopretrained` | 0.511 | 0.5 ms | 20 MB | Scratch training matches pretrained |
-| `y26m_vanilla_local` | 0.509 | 0.8 ms | 42 MB | Largest; best E2E pipeline |
-| `y26s_vanilla_local` | 0.506 | 0.5 ms | 20 MB | Standard small |
-| `y26s_noaug` | 0.465 | 0.5 ms | 20 MB | Ablation: no augmentation |
+| `y26m` | **0.528** | 1.0 ms | 42 MB | Best detection accuracy |
+| `y26n` | 0.515 | **0.3 ms** | **5.2 MB** | **Best efficiency (recommended)** |
+| `y26s` | 0.511 | 0.4 ms | 20 MB | Balanced size/speed |
 
 ### E2E — Per-Image Approach (complete pipeline, 95 test trees)
 
@@ -53,27 +56,25 @@ as the per-tree approach. Results on test split (95 trees, `split_manifest.csv`)
 ```bash
 # Run all counters for one model (derives per-image JSONs from existing per-tree predictions)
 python pipeline/run_e2e_per_image.py \
-    --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt \
+    --name y26n --weights models/y26n.pt \
     --data ./SawitMVC-YOLO --skip-inference
 ```
 
-**Simple aggregation (no training):** all 5 models, sorted by Acc±1
+**Simple aggregation (no training):** 3 models sorted by Acc±1
 
-| Rank | Detector | Agg | Acc ±1 | MAE | B1 | B2 | B3 | B4 |
-|:----:|----------|-----|:------:|:---:|:--:|:--:|:--:|:--:|
-| 1 | y26s_noaug | **max** | **67.1%** | 1.305 | 89.5% | 67.4% | 49.5% | 62.1% |
-| 1 | y26s_nopretrained | max | 67.1% | 1.318 | 92.6% | 65.3% | 41.1% | 69.5% |
-| 1 | y26s_vanilla | max | 67.1% | 1.374 | 94.7% | 62.1% | 45.3% | 66.3% |
-| 4 | y26n_vanilla | max | 65.0% | 1.379 | 89.5% | 63.2% | 42.1% | 65.3% |
-| 5 | y26m_vanilla | max | 63.7% | 1.458 | 92.6% | 60.0% | 34.7% | 67.4% |
-| — | *(all models)* | mean | 52.9–58.2% | 1.70–1.85 | — | — | — | — |
-| — | *(all models)* | sum | 47.1–51.3% | 2.27–2.73 | — | — | — | — |
+| Rank | Detector | Agg | Acc ±1 | MAE |
+|:----:|----------|-----|:------:|:---:|
+| 1 | y26m | **max** | **64.2%** | 1.368 |
+| 2 | y26n | max | 63.7% | 1.363 |
+| 3 | y26s | max | 61.8% | 1.403 |
+| — | *(all models)* | mean | 53.9–55.8% | 1.70–1.84 |
+| — | *(all models)* | sum | 50.0–52.6% | 2.22–2.48 |
 
 `max` is the best simple dedup: a bunch visible from multiple sides is counted once (best view).
 `sum` is worst: overcounts the same bunch detected from each side.
 
 **With ML/heuristic counter:** per-image achieves the same results as per-tree (see table below).
-All 35 per-image results (5 models × 7 counters) in [`benchmarks/e2e/`](benchmarks/e2e/) as
+All 21 per-image results (3 models × 7 counters) in [`benchmarks/e2e/`](benchmarks/e2e/) as
 `e2e_{model}_per_image_{counter}/metrics.json`.
 
 ---
@@ -82,36 +83,28 @@ All 35 per-image results (5 models × 7 counters) in [`benchmarks/e2e/`](benchma
 
 All images of a tree are grouped, detections aggregated into 13-dim features, then a ML
 counter is applied. Results on test split (95 trees, `split_manifest.csv`).
-Sorted by Acc±1. **4 counters × 5 detectors = 20 combinations.**
+Sorted by Acc±1. **4 counters × 3 detectors = 12 combinations.**
 
 | Rank | Detector | Counter | Acc ±1 ↑ | MAE ↓ | B1 | B2 | B3 | B4 |
 |:----:|----------|---------|:--------:|:-----:|:--:|:--:|:--:|:--:|
-| 🥇 1 | y26m_vanilla | **LR** | **72.4%** | 1.132 | 92.6% | 69.5% | 56.8% | 70.5% |
-| 2 | y26m_vanilla | SVM | 71.6% | 1.118 | 92.6% | 63.2% | 60.0% | 70.5% |
-| 3 | y26s_noaug | SVM | 70.5% | 1.126 | 91.6% | 69.5% | 56.8% | 64.2% |
-| 4 | y26n_vanilla | SVM | 70.0% | 1.145 | 90.5% | 68.4% | 56.8% | 64.2% |
-| 5 | y26s_nopretrained | **LR** | 69.5% | 1.171 | 91.6% | 65.3% | 56.8% | 64.2% |
-| 6 | y26s_noaug | **LR** | 69.2% | 1.155 | 90.5% | 71.6% | 56.8% | 57.9% |
-| 7 | y26s_nopretrained | M01 | 69.2% | 1.266 | 91.6% | 63.2% | 52.6% | 69.5% |
-| 8 | y26s_nopretrained | SVM | 69.0% | 1.145 | 90.5% | 68.4% | 51.6% | 65.3% |
-| 9 | y26s_vanilla | SVM | 69.0% | 1.163 | 93.7% | 68.4% | 48.4% | 65.3% |
-| 10 | y26s_vanilla | **LR** | 68.7% | 1.155 | 93.7% | 67.4% | 51.6% | 62.1% |
-| 11 | y26n_vanilla | **LR** | 68.4% | 1.171 | 92.6% | 66.3% | 55.8% | 58.9% |
-| 12 | y26s_noaug | RF | 68.4% | 1.184 | 92.6% | 66.3% | 55.8% | 58.9% |
-| 13 | y26n_vanilla | RF | 68.2% | 1.218 | 90.5% | 68.4% | 54.7% | 58.9% |
-| 14 | y26m_vanilla | RF | 67.9% | 1.211 | 95.8% | 68.4% | 49.5% | 57.9% |
-| 15 | y26s_nopretrained | RF | 67.9% | 1.229 | 93.7% | 65.3% | 55.8% | 56.8% |
-| 16 | y26n_vanilla | M01 | 67.1% | 1.337 | 87.4% | 65.3% | 51.6% | 64.2% |
-| 17 | y26s_noaug | M01 | 66.6% | 1.384 | 90.5% | 68.4% | 43.2% | 64.2% |
-| 18 | y26s_vanilla | RF | 66.6% | 1.216 | 96.8% | 68.4% | 48.4% | 52.6% |
-| 19 | y26s_vanilla | M01 | 65.5% | 1.403 | 89.5% | 66.3% | 38.9% | 67.4% |
-| 20 | y26m_vanilla | M01 | 64.5% | 1.400 | 90.5% | 56.8% | 40.0% | 70.5% |
+| 🥇 1 | y26n | **M01** | **74.4%** | 1.095 | 95.2% | 78.3% | 54.8% | 69.3% |
+| 2 | y26m | M01 | 71.8% | 1.175 | 94.0% | 72.9% | 57.2% | 63.3% |
+| 3 | y26s | M01 | 70.9% | 1.224 | 94.0% | 75.9% | 51.8% | 62.0% |
+| 4 | y26s | SVM | 70.8% | 1.147 | 93.7% | 66.3% | 53.7% | 69.5% |
+| 5 | y26n | SVM | 68.9% | 1.168 | 91.6% | 68.4% | 54.7% | 61.1% |
+| 5 | y26m | SVM | 68.9% | 1.168 | 93.7% | 70.5% | 50.5% | 61.1% |
+| 7 | y26s | LR | 68.7% | 1.161 | 92.6% | 67.4% | 54.7% | 60.0% |
+| 8 | y26n | LR | 68.2% | 1.171 | 92.6% | 72.6% | 53.7% | 53.7% |
+| 9 | y26m | LR | 67.9% | 1.174 | 92.6% | 70.5% | 51.6% | 56.8% |
+| 10 | y26n | RF | 66.8% | 1.184 | 91.6% | 68.4% | 49.5% | 57.9% |
+| 10 | y26m | RF | 66.8% | 1.216 | 90.5% | 64.2% | 54.7% | 57.9% |
+| 12 | y26s | RF | 64.2% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
 | — | **M01 on GT** (upper bound) | — | **87.6%** | **0.375** | — | — | — | — |
 
 > Full analysis in [`docs/e2e_pipeline.md`](docs/e2e_pipeline.md).
 > All `metrics.json` files in [`benchmarks/e2e/`](benchmarks/e2e/).
 
-The ~16 pp gap between best E2E and heuristic-on-GT represents **detector error
+The ~13 pp gap between best E2E (74.4%) and heuristic-on-GT represents **detector error
 propagation** — improving the detector is the highest-leverage path. See [`docs/findings.md`](docs/findings.md).
 
 ---
@@ -204,11 +197,9 @@ Baseline-SawitMVC/
 │
 ├── models/                      Trained YOLO26 weights (all < 50 MB)
 │   ├── README.md                Model comparison, inference guide
-│   ├── y26n_vanilla_local.pt   🏆 Best: mAP50=0.521, 5.2 MB
-│   ├── y26s_vanilla_local.pt   Standard small, 20 MB
-│   ├── y26m_vanilla_local.pt   Medium, 42 MB (best E2E)
-│   ├── y26s_nopretrained.pt    Ablation: scratch training
-│   └── y26s_noaug.pt           Ablation: no augmentation
+│   ├── y26n.pt                 ⚡ Best efficiency: mAP50=0.515, 5.2 MB
+│   ├── y26s.pt                 Standard small: mAP50=0.511, 20 MB
+│   └── y26m.pt                 Best accuracy: mAP50=0.528, 42 MB
 │
 ├── benchmarks/                  Reproducible benchmark suite
 │   ├── README.md                How to run, metric definitions
@@ -218,10 +209,10 @@ Baseline-SawitMVC/
 │   │   ├── per_tree.csv         Per-tree predictions
 │   │   ├── totals.csv           Aggregate counts
 │   │   └── mean_per_tree.csv    Mean per-tree statistics
-│   └── e2e/                     All 15 E2E results (5 detectors × 3 counters)
-│       ├── e2e_y26m_vanilla_local_svm/   metrics.json + predictions.csv
-│       ├── e2e_y26n_vanilla_local_svm/
-│       └── … (15 folders total)
+│   └── e2e/                     All 33 E2E results (3 detectors × 11 counters)
+│       ├── e2e_y26n_m01/              metrics.json + predictions.csv
+│       ├── e2e_y26n_per_image_svm/
+│       └── … (33 folders total)
 │
 ├── pipeline/                    E2E pipeline scripts
 │   ├── README.md                Step-by-step replication + ablation guide
@@ -231,12 +222,13 @@ Baseline-SawitMVC/
 │   ├── run_counting_svm.py      SVM counter (train + evaluate)
 │   └── run_counting_rf.py       RF counter (train + evaluate)
 │
-├── predictions/                 Pre-computed YOLO inference (~28 MB)
-│   ├── y26n_vanilla_local_inference/  953 JSON files per detector
-│   ├── y26s_vanilla_local_inference/
-│   ├── y26m_vanilla_local_inference/
-│   ├── y26s_nopretrained_inference/
-│   └── y26s_noaug_inference/
+├── predictions/                 Pre-computed YOLO inference (~17 MB)
+│   ├── y26n_inference/          953 JSON files (per-tree)
+│   ├── y26s_inference/          953 JSON files (per-tree)
+│   ├── y26m_inference/          953 JSON files (per-tree)
+│   ├── y26n_per_image/          3992 JSON files (per-image, derived)
+│   ├── y26s_per_image/          3992 JSON files (per-image, derived)
+│   └── y26m_per_image/          3992 JSON files (per-image, derived)
 │
 ├── figures/                     All visualizations
 │   ├── README.md                Figure index and descriptions

@@ -107,7 +107,7 @@ Mean predicted counts per tree per method.
 
 ### `e2e/y26m_svm_metrics.json`
 
-Best end-to-end result: `y26m_vanilla_local` detector + SVM counter.
+Best end-to-end result: `y26m` detector + SVM counter.
 
 Key metrics:
 - `macro_acc_within1`: 0.716 (71.6%)

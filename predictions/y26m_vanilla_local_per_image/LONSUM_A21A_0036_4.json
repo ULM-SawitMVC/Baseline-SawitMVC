@@ -1,1 +1,0 @@
-{"image": "LONSUM_A21A_0036_4.jpg", "detector": "y26m_vanilla_local", "detections": [{"box_index": 0, "class_id": 2, "class_name": "B3", "bbox_yolo": [0.4210142493247986, 0.30305659770965576, 0.09944716095924377, 0.08218846470117569], "conf": 0.2666971683502197}], "count_per_class": {"B1": 0, "B2": 0, "B3": 1, "B4": 0}, "side_index": 3}

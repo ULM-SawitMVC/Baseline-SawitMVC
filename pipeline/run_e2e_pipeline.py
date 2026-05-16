@@ -9,13 +9,13 @@ Steps:
 
 Usage:
     # Full pipeline (requires GPU for step 1)
-    python pipeline/run_e2e_pipeline.py --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt
+    python pipeline/run_e2e_pipeline.py --name y26n --weights models/y26n.pt
 
     # Skip inference, use pre-computed predictions
-    python pipeline/run_e2e_pipeline.py --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt --skip-inference
+    python pipeline/run_e2e_pipeline.py --name y26n --weights models/y26n.pt --skip-inference
 
     # Custom dataset path
-    python pipeline/run_e2e_pipeline.py --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt --data ./SawitMVC-YOLO/
+    python pipeline/run_e2e_pipeline.py --name y26n --weights models/y26n.pt --data ./SawitMVC-YOLO/
 """
 from __future__ import annotations
 import argparse, json, re, sys
@@ -265,7 +265,7 @@ def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, out_dir: Pat
 
 def main() -> None:
     p = argparse.ArgumentParser(description="Unified E2E pipeline: inference → counting → evaluation")
-    p.add_argument("--name", required=True, help="Experiment name, e.g. y26n_vanilla_local")
+    p.add_argument("--name", required=True, help="Experiment name, e.g. y26n or y26m")
     p.add_argument("--weights", type=Path, required=True, help="Path to YOLO .pt weights")
     p.add_argument("--data", type=Path, default=ROOT / "SawitMVC-YOLO",
                    help="Dataset root (default: ./SawitMVC-YOLO/)")

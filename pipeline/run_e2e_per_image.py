@@ -19,14 +19,14 @@ Full ML/heuristic counters (identical features to per-tree pipeline):
 
 Usage:
     # Full run (requires GPU + dataset)
-    python pipeline/run_e2e_per_image.py --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt
+    python pipeline/run_e2e_per_image.py --name y26n --weights models/y26n.pt
 
     # Skip inference: derive per-image from existing per-tree predictions (no GPU needed)
-    python pipeline/run_e2e_per_image.py --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt \\
+    python pipeline/run_e2e_per_image.py --name y26n --weights models/y26n.pt \\
         --data /workspace/SawitMVC-YOLO --skip-inference
 
     # Run only specific counters
-    python pipeline/run_e2e_per_image.py --name y26n_vanilla_local --weights models/y26n_vanilla_local.pt \\
+    python pipeline/run_e2e_per_image.py --name y26n --weights models/y26n.pt \\
         --skip-inference --counters max svm lr
 """
 from __future__ import annotations
@@ -400,7 +400,7 @@ Counters:
   rf    Random Forest (n=200, max_depth=10)
   lr    Linear Regression + StandardScaler (interpretable)
         """)
-    p.add_argument("--name", required=True, help="Experiment name, e.g. y26n_vanilla_local")
+    p.add_argument("--name", required=True, help="Experiment name, e.g. y26n or y26m")
     p.add_argument("--weights", type=Path, required=True, help="Path to YOLO .pt weights")
     p.add_argument("--data", type=Path, default=ROOT / "SawitMVC-YOLO",
                    help="Dataset root (default: ./SawitMVC-YOLO/)")

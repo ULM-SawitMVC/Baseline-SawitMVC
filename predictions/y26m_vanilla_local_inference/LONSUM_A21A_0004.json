@@ -1,1 +1,0 @@
-{"tree_name": "LONSUM_A21A_0004", "split": "test", "source": "y26m_vanilla_local_inference", "weights": "baseline-run/weights/y26m_vanilla_local.pt", "images": {"sisi_1": {"annotations": []}, "sisi_2": {"annotations": []}, "sisi_3": {"annotations": []}, "sisi_4": {"annotations": []}}}

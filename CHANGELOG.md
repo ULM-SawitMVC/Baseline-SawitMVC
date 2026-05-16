@@ -6,6 +6,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.2.0] — 2026-05-16
+
+### Changed
+
+**Models replaced — all previous model weights superseded**
+- Previous 5 models (`y26n_vanilla_local`, `y26s_vanilla_local`, `y26m_vanilla_local`,
+  `y26s_nopretrained`, `y26s_noaug`) were trained on a corrupt dataset and have been removed
+- Replaced with 3 correctly-trained models on the validated `SawitMVC-YOLO` dataset:
+  - `y26n.pt` — YOLO26n, mAP50=0.515, 5.2 MB, 0.3 ms/frame
+  - `y26s.pt` — YOLO26s, mAP50=0.511, 20 MB, 0.4 ms/frame
+  - `y26m.pt` — YOLO26m, mAP50=0.528, 42 MB, 1.0 ms/frame
+  - All trained: 60 epochs, seed=42, pretrained=True, standard augmentation
+
+**All E2E benchmarks rerun with new models**
+- Per-tree: 12 combinations (3 models × 4 counters); best: y26n + M01 = **74.4%**
+- Per-image: 21 combinations (3 models × 7 counters); best: y26s + SVM = **70.8%**
+- `predictions/` updated: 2,859 per-tree JSONs + 11,976 per-image JSONs
+- `benchmarks/e2e/` updated: 33 result folders
+
+---
+
 ## [1.1.0] — 2026-05-16
 
 ### Added
@@ -13,13 +34,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 **E2E Pipeline (complete)**
 - `pipeline/` folder with 5 runnable scripts for full E2E replication
 - `pipeline/README.md` — step-by-step guide + ablation recipes
-- `predictions/` — pre-computed YOLO inference for all 5 models (4,765 JSON, ~28 MB)
-- All 15 E2E result folders in `benchmarks/e2e/` (5 detectors × 3 counters)
-- `docs/e2e_pipeline.md` — complete guide with 15-combination results table, key
-  findings, and 4 ablation scenarios with exact commands
+- Per-image pipeline extended with ML counters (max/mean/sum/M01/SVM/RF/LR)
+- `docs/e2e_pipeline.md` — complete guide with results table, key findings, and ablation scenarios
 
 **Documentation**
-- Complete E2E results table in README (all 15 combinations, per-class breakdown)
+- Complete E2E results table in README (all combinations, per-class breakdown)
 - Updated Repository Structure section with `pipeline/` and `predictions/`
 
 ---
@@ -35,17 +54,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `M04_blend_floor_clamped` — Floor-clamped weighted blend, 86.99% Acc±1
 - `M05_blend_vis_divide` — Simple weighted blend, 86.99% Acc±1
 
-**Models (YOLO26, trained locally)**
-- `y26n_vanilla_local.pt` — Best: mAP50=0.521, 5.2 MB, 0.2 ms/frame
-- `y26s_vanilla_local.pt` — mAP50=0.506, 20 MB
-- `y26m_vanilla_local.pt` — mAP50=0.509, 42 MB (best E2E pipeline)
-- `y26s_nopretrained.pt` — Ablation: scratch training, mAP50=0.511
-- `y26s_noaug.pt` — Ablation: no augmentation, mAP50=0.465
+**Models (YOLO26, initial training — superseded in v1.2.0)**
+- Initial 5-model set (see v1.2.0 for corrected versions)
 
 **Benchmarks**
 - Pre-computed results for all 29 heuristic methods on 953 trees (`accuracy_953.csv`)
 - Per-tree predictions CSV (953 rows × 29 methods)
-- End-to-end best result: y26m → SVM, Acc±1=71.6%
+- End-to-end best result: y26m → SVM, Acc±1=71.6% (superseded by v1.2.0)
 - Runnable benchmark script (`benchmarks/run_benchmark.py`)
 
 **Figures**

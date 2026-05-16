@@ -86,7 +86,7 @@ yolo detect train \
     model=yolo26s.yaml \
     data=SawitMVC-YOLO/data.yaml \
     imgsz=640 batch=16 epochs=100 patience=50 seed=42 deterministic=True \
-    name=y26s_nopretrained
+    name=y26s
 ```
 
 Expected: **mAP50 ≈ 0.511** at best epoch ~57 (needs more epochs without head start).
@@ -99,7 +99,7 @@ yolo detect train \
     data=SawitMVC-YOLO/data.yaml \
     imgsz=640 batch=16 epochs=100 patience=50 seed=42 deterministic=True \
     hsv_h=0 hsv_s=0 hsv_v=0 translate=0 scale=0 mosaic=0 \
-    name=y26s_noaug
+    name=y26s
 ```
 
 Expected: **mAP50 ≈ 0.465**, early stopping at epoch ~6 (overfitting).
@@ -192,7 +192,7 @@ If you don't want to retrain, use the weights in `models/`:
 ```python
 from ultralytics import YOLO
 
-model = YOLO("models/y26n_vanilla_local.pt")
+model = YOLO("models/y26n.pt")
 results = model.predict("path/to/tree_side_1.jpg", conf=0.25, iou=0.45)
 ```
 

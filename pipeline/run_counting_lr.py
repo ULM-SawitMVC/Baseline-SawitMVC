@@ -3,8 +3,8 @@ Linear Regression counting — 13-dim features → per-class bunch count.
 
 Usage:
     python pipeline/run_counting_lr.py
-    python pipeline/run_counting_lr.py --inference-dir predictions/y26m_vanilla_local_inference/
-    python pipeline/run_counting_lr.py --inference-dir predictions/y26m_vanilla_local_inference/ --out benchmarks/e2e/my_result/
+    python pipeline/run_counting_lr.py --inference-dir predictions/y26m_inference/
+    python pipeline/run_counting_lr.py --inference-dir predictions/y26m_inference/ --out benchmarks/e2e/my_result/
 """
 from __future__ import annotations
 import argparse, json, sys
@@ -46,7 +46,7 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray, tree_ids: list[str])
 def main() -> None:
     p = argparse.ArgumentParser(description="Linear Regression counting on inference features")
     p.add_argument("--inference-dir", type=Path,
-                   default=ROOT / "predictions" / "y26n_vanilla_local_inference",
+                   default=ROOT / "predictions" / "y26n_inference",
                    help="Folder of prediction JSONs (one per tree)")
     p.add_argument("--gt-dir", type=Path,
                    default=ROOT / "SawitMVC-YOLO" / "json",

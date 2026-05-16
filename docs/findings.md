@@ -91,7 +91,7 @@ scratch is a valid choice and may produce better domain-specific representations
 by 0.056 (from 0.506 to 0.465). The model overfits by epoch 6.
 
 **Evidence:**
-- `y26s_noaug`: mAP50=0.465, early stop at epoch 6 (overfitting from epoch 1)
+- `y26s`: mAP50=0.465, early stop at epoch 6 (overfitting from epoch 1)
 - `y26s_vanilla`: mAP50=0.506, stable convergence to epoch 21
 
 With only ~3,200 training images, the model cannot learn generalizable features
