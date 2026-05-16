@@ -1,6 +1,6 @@
 # Training — Reproduce YOLO26 Experiments
 
-All five YOLO26 detection models can be reproduced using the commands and
+All three public YOLO26 detection models can be reproduced using the commands and
 configurations in this document. Training requires a GPU with ≥ 8 GB VRAM.
 
 ---
@@ -45,15 +45,15 @@ yolo detect train \
     model=yolo26n.pt \
     data=SawitMVC-YOLO/data.yaml \
     imgsz=640 \
-    batch=16 \
-    epochs=100 \
-    patience=50 \
+    batch=32 \
+    epochs=60 \
+    patience=60 \
     seed=42 \
     deterministic=True \
     name=y26n_vanilla
 ```
 
-Expected: **mAP50 ≈ 0.521** at best epoch ~38.
+Expected: **mAP50 ≈ 0.515**.
 
 ### 2. YOLO26s — Vanilla
 
@@ -61,11 +61,11 @@ Expected: **mAP50 ≈ 0.521** at best epoch ~38.
 yolo detect train \
     model=yolo26s.pt \
     data=SawitMVC-YOLO/data.yaml \
-    imgsz=640 batch=16 epochs=100 patience=50 seed=42 deterministic=True \
-    name=y26s_vanilla
+    imgsz=640 batch=32 epochs=60 patience=60 seed=42 deterministic=True \
+    name=y26s
 ```
 
-Expected: **mAP50 ≈ 0.506** at best epoch ~21.
+Expected: **mAP50 ≈ 0.511**.
 
 ### 3. YOLO26m — Vanilla
 
@@ -73,11 +73,11 @@ Expected: **mAP50 ≈ 0.506** at best epoch ~21.
 yolo detect train \
     model=yolo26m.pt \
     data=SawitMVC-YOLO/data.yaml \
-    imgsz=640 batch=16 epochs=100 patience=50 seed=42 deterministic=True \
-    name=y26m_vanilla
+    imgsz=640 batch=32 epochs=60 patience=60 seed=42 deterministic=True \
+    name=y26m
 ```
 
-Expected: **mAP50 ≈ 0.509** at best epoch ~33.
+Expected: **mAP50 ≈ 0.528**.
 
 ### 4. YOLO26s — No Pretrained Weights (Scratch)
 
@@ -85,7 +85,7 @@ Expected: **mAP50 ≈ 0.509** at best epoch ~33.
 yolo detect train \
     model=yolo26s.yaml \
     data=SawitMVC-YOLO/data.yaml \
-    imgsz=640 batch=16 epochs=100 patience=50 seed=42 deterministic=True \
+    imgsz=640 batch=32 epochs=60 patience=60 seed=42 deterministic=True \
     name=y26s
 ```
 
@@ -97,7 +97,7 @@ Expected: **mAP50 ≈ 0.511** at best epoch ~57 (needs more epochs without head 
 yolo detect train \
     model=yolo26s.pt \
     data=SawitMVC-YOLO/data.yaml \
-    imgsz=640 batch=16 epochs=100 patience=50 seed=42 deterministic=True \
+    imgsz=640 batch=32 epochs=60 patience=60 seed=42 deterministic=True \
     hsv_h=0 hsv_s=0 hsv_v=0 translate=0 scale=0 mosaic=0 \
     name=y26s
 ```
@@ -112,9 +112,9 @@ Expected: **mAP50 ≈ 0.465**, early stopping at epoch ~6 (overfitting).
 |-----------|:-------:|:-------------:|:------:|
 | `model` | `yolo26{n,s,m}.pt` | `yolo26s.yaml` | `yolo26s.pt` |
 | `imgsz` | 640 | 640 | 640 |
-| `batch` | 16 | 16 | 16 |
-| `epochs` | 100 | 100 | 100 |
-| `patience` | 50 | 50 | 50 |
+| `batch` | 32 | 32 | 32 |
+| `epochs` | 60 | 60 | 60 |
+| `patience` | 60 | 60 | 60 |
 | `seed` | 42 | 42 | 42 |
 | `augmentation` | Default | Default | Disabled |
 | `pretrained` | COCO | None | COCO |
@@ -135,11 +135,11 @@ yolo detect val \
     split=test
 ```
 
-Expected metrics for y26n_vanilla:
+Expected metrics for y26n:
 
 | Metric | Value |
 |--------|------:|
-| mAP50 | 0.521 |
+| mAP50 | 0.515 |
 | mAP50-95 | 0.237 |
 | Precision | ~0.65 |
 | Recall | ~0.61 |
@@ -157,16 +157,17 @@ must be enabled for any serious training run.
 
 ### COCO pretraining is optional
 
-YOLO26s trained from scratch achieves mAP50=0.511 at epoch 57, **exceeding** the
-pretrained vanilla YOLO26s (mAP50=0.506 at epoch 21). For this specific domain
+YOLO26s trained from scratch achieved mAP50=0.511 in earlier ablations, close to
+the public pretrained y26s result (mAP50=0.511). For this specific domain
 (aerial/close-up oil palm images), ImageNet/COCO weights provide no advantage.
 Training from scratch requires ~3× more epochs to converge.
 
 ### Nano outperforms medium
 
-YOLO26n (mAP50=0.521) outperforms YOLO26m (mAP50=0.509) while being 8× smaller and
-4× faster. Larger architectures tend to overfit on this dataset of ~4,000 images.
-The nano model's implicit regularization from reduced capacity is beneficial.
+YOLO26m has the highest detection mAP50 (0.528), while YOLO26n remains the most
+efficient public model at mAP50=0.515 with a 5.2 MB weight file. E2E counting
+quality does not perfectly follow detector mAP50 because class-specific detection
+errors propagate differently through each counter.
 
 ---
 

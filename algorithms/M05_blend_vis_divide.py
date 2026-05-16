@@ -1,7 +1,7 @@
 """
 M05_blend_vis_divide
 Family: blend  | Old name: hybrid_vis_corr
-Benchmark 953-tree: Acc±1 86.04%, MAE 0.4077.
+Canonical benchmark: 953 trees, Acc±1 = 86.99%, MAE = 0.3875.
 
 Weighted average of M06 (visibility) and M19 (adaptive divide):
     out = round(0.6 * vis + 0.4 * adaptive_corrected)

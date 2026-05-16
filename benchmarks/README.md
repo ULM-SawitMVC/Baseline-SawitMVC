@@ -34,6 +34,12 @@ Save results to CSV:
 python benchmarks/run_benchmark.py --data ./SawitMVC-YOLO/json/ --save
 ```
 
+Before release, verify stored headline metrics:
+
+```bash
+python benchmarks/check_release_claims.py
+```
+
 ---
 
 ## Metrics Definitions
@@ -105,15 +111,17 @@ Aggregate bunch counts per method (total B1/B2/B3/B4 summed across all 953 trees
 
 Mean predicted counts per tree per method.
 
-### `e2e/y26m_svm_metrics.json`
+### `e2e/e2e_y26s_svm/metrics.json`
 
-Best end-to-end result: `y26m` detector + SVM counter.
+Best canonical end-to-end result: `y26s` detector + SVM counter on the
+95-tree `split_manifest.csv` test split.
 
 Key metrics:
-- `macro_acc_within1`: 0.716 (71.6%)
-- `macro_class_mae`: 1.118
-- `total_count_mae`: 2.432
-- Per-class: B1=92.6%, B2=63.2%, B3=60.0%, B4=70.5%
+- `n_trees`: 95
+- `macro_acc_pm1`: 0.708 (70.8%)
+- `macro_class_mae`: 1.147
+- `total_count_mae`: 2.589
+- Per-class Acc±1: B1=93.7%, B2=66.3%, B3=53.7%, B4=69.5%
 
 ---
 

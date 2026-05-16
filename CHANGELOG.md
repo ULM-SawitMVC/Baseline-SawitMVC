@@ -20,7 +20,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - All trained: 60 epochs, seed=42, pretrained=True, standard augmentation
 
 **All E2E benchmarks rerun with new models**
-- Per-tree: 12 combinations (3 models × 4 counters); best: y26n + M01 = **74.4%**
+- Per-tree: 12 combinations (3 models × 4 counters); best canonical split result:
+  y26s + SVM = **70.8%**
 - Per-image: 21 combinations (3 models × 7 counters); best: y26s + SVM = **70.8%**
 - `predictions/` updated: 2,859 per-tree JSONs + 11,976 per-image JSONs
 - `benchmarks/e2e/` updated: 33 result folders

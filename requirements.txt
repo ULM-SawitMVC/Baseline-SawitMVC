@@ -6,3 +6,5 @@ Pillow
 scipy
 matplotlib
 tqdm
+scikit-learn
+huggingface_hub

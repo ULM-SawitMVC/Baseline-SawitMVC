@@ -97,12 +97,14 @@ over `_confirmedLinks`: boxes connected across sides belong to the same physical
 
 | Split | Trees | Images |
 |-------|------:|-------:|
-| Train | 758 | 958 |
-| Val | — | 405 |
-| Test | 95 | 95 |
+| Train | 763 | 3,164 |
+| Val | 95 | 416 |
+| Test | 95 | 412 |
 
-Split membership is in `split_manifest.csv` (per tree) and `train.txt` / `val.txt` /
-`test.txt` (per image path).
+Canonical tree-level split membership is in `split_manifest.csv`. The YOLO image
+split is represented by the `images/train`, `images/val`, and `images/test`
+folders (and matching `labels/` folders). E2E counters should use
+`split_manifest.csv`, not the `split` value embedded in older JSON files.
 
 Stratification was performed on unique bunch count distribution to ensure similar
 class balance across splits.
@@ -135,13 +137,10 @@ All pre-fix versions are archived in the research repository.
 
 ```
 SawitMVC-YOLO/
-├── images/           3,992 JPEG images (flat, no subdirectories)
-├── labels/           3,992 YOLO TXT files (flat)
+├── images/           3,992 JPEG images under train/val/test
+├── labels/           3,992 YOLO TXT files under train/val/test
 ├── json/             953 JSON ground-truth files (one per tree)
 ├── data.yaml         YOLO data config (class names, split paths)
-├── train.txt         Training image paths (958 images)
-├── val.txt           Validation image paths (405 images)
-├── test.txt          Test image paths (95 images — 95 trees)
 └── split_manifest.csv  Per-tree split assignment + stratification keys
 ```
 
@@ -151,6 +150,12 @@ Example: `DAMIMAS_A21B_0001_1.jpg` (site DAMIMAS, block A21B, tree 0001, side 1)
 ---
 
 ## Downloading the Dataset
+
+The dataset is external and is not committed to this repository. This repository
+includes precomputed detector predictions under `predictions/`, but any benchmark
+or E2E re-evaluation still needs the ground-truth JSON files from
+`SawitMVC-YOLO/json/`. If the Hugging Face dataset is gated, log in or pass an
+approved token.
 
 ```python
 from huggingface_hub import snapshot_download

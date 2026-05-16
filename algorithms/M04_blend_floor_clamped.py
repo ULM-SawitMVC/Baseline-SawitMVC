@@ -1,11 +1,10 @@
 """
-Algoritma: floor_clamped_hybrid
-Generasi: iter1 (eksperimen 10 Mei 2026)
+Algorithm: floor_clamped_hybrid.
 
-Hybrid_vis_corr dengan floor per kelas = max_per_side.
-Paling sederhana: hanya 1 baris modifikasi dari hybrid_vis_corr.
+Weighted visibility/adaptive blend with a per-class max_per_side floor.
 
-Benchmark 953 pohon: Acc ±1 = 86.04%, MAE = 0.4050, n_fail = 133.
+Canonical benchmark: 953 trees, Acc±1 = 86.99%, MAE = 0.3848,
+n_fail = 124. See benchmarks/results/accuracy_953.csv.
 """
 
 from collections import Counter

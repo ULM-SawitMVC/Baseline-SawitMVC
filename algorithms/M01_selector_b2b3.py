@@ -1,55 +1,36 @@
 """
-Algoritma: selector_with_b2b3
-Generasi: iter11 (eksperimen 10 Mei 2026)
-Benchmark Brand-New-Dataset-YOLO 953 pohon: Acc ±1 = 86.67%, MAE = 0.3982,
-n_fail = 127 (best Acc±1 + best MAE simultan).
+Algorithm: selector_with_b2b3.
 
-Validasi train/val/test held-out (dari iter11_results.csv):
-    train: 87.34%   val: 82.58%   test: 88.62%   worst_drop: 0.00 pp
+Canonical benchmark: 953 trees, Acc±1 = 87.62%, MAE = 0.3746,
+n_fail = 118. See benchmarks/results/accuracy_953.csv.
 
-Ide utama
----------
-Dua koreksi disusun berurutan:
+The algorithm applies two corrections in sequence:
 
-  (1) Selector trifurkasi (selector_iter9_trifurc) — pilih estimator dasar
-      berdasarkan profil deteksi pohon:
-        a. Pohon padat dengan dominansi B3 (b3frac >= 0.60 dan n_total >= 25)
-           → median3_floor (median of {visibility, adaptive, side_coverage})
-        b. Pohon dengan B1 cukup banyak, B3 tidak dominan, B4 sedikit
-           (naive_B1 >= 3, b3frac < 0.45, naive_B4 < 10)
-           → adaptive_corrected (v5)
-        c. Selain itu → geometric_mean_blend (akar dari vis × adaptive)
+  1. A three-way selector chooses the base estimator from the tree detection
+     profile:
+       a. Dense, B3-dominated trees (b3frac >= 0.60 and n_total >= 25)
+          use median3_floor.
+       b. B1-rich trees with limited B3/B4 dominance
+          (naive_B1 >= 3, b3frac < 0.45, naive_B4 < 10)
+          use adaptive_corrected.
+       c. All other trees use geometric_mean_blend.
 
-  (2) Koreksi B2↔B3 split — total (B2+B3) dari hasil (1) dipertahankan
-      (jumlah tandan dewasa stabil di seluruh sisi), namun rasio B2:B3
-      dialokasikan ulang berdasarkan rasio naive di kelas tersebut. Ini
-      menjawab masalah inti dataset: ambiguitas visual B2↔B3 yang
-      menyebabkan kesalahan kelas tetapi bukan kesalahan jumlah.
+  2. B2/B3 split correction preserves the predicted B2+B3 total, then
+     reallocates that total using the naive B2:B3 ratio. This targets the main
+     dataset ambiguity: B2 and B3 visual confusion changes class labels more
+     often than total bunch count.
 
-Mengapa lebih baik dari hybrid_vis_corr?
-- hybrid_vis_corr (86.04%) hanya merata-rata dua estimator tanpa peduli
-  profil pohon. selector_with_b2b3 memilih estimator yang paling cocok
-  per regime, lalu mengoreksi kesalahan kelas B2/B3 pasca-prediksi.
-- Improvement: +0.63 pp Acc±1 dan -2.32% MAE absolut.
+This is fully deterministic: no training, embeddings, or gradient optimization.
+The BASE_FACTORS constants come from median naive/GT ratios on a 228-tree
+development snapshot; no parameters are fitted on validation or test splits.
 
-Constraint: 100% deterministik, tanpa training, tanpa embedding, tanpa
-gradient. Semua parameter berasal dari median rasio naive/GT pada
-228 pohon (BASE_FACTORS) — tidak ada parameter yang di-fit pada split
-val atau test.
+Input detections must contain:
+  - "class": "B1", "B2", "B3", or "B4"
+  - "x_norm": normalized YOLO box center x, 0..1
+  - "y_norm": normalized YOLO box center y, retained for interface symmetry
+  - "side_index": image side index, 0..7
 
-Input
------
-detections : list[dict]
-    Tiap elemen wajib punya field:
-      - "class"      : str  → "B1"/"B2"/"B3"/"B4"
-      - "x_norm"     : float (pusat bbox YOLO, 0..1)
-      - "y_norm"     : float (tidak dipakai langsung di sini, dijaga konsisten)
-      - "side_index" : int  (urutan sisi foto, 0..7)
-
-Output
-------
-dict[str, int]
-    Count unik per kelas: {"B1": int, "B2": int, "B3": int, "B4": int}.
+Returns a unique per-class count dict: {"B1": int, "B2": int, "B3": int, "B4": int}.
 """
 
 from __future__ import annotations
@@ -60,23 +41,23 @@ import numpy as np
 
 NAMES = ["B1", "B2", "B3", "B4"]
 
-# Median rasio naive/GT per kelas, dihitung dari 228 pohon JSON (snapshot
-# 22 April 2026). Dipakai sebagai pembagi dasar untuk adaptive_corrected.
+# Median naive/GT ratio per class, computed from a 228-tree JSON snapshot
+# from 2026-04-22. Used as the base divisor for adaptive_corrected.
 BASE_FACTORS = {"B1": 1.986, "B2": 1.786, "B3": 1.795, "B4": 1.655}
 
 
 # ---------------------------------------------------------------------------
-# Estimator dasar
+# Base estimators
 # ---------------------------------------------------------------------------
 
 def naive_count(dets: list) -> dict:
-    """Jumlah deteksi mentah per kelas (tanpa dedup)."""
+    """Raw per-class detection count before deduplication."""
     n = Counter(d["class"] for d in dets)
     return {c: int(n.get(c, 0)) for c in NAMES}
 
 
 def adaptive_corrected(dets: list) -> dict:
-    """Pembagi adaptif: dup-rate menurun saat pohon padat."""
+    """Adaptive divisor: the duplicate rate decreases as trees get denser."""
     n_total = len(dets)
     dup_rate = float(np.clip(2.05 - 0.014 * n_total, 1.45, 2.10))
     scale = dup_rate / 1.79
@@ -86,9 +67,9 @@ def adaptive_corrected(dets: list) -> dict:
 
 def visibility_count(dets: list, alpha: float = 1.0, sigma: float = 0.3) -> dict:
     """
-    Pembobotan Gauss berdasarkan jarak deteksi dari pusat frame.
-    Tandan di tengah (x_norm ≈ 0.5) → bobot ~ 1 (pasti unik).
-    Tandan di tepi → bobot menurun (kemungkinan terlihat dari sisi sebelah).
+    Gaussian-like weighting by horizontal distance from the frame center.
+    Center detections (x_norm ~= 0.5) get higher unique-count weight; edge
+    detections get lower weight because they may also appear in adjacent views.
     """
     out = {}
     for c in NAMES:
@@ -106,8 +87,8 @@ def visibility_count(dets: list, alpha: float = 1.0, sigma: float = 0.3) -> dict
 
 def side_coverage(dets: list) -> dict:
     """
-    Lantai fisik berdasarkan deteksi maksimum per-sisi: jumlah unik tidak
-    boleh kurang dari max_per_side, dan tidak boleh melebihi naive.
+    Physical floor from the maximum count on any single side: the unique count
+    cannot be below max_per_side and cannot exceed the naive count.
     """
     vis = visibility_count(dets)
     n = naive_count(dets)
@@ -128,11 +109,11 @@ def _max_per_side(dets: list, c: str) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Estimator turunan (dipakai oleh selector trifurkasi)
+# Derived estimators used by the three-way selector
 # ---------------------------------------------------------------------------
 
 def geometric_mean_blend(dets: list) -> dict:
-    """sqrt(visibility × adaptive_corrected) per kelas, dengan lantai max_per_side."""
+    """sqrt(visibility * adaptive_corrected) per class, with max_per_side floor."""
     v = visibility_count(dets)
     c = adaptive_corrected(dets)
     out = {}
@@ -145,7 +126,7 @@ def geometric_mean_blend(dets: list) -> dict:
 
 
 def median3_floor(dets: list) -> dict:
-    """Median dari {visibility, adaptive, side_coverage} per kelas."""
+    """Per-class median of {visibility, adaptive, side_coverage}."""
     a = visibility_count(dets)
     b = adaptive_corrected(dets)
     s = side_coverage(dets)
@@ -154,15 +135,15 @@ def median3_floor(dets: list) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Selector trifurkasi
+# Three-way selector
 # ---------------------------------------------------------------------------
 
 def selector_iter9_trifurc(dets: list) -> dict:
     """
-    Pilih estimator dasar berdasarkan profil pohon:
-      - dense + B3-dominan         → median3_floor
-      - B1 cukup, B3 sedikit, B4 sedikit → adaptive_corrected
-      - default                    → geometric_mean_blend
+    Choose a base estimator from the tree detection profile:
+      - dense and B3-dominated: median3_floor
+      - B1-rich with limited B3/B4 dominance: adaptive_corrected
+      - default: geometric_mean_blend
     """
     n_total = len(dets)
     if n_total == 0:
@@ -179,30 +160,29 @@ def selector_iter9_trifurc(dets: list) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Algoritma final: selector + koreksi split B2↔B3
+# Final algorithm: selector + B2/B3 split correction
 # ---------------------------------------------------------------------------
 
 def predict(detections: list) -> dict:
     """
-    Hitung count unik per kelas dengan selector_with_b2b3.
+    Estimate unique per-class counts with selector_with_b2b3.
 
-    Tahap:
-      1. selector_iter9_trifurc → dapat (B1, B2, B3, B4) awal.
-      2. Pertahankan total joint = B2 + B3, tetapi alokasikan ulang B2:B3
-         menggunakan rasio naive di kedua kelas tersebut.
-      3. Pasang lantai max_per_side untuk B2 dan B3 (jumlah unik minimum
-         tidak mungkin kurang dari deteksi maksimum di salah satu sisi).
+    Steps:
+      1. Run selector_iter9_trifurc for an initial B1/B2/B3/B4 prediction.
+      2. Preserve joint total B2+B3, then reallocate B2:B3 using the naive
+         detection ratio between those classes.
+      3. Apply max_per_side floors for B2 and B3.
 
     Parameters
     ----------
     detections : list[dict]
-        Daftar bounding box dari semua sisi pohon. Wajib field
-        "class", "x_norm", "side_index".
+        Bounding boxes from all tree sides. Required fields:
+        "class", "x_norm", and "side_index".
 
     Returns
     -------
     dict[str, int]
-        Count unik per kelas {"B1", "B2", "B3", "B4"}.
+        Unique per-class count for {"B1", "B2", "B3", "B4"}.
     """
     pred = selector_iter9_trifurc(detections)
 

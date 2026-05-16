@@ -1,12 +1,11 @@
 """
-Algoritma: geometric_mean_blend
-Generasi: iter4–iter9 (eksperimen 10 Mei 2026)
+Algorithm: geometric_mean_blend.
 
-Estimator dasar yang mengambil rata-rata geometri antara
-visibility_count dan adaptive_corrected, dengan floor per kelas
-berdasarkan max_per_side.
+Base estimator that takes the geometric mean of visibility_count and
+adaptive_corrected, then applies a per-class max_per_side floor.
 
-Benchmark 953 pohon: Acc ±1 = 86.15%, MAE = 0.3961, n_fail = 132.
+Canonical benchmark: 953 trees, Acc±1 = 86.99%, MAE = 0.3767,
+n_fail = 124. See benchmarks/results/accuracy_953.csv.
 """
 
 from collections import Counter

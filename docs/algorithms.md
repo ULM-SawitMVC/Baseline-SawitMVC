@@ -105,8 +105,9 @@ better when one estimator produces a very high or very low value.
 
 ## Why Heuristics Beat End-to-End ML
 
-On this dataset, the heuristic M01 achieves 87.62% Acc±1 while the best end-to-end
-pipeline (YOLO26m → SVM) achieves only 71.6%. The gap is entirely explained by
+On this dataset, the heuristic M01 achieves 87.62% Acc±1 while the best canonical
+end-to-end pipeline (YOLO26s -> SVM) achieves 70.8% on the 95-tree manifest test
+split. The gap is entirely explained by
 **detector error propagation**:
 
 - ML counting on perfect (GT) detections achieves 96.1% Acc±1 (SVM on 13-dim features)

@@ -16,16 +16,16 @@ counting algorithm. Improving the detector is the highest-leverage path forward.
 |-------|:------:|
 | Perfect detections (GT) + SVM counter | **96.1%** |
 | Perfect detections (GT) + heuristic M01 | **87.6%** |
-| YOLO26m detections + SVM counter (best E2E) | 71.6% |
-| YOLO26n detections + M01 heuristic | ~68–72% |
+| YOLO26s detections + SVM counter (best E2E) | 70.8% |
+| YOLO26m detections + M01 heuristic | 69.2% |
 
-The 24-pp gap between GT-SVM (96.1%) and E2E-SVM (71.6%) is entirely due to
+The 25.3-pp gap between GT-SVM (96.1%) and best E2E-SVM (70.8%) is entirely due to
 YOLO detection errors (missed detections, wrong class labels, false positives)
 corrupting the feature vectors used by the counter.
 
-**All 15 E2E combinations** (5 detectors × 3 counting methods) land in a narrow
-64–72% Acc±1 range — confirming that counting method choice barely matters once
-detector quality is fixed.
+**All 12 canonical E2E combinations** (3 detectors × 4 counters) land in a narrow
+64–71% Acc±1 range on the 95-tree `split_manifest.csv` test split — confirming
+that detector quality dominates once the counter family is fixed.
 
 ---
 
@@ -70,15 +70,15 @@ No single estimator is optimal across all profiles.
 
 ---
 
-## Finding 4: COCO Pretraining Is Not Required for This Domain
+## Finding 4: COCO Pretraining Is Not Always Required for This Domain
 
-**Summary:** Training YOLO26s from scratch (random initialization) achieves mAP50=0.511,
-which **exceeds** the COCO-pretrained vanilla YOLO26s (mAP50=0.506).
+**Summary:** Earlier ablations found YOLO26s from scratch can reach mAP50=0.511,
+matching the public y26s result.
 
 **Explanation:** Oil palm bunch images are close-up agricultural photographs — very
 different from the COCO distribution. COCO weights do not transfer meaningful low-level
-features for this task. The scratch model converges at epoch 57 (vs epoch 21 for
-pretrained), but reaches a slightly higher final mAP50.
+features for this task. Scratch training generally converges more slowly, but can
+still reach competitive final mAP50.
 
 **Practical implication:** When retraining on a new plantation dataset, starting from
 scratch is a valid choice and may produce better domain-specific representations.
@@ -88,11 +88,11 @@ scratch is a valid choice and may produce better domain-specific representations
 ## Finding 5: Augmentation Is Essential
 
 **Summary:** Disabling augmentation causes catastrophic overfitting and drops mAP50
-by 0.056 (from 0.506 to 0.465). The model overfits by epoch 6.
+substantially. The model overfits by epoch 6 in the archived ablation.
 
 **Evidence:**
 - `y26s`: mAP50=0.465, early stop at epoch 6 (overfitting from epoch 1)
-- `y26s_vanilla`: mAP50=0.506, stable convergence to epoch 21
+- Public `y26s`: mAP50=0.511 with standard augmentation
 
 With only ~3,200 training images, the model cannot learn generalizable features
 without augmentation. Default Ultralytics augmentation (HSV, flip, translate, scale,
@@ -122,7 +122,7 @@ visibility weights) is more robust.
 
 ### High priority (high expected impact)
 
-1. **Better detection backbone** — The 24-pp gap between GT and E2E performance
+1. **Better detection backbone** — The 25-pp gap between GT and E2E performance
    makes the detector the primary target. Potential approaches:
    - Multi-scale fusion (FPN) specialized for close-up agricultural imagery
    - Self-supervised pretraining on unlabeled oil palm images

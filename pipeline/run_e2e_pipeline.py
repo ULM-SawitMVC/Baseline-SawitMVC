@@ -18,7 +18,7 @@ Usage:
     python pipeline/run_e2e_pipeline.py --name y26n --weights models/y26n.pt --data ./SawitMVC-YOLO/
 """
 from __future__ import annotations
-import argparse, json, re, sys
+import argparse, csv, json, re, sys
 from pathlib import Path
 from collections import defaultdict
 import numpy as np
@@ -37,25 +37,39 @@ CLASS_MAP = {0: "B1", 1: "B2", 2: "B3", 3: "B4"}
 # ---------------------------------------------------------------------------
 
 def _load_splits(data_dir: Path) -> dict[str, str]:
+    """Load canonical per-tree splits from split_manifest.csv."""
+    manifest = data_dir / "split_manifest.csv"
     splits: dict[str, str] = {}
+    if manifest.exists():
+        with open(manifest, encoding="utf-8-sig", newline="") as f:
+            for row in csv.DictReader(f):
+                tid = row.get("tree_id", "")
+                sp = row.get("new_split") or row.get("split", "train")
+                if tid:
+                    splits[tid] = sp
+        return splits
+
+    # Fallback for incomplete local dataset copies: infer a tree split from image lists.
     for sp in ("train", "val", "test"):
         list_file = data_dir / f"{sp}.txt"
         if not list_file.exists():
             continue
         for line in list_file.read_text(encoding="utf-8").splitlines():
             fname = Path(line.strip()).name
-            if fname:
-                splits[fname] = sp
+            m = re.match(r"^(.+)_(\d+)\.jpg$", fname)
+            if m:
+                splits.setdefault(m.group(1), sp)
     return splits
 
 
-def _load_gt(gt_dir: Path) -> dict[str, dict]:
+def _load_gt(gt_dir: Path, splits_map: dict[str, str] | None = None) -> dict[str, dict]:
+    splits_map = splits_map or {}
     gt: dict = {}
     for fp in sorted(gt_dir.glob("*.json")):
         d = json.loads(fp.read_text(encoding="utf-8-sig"))
         tid = d.get("tree_id") or d.get("tree_name") or fp.stem
         by_class = d.get("summary", {}).get("by_class", {})
-        split = d.get("split", "train")
+        split = splits_map.get(tid, d.get("split", "train"))
         gt[tid] = {"gt": {c: int(by_class.get(c, 0)) for c in CLASSES}, "split": split}
     return gt
 
@@ -67,7 +81,7 @@ def _group_by_tree(data_dir: Path, split_map: dict) -> dict:
         if not m:
             continue
         tree_id, side_num = m.group(1), int(m.group(2))
-        trees[tree_id].append((split_map.get(img_path.name, "unknown"), side_num - 1, img_path))
+        trees[tree_id].append((split_map.get(tree_id, "unknown"), side_num - 1, img_path))
     for tid in trees:
         trees[tid].sort(key=lambda x: x[1])
     return dict(trees)
@@ -97,7 +111,7 @@ def _compute_metrics(rows: list[dict], split: str) -> dict:
     sub = [r for r in rows if r["split"] == split]
     if not sub:
         return {}
-    m: dict = {}
+    m: dict = {"n_trees": len(sub)}
     for c in CLASSES:
         errs = [abs(r[f"pred_{c}"] - r[f"gt_{c}"]) for r in sub]
         m[f"MAE_{c}"] = float(np.mean(errs))
@@ -157,9 +171,10 @@ def step_inference(name: str, weights: Path, data_dir: Path, infer_dir: Path, co
 # Step 2+3: Count with M01 heuristic
 # ---------------------------------------------------------------------------
 
-def step_m01(name: str, infer_dir: Path, gt_dir: Path, out_dir: Path) -> None:
+def step_m01(name: str, infer_dir: Path, gt_dir: Path, data_dir: Path, out_dir: Path) -> None:
     from algorithms.M01_selector_b2b3 import predict
-    gt_map = _load_gt(gt_dir)
+    splits_map = _load_splits(data_dir)
+    gt_map = _load_gt(gt_dir, splits_map)
     rows = []
     for fp in sorted(infer_dir.glob("*.json")):
         d = json.loads(fp.read_text(encoding="utf-8-sig"))
@@ -187,9 +202,9 @@ def step_m01(name: str, infer_dir: Path, gt_dir: Path, out_dir: Path) -> None:
 # Step 2+3: Count with SVM / RF
 # ---------------------------------------------------------------------------
 
-def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, out_dir: Path) -> None:
+def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, data_dir: Path, out_dir: Path) -> None:
     from build_counting_features import load_dataset, FEATURE_NAMES
-    X, y, tree_ids, tree_splits = load_dataset(infer_dir, gt_dir)
+    X, y, tree_ids, tree_splits = load_dataset(infer_dir, gt_dir, data_dir)
     splits = np.array(tree_splits)
     train_m, val_m, test_m = splits == "train", splits == "val", splits == "test"
     X_tr, y_tr = X[train_m], y[train_m]
@@ -225,10 +240,10 @@ def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, out_dir: Pat
         predict_fn = rf.predict
         extra = {}
 
-    def _metrics(X_sub, y_sub, ids_sub):
+    def _metrics(X_sub, y_sub, ids_sub, split_label: str):
         yp = np.clip(np.round(predict_fn(X_sub)), 0, None).astype(int)
         yt = y_sub.astype(int)
-        m: dict = {}
+        m: dict = {"n_trees": int(len(ids_sub))}
         for j, c in enumerate(CLASSES):
             err = np.abs(yp[:, j] - yt[:, j])
             m[f"MAE_{c}"] = float(np.mean(err))
@@ -240,19 +255,20 @@ def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, out_dir: Pat
         m["total_count_mae"] = float(np.mean(te))
         m["total_pm1_acc"] = float(np.mean(te <= 1))
         m["exact_profile_acc"] = float(np.mean(np.all(yp == yt, axis=1)))
-        df = pd.DataFrame([dict(tree_id=tid, **{f"pred_{c}": yp[i, j] for j, c in enumerate(CLASSES)},
+        df = pd.DataFrame([dict(tree_id=tid, split=split_label,
+                                **{f"pred_{c}": yp[i, j] for j, c in enumerate(CLASSES)},
                                 **{f"gt_{c}": yt[i, j] for j, c in enumerate(CLASSES)})
                            for i, tid in enumerate(ids_sub)])
         return {**m, **extra}, df
 
-    m_te, df_te = _metrics(X_te, y_te, ids_te)
+    m_te, df_te = _metrics(X_te, y_te, ids_te, "test")
     m_te["split"] = "test"
-    m_val, _ = _metrics(X_val, y_val, ids_val)
+    m_val, df_val = _metrics(X_val, y_val, ids_val, "val")
     m_val["split"] = "val"
 
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "metrics.json").write_text(json.dumps({"test": m_te, "val": m_val}, indent=2))
-    df_te.to_csv(out_dir / "predictions.csv", index=False)
+    pd.concat([df_te, df_val], ignore_index=True).to_csv(out_dir / "predictions.csv", index=False)
     if counter == "rf":
         fi = pd.DataFrame({"feature": FEATURE_NAMES, "importance": rf.feature_importances_}).sort_values("importance", ascending=False)
         fi.to_csv(out_dir / "feature_importance.csv", index=False)
@@ -293,13 +309,13 @@ def main() -> None:
     # Steps 2+3: Count
     print(f"\n[Steps 2-3] Counting with: {args.counters}")
     if "m01" in args.counters:
-        step_m01(args.name, infer_dir, gt_dir, e2e_base / f"e2e_{args.name}_m01")
+        step_m01(args.name, infer_dir, gt_dir, args.data, e2e_base / f"e2e_{args.name}_m01")
     if "svm" in args.counters:
-        step_ml(args.name, "svm", infer_dir, gt_dir, e2e_base / f"e2e_{args.name}_svm")
+        step_ml(args.name, "svm", infer_dir, gt_dir, args.data, e2e_base / f"e2e_{args.name}_svm")
     if "lr" in args.counters:
-        step_ml(args.name, "lr",  infer_dir, gt_dir, e2e_base / f"e2e_{args.name}_lr")
+        step_ml(args.name, "lr",  infer_dir, gt_dir, args.data, e2e_base / f"e2e_{args.name}_lr")
     if "rf" in args.counters:
-        step_ml(args.name, "rf",  infer_dir, gt_dir, e2e_base / f"e2e_{args.name}_rf")
+        step_ml(args.name, "rf",  infer_dir, gt_dir, args.data, e2e_base / f"e2e_{args.name}_rf")
 
     print(f"\nDone. Results in {e2e_base}/")
 

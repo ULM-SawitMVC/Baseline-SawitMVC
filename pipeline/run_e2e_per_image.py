@@ -78,7 +78,7 @@ def _compute_metrics(rows: list[dict], split: str) -> dict:
     sub = [r for r in rows if r["split"] == split]
     if not sub:
         return {}
-    m: dict = {}
+    m: dict = {"n_trees": len(sub)}
     for c in CLASSES:
         errs = [abs(r[f"pred_{c}"] - r[f"gt_{c}"]) for r in sub]
         m[f"MAE_{c}"] = float(np.mean(errs))
@@ -112,7 +112,7 @@ def _save_results(rows: list[dict], out_dir: Path, name: str, counter: str) -> N
 def derive_per_image_from_per_tree(per_tree_dir: Path, per_image_dir: Path, detector: str) -> int:
     """Split per-tree JSONs into per-image JSONs (one JSON per image side).
 
-    Per-tree format: images keyed as 'sisi_N' with list of annotations.
+    Per-tree format: images keyed by side label with a list of annotations.
     Per-image output: {image, detector, detections, count_per_class}
     """
     per_image_dir.mkdir(parents=True, exist_ok=True)
@@ -121,7 +121,7 @@ def derive_per_image_from_per_tree(per_tree_dir: Path, per_image_dir: Path, dete
         d = json.loads(fp.read_text(encoding="utf-8-sig"))
         tree_id = d.get("tree_name") or d.get("tree_id") or fp.stem
         for side_key, side_data in d.get("images", {}).items():
-            # parse side number from key (e.g. 'sisi_1' → 1, 'side_2' → 2)
+            # Parse side number from keys such as "side_1" or legacy localized labels.
             m = re.search(r"(\d+)$", side_key)
             if not m:
                 continue

@@ -1,15 +1,15 @@
 """
-Algoritma: selector_iter9_trifurc
-Generasi: iter9 (eksperimen 10 Mei 2026)
+Algorithm: selector_iter9_trifurc.
 
-Selector trifurkasi yang memilih estimator dasar berdasarkan
-profil deteksi pohon:
-  1. Pohon padat B3-dominan (b3frac >= 0.60, n_total >= 25) → median3_floor
-  2. Pohon dengan B1 cukup, B3 tidak dominan, B4 sedikit
-     (naive_B1 >= 3, b3frac < 0.45, naive_B4 < 10) → adaptive_corrected
-  3. Selainnya → geometric_mean_blend
+Three-way selector that chooses a base estimator from the tree detection
+profile:
+  1. Dense, B3-dominated trees (b3frac >= 0.60, n_total >= 25): median3_floor
+  2. B1-rich trees with limited B3/B4 dominance
+     (naive_B1 >= 3, b3frac < 0.45, naive_B4 < 10): adaptive_corrected
+  3. All other trees: geometric_mean_blend
 
-Benchmark 953 pohon: Acc ±1 = 86.67%, MAE = 0.3987, n_fail = 127.
+Canonical benchmark: 953 trees, Acc±1 = 87.62%, MAE = 0.3757,
+n_fail = 118. See benchmarks/results/accuracy_953.csv.
 """
 
 from collections import Counter

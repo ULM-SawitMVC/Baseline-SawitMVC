@@ -87,24 +87,24 @@ Sorted by Acc±1. **4 counters × 3 detectors = 12 combinations.**
 
 | Rank | Detector | Counter | Acc ±1 ↑ | MAE ↓ | B1 | B2 | B3 | B4 |
 |:----:|----------|---------|:--------:|:-----:|:--:|:--:|:--:|:--:|
-| 🥇 1 | y26n | **M01** | **74.4%** | 1.095 | 95.2% | 78.3% | 54.8% | 69.3% |
-| 2 | y26m | M01 | 71.8% | 1.175 | 94.0% | 72.9% | 57.2% | 63.3% |
-| 3 | y26s | M01 | 70.9% | 1.224 | 94.0% | 75.9% | 51.8% | 62.0% |
-| 4 | y26s | SVM | 70.8% | 1.147 | 93.7% | 66.3% | 53.7% | 69.5% |
-| 5 | y26n | SVM | 68.9% | 1.168 | 91.6% | 68.4% | 54.7% | 61.1% |
-| 5 | y26m | SVM | 68.9% | 1.168 | 93.7% | 70.5% | 50.5% | 61.1% |
-| 7 | y26s | LR | 68.7% | 1.161 | 92.6% | 67.4% | 54.7% | 60.0% |
-| 8 | y26n | LR | 68.2% | 1.171 | 92.6% | 72.6% | 53.7% | 53.7% |
-| 9 | y26m | LR | 67.9% | 1.174 | 92.6% | 70.5% | 51.6% | 56.8% |
-| 10 | y26n | RF | 66.8% | 1.184 | 91.6% | 68.4% | 49.5% | 57.9% |
-| 10 | y26m | RF | 66.8% | 1.216 | 90.5% | 64.2% | 54.7% | 57.9% |
-| 12 | y26s | RF | 64.2% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
+| 🥇 1 | y26s | **SVM** | **70.8%** | 1.147 | 93.7% | 66.3% | 53.7% | 69.5% |
+| 2 | y26m | M01 | 69.2% | 1.295 | 91.6% | 69.5% | 48.4% | 67.4% |
+| 3 | y26n | SVM | 68.9% | 1.168 | 91.6% | 68.4% | 54.7% | 61.1% |
+| 4 | y26m | SVM | 68.9% | 1.168 | 93.7% | 70.5% | 50.5% | 61.1% |
+| 5 | y26s | LR | 68.7% | 1.161 | 92.6% | 67.4% | 54.7% | 60.0% |
+| 6 | y26n | LR | 68.2% | 1.171 | 92.6% | 72.6% | 53.7% | 53.7% |
+| 7 | y26m | LR | 67.9% | 1.174 | 92.6% | 70.5% | 51.6% | 56.8% |
+| 8 | y26m | RF | 66.8% | 1.216 | 90.5% | 64.2% | 54.7% | 57.9% |
+| 9 | y26n | RF | 66.8% | 1.184 | 91.6% | 68.4% | 49.5% | 57.9% |
+| 10 | y26s | M01 | 64.2% | 1.313 | 89.5% | 55.8% | 49.5% | 62.1% |
+| 11 | y26s | RF | 64.2% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
+| 12 | y26n | M01 | 63.9% | 1.342 | 89.5% | 64.2% | 43.2% | 58.9% |
 | — | **M01 on GT** (upper bound) | — | **87.6%** | **0.375** | — | — | — | — |
 
 > Full analysis in [`docs/e2e_pipeline.md`](docs/e2e_pipeline.md).
 > All `metrics.json` files in [`benchmarks/e2e/`](benchmarks/e2e/).
 
-The ~13 pp gap between best E2E (74.4%) and heuristic-on-GT represents **detector error
+The ~17 pp gap between best E2E (70.8%) and heuristic-on-GT represents **detector error
 propagation** — improving the detector is the highest-leverage path. See [`docs/findings.md`](docs/findings.md).
 
 ---
@@ -119,6 +119,11 @@ pip install -r requirements.txt
 
 ### 2. Download the dataset
 
+The dataset is external and is not included in this repository. The precomputed
+prediction JSONs are included under `predictions/`, but the ground-truth JSONs from
+`SawitMVC-YOLO/json/` are still required to re-run benchmarks or E2E evaluation.
+Hugging Face access may require an approved account token for this dataset.
+
 ```python
 from huggingface_hub import snapshot_download
 
@@ -126,6 +131,7 @@ snapshot_download(
     repo_id="ULM-DS-Lab/SawitMVC-YOLO",
     repo_type="dataset",
     local_dir="./SawitMVC-YOLO",
+    token=True,  # uses your logged-in Hugging Face token when access is gated
 )
 ```
 
@@ -233,7 +239,7 @@ Baseline-SawitMVC/
 ├── figures/                     All visualizations
 │   ├── README.md                Figure index and descriptions
 │   ├── eda/                     23 EDA plots (dataset characteristics)
-│   └── training/                YOLO training artifacts (5 models × 7 plots)
+│   └── training/                YOLO training artifacts
 │
 └── docs/                        In-depth documentation
     ├── dataset.md               Dataset structure, classes, GT quality
