@@ -4,7 +4,7 @@ Algorithm: floor_clamped_hybrid.
 Weighted visibility/adaptive blend with a per-class max_per_side floor.
 
 Canonical benchmark: 953 trees, Acc±1 = 86.99%, MAE = 0.3848,
-n_fail = 124. See benchmarks/results/accuracy_953.csv.
+n_fail = 124. See results/heuristics_953/accuracy_full.csv.
 """
 
 from collections import Counter

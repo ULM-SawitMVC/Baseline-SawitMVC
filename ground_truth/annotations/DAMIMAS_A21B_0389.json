@@ -1,0 +1,998 @@
+﻿{
+  "version": 4,
+  "tree_id": "DAMIMAS_A21B_0389",
+  "tree_name": "DAMIMAS_A21B_0389",
+  "split": "train",
+  "metadata": {
+    "date": "2026-05-09",
+    "session_id": "20260509-DAMIMAS-389",
+    "number": 389,
+    "generated_at": "2026-05-09T13:53:57.661Z",
+    "variety": "DAMIMAS"
+  },
+  "images": {
+    "side_1": {
+      "filename": "DAMIMAS_A21B_0389_1.jpg",
+      "label_file": "DAMIMAS_A21B_0389_1.txt",
+      "side_index": 0,
+      "side_label": "Side 1",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 7,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 1,
+          "class_name": "B2",
+          "bbox_yolo": [
+            0.351042,
+            0.4375,
+            0.077083,
+            0.070313
+          ],
+          "bbox_pixel": [
+            300,
+            515,
+            374,
+            605
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.343229,
+            0.388672,
+            0.044792,
+            0.033594
+          ],
+          "bbox_pixel": [
+            308,
+            476,
+            351,
+            519
+          ]
+        },
+        {
+          "box_index": 2,
+          "class_id": 3,
+          "class_name": "B4",
+          "bbox_yolo": [
+            0.439063,
+            0.340234,
+            0.048958,
+            0.071094
+          ],
+          "bbox_pixel": [
+            398,
+            390,
+            445,
+            481
+          ]
+        },
+        {
+          "box_index": 3,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.447917,
+            0.40625,
+            0.06875,
+            0.057813
+          ],
+          "bbox_pixel": [
+            397,
+            483,
+            463,
+            557
+          ]
+        },
+        {
+          "box_index": 4,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.558854,
+            0.36875,
+            0.076042,
+            0.073438
+          ],
+          "bbox_pixel": [
+            500,
+            425,
+            573,
+            519
+          ]
+        },
+        {
+          "box_index": 5,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.621875,
+            0.414063,
+            0.072917,
+            0.057813
+          ],
+          "bbox_pixel": [
+            562,
+            493,
+            632,
+            567
+          ]
+        },
+        {
+          "box_index": 6,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.670833,
+            0.380078,
+            0.04375,
+            0.046094
+          ],
+          "bbox_pixel": [
+            623,
+            457,
+            665,
+            516
+          ]
+        }
+      ]
+    },
+    "side_2": {
+      "filename": "DAMIMAS_A21B_0389_2.jpg",
+      "label_file": "DAMIMAS_A21B_0389_2.txt",
+      "side_index": 1,
+      "side_label": "Side 2",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 7,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 1,
+          "class_name": "B2",
+          "bbox_yolo": [
+            0.600521,
+            0.428516,
+            0.044792,
+            0.047656
+          ],
+          "bbox_pixel": [
+            555,
+            518,
+            598,
+            579
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.380729,
+            0.439063,
+            0.063542,
+            0.051562
+          ],
+          "bbox_pixel": [
+            335,
+            529,
+            396,
+            595
+          ]
+        },
+        {
+          "box_index": 2,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.316667,
+            0.408984,
+            0.066667,
+            0.066406
+          ],
+          "bbox_pixel": [
+            272,
+            481,
+            336,
+            566
+          ]
+        },
+        {
+          "box_index": 3,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.457292,
+            0.432422,
+            0.091667,
+            0.075781
+          ],
+          "bbox_pixel": [
+            395,
+            505,
+            483,
+            602
+          ]
+        },
+        {
+          "box_index": 4,
+          "class_id": 3,
+          "class_name": "B4",
+          "bbox_yolo": [
+            0.416667,
+            0.368359,
+            0.075,
+            0.052344
+          ],
+          "bbox_pixel": [
+            364,
+            438,
+            436,
+            505
+          ]
+        },
+        {
+          "box_index": 5,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.538021,
+            0.3875,
+            0.080208,
+            0.073438
+          ],
+          "bbox_pixel": [
+            478,
+            449,
+            555,
+            543
+          ]
+        },
+        {
+          "box_index": 6,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.63125,
+            0.394531,
+            0.054167,
+            0.046875
+          ],
+          "bbox_pixel": [
+            580,
+            475,
+            632,
+            535
+          ]
+        }
+      ]
+    },
+    "side_3": {
+      "filename": "DAMIMAS_A21B_0389_3.jpg",
+      "label_file": "DAMIMAS_A21B_0389_3.txt",
+      "side_index": 2,
+      "side_label": "Side 3",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 4,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 3,
+          "class_name": "B4",
+          "bbox_yolo": [
+            0.640104,
+            0.348047,
+            0.078125,
+            0.055469
+          ],
+          "bbox_pixel": [
+            577,
+            410,
+            652,
+            481
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.508333,
+            0.377344,
+            0.114583,
+            0.06875
+          ],
+          "bbox_pixel": [
+            433,
+            439,
+            543,
+            527
+          ]
+        },
+        {
+          "box_index": 2,
+          "class_id": 1,
+          "class_name": "B2",
+          "bbox_yolo": [
+            0.3875,
+            0.439453,
+            0.10625,
+            0.083594
+          ],
+          "bbox_pixel": [
+            321,
+            509,
+            423,
+            616
+          ]
+        },
+        {
+          "box_index": 3,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.386458,
+            0.367969,
+            0.064583,
+            0.05
+          ],
+          "bbox_pixel": [
+            340,
+            439,
+            402,
+            503
+          ]
+        }
+      ]
+    },
+    "side_4": {
+      "filename": "DAMIMAS_A21B_0389_4.jpg",
+      "label_file": "DAMIMAS_A21B_0389_4.txt",
+      "side_index": 3,
+      "side_label": "Side 4",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 7,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 1,
+          "class_name": "B2",
+          "bbox_yolo": [
+            0.346875,
+            0.385937,
+            0.054167,
+            0.026562
+          ],
+          "bbox_pixel": [
+            307,
+            477,
+            359,
+            511
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.340104,
+            0.347656,
+            0.063542,
+            0.048438
+          ],
+          "bbox_pixel": [
+            296,
+            414,
+            357,
+            476
+          ]
+        },
+        {
+          "box_index": 2,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.376042,
+            0.430859,
+            0.06875,
+            0.071094
+          ],
+          "bbox_pixel": [
+            328,
+            506,
+            394,
+            597
+          ]
+        },
+        {
+          "box_index": 3,
+          "class_id": 3,
+          "class_name": "B4",
+          "bbox_yolo": [
+            0.538542,
+            0.335547,
+            0.083333,
+            0.042969
+          ],
+          "bbox_pixel": [
+            477,
+            402,
+            557,
+            457
+          ]
+        },
+        {
+          "box_index": 4,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.451042,
+            0.36875,
+            0.075,
+            0.060937
+          ],
+          "bbox_pixel": [
+            397,
+            433,
+            469,
+            511
+          ]
+        },
+        {
+          "box_index": 5,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.577083,
+            0.412109,
+            0.089583,
+            0.057031
+          ],
+          "bbox_pixel": [
+            511,
+            491,
+            597,
+            564
+          ]
+        },
+        {
+          "box_index": 6,
+          "class_id": 1,
+          "class_name": "B2",
+          "bbox_yolo": [
+            0.659375,
+            0.414063,
+            0.0875,
+            0.053125
+          ],
+          "bbox_pixel": [
+            591,
+            496,
+            675,
+            564
+          ]
+        }
+      ]
+    }
+  },
+  "bunches": [
+    {
+      "bunch_id": 1,
+      "class": "B2",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 0,
+          "class_name": "B2",
+          "bbox_pixel": [
+            300,
+            515,
+            374,
+            605
+          ]
+        },
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 0,
+          "class_name": "B2",
+          "bbox_pixel": [
+            555,
+            518,
+            598,
+            579
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 2,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            308,
+            476,
+            351,
+            519
+          ]
+        },
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 6,
+          "class_name": "B3",
+          "bbox_pixel": [
+            580,
+            475,
+            632,
+            535
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 3,
+      "class": "B4",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 2,
+          "class_name": "B4",
+          "bbox_pixel": [
+            398,
+            390,
+            445,
+            481
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 4,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 3,
+          "class_name": "B3",
+          "bbox_pixel": [
+            397,
+            483,
+            463,
+            557
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 5,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 4,
+          "class_name": "B3",
+          "bbox_pixel": [
+            500,
+            425,
+            573,
+            519
+          ]
+        },
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            296,
+            414,
+            357,
+            476
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 6,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 5,
+          "class_name": "B3",
+          "bbox_pixel": [
+            562,
+            493,
+            632,
+            567
+          ]
+        },
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 2,
+          "class_name": "B3",
+          "bbox_pixel": [
+            328,
+            506,
+            394,
+            597
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 7,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 6,
+          "class_name": "B3",
+          "bbox_pixel": [
+            623,
+            457,
+            665,
+            516
+          ]
+        },
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 4,
+          "class_name": "B3",
+          "bbox_pixel": [
+            397,
+            433,
+            469,
+            511
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 8,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            335,
+            529,
+            396,
+            595
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 9,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 2,
+          "class_name": "B3",
+          "bbox_pixel": [
+            272,
+            481,
+            336,
+            566
+          ]
+        },
+        {
+          "side": "side_3",
+          "side_index": 2,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            433,
+            439,
+            543,
+            527
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 10,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 3,
+          "class_name": "B3",
+          "bbox_pixel": [
+            395,
+            505,
+            483,
+            602
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 11,
+      "class": "B4",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 4,
+          "class_name": "B4",
+          "bbox_pixel": [
+            364,
+            438,
+            436,
+            505
+          ]
+        },
+        {
+          "side": "side_3",
+          "side_index": 2,
+          "box_index": 0,
+          "class_name": "B4",
+          "bbox_pixel": [
+            577,
+            410,
+            652,
+            481
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 12,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 5,
+          "class_name": "B3",
+          "bbox_pixel": [
+            478,
+            449,
+            555,
+            543
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 13,
+      "class": "B2",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_3",
+          "side_index": 2,
+          "box_index": 2,
+          "class_name": "B2",
+          "bbox_pixel": [
+            321,
+            509,
+            423,
+            616
+          ]
+        },
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 6,
+          "class_name": "B2",
+          "bbox_pixel": [
+            591,
+            496,
+            675,
+            564
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 14,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_3",
+          "side_index": 2,
+          "box_index": 3,
+          "class_name": "B3",
+          "bbox_pixel": [
+            340,
+            439,
+            402,
+            503
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 15,
+      "class": "B2",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 0,
+          "class_name": "B2",
+          "bbox_pixel": [
+            307,
+            477,
+            359,
+            511
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 16,
+      "class": "B4",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 3,
+          "class_name": "B4",
+          "bbox_pixel": [
+            477,
+            402,
+            557,
+            457
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 17,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 1,
+      "appearances": [
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 5,
+          "class_name": "B3",
+          "bbox_pixel": [
+            511,
+            491,
+            597,
+            564
+          ]
+        }
+      ]
+    }
+  ],
+  "_confirmedLinks": [
+    {
+      "linkId": "lnk-0",
+      "sideA": 0,
+      "bboxIdA": "b1",
+      "sideB": 1,
+      "bboxIdB": "b6"
+    },
+    {
+      "linkId": "lnk-1",
+      "sideA": 0,
+      "bboxIdA": "b0",
+      "sideB": 1,
+      "bboxIdB": "b0"
+    },
+    {
+      "linkId": "lnk-2",
+      "sideA": 1,
+      "bboxIdA": "b4",
+      "sideB": 2,
+      "bboxIdB": "b0"
+    },
+    {
+      "linkId": "lnk-3",
+      "sideA": 1,
+      "bboxIdA": "b2",
+      "sideB": 2,
+      "bboxIdB": "b1"
+    },
+    {
+      "linkId": "lnk-4",
+      "sideA": 2,
+      "bboxIdA": "b2",
+      "sideB": 3,
+      "bboxIdB": "b6"
+    },
+    {
+      "linkId": "lnk-5",
+      "sideA": 3,
+      "bboxIdA": "b4",
+      "sideB": 0,
+      "bboxIdB": "b6"
+    },
+    {
+      "linkId": "lnk-6",
+      "sideA": 3,
+      "bboxIdA": "b2",
+      "sideB": 0,
+      "bboxIdB": "b5"
+    },
+    {
+      "linkId": "lnk-7",
+      "sideA": 3,
+      "bboxIdA": "b1",
+      "sideB": 0,
+      "bboxIdB": "b4"
+    }
+  ],
+  "summary": {
+    "total_unique_bunches": 17,
+    "total_detections": 25,
+    "duplicates_linked": 8,
+    "by_class": {
+      "B1": 0,
+      "B2": 3,
+      "B3": 11,
+      "B4": 3,
+      "other": 0
+    },
+    "by_side": {
+      "side_1": 7,
+      "side_2": 7,
+      "side_3": 4,
+      "side_4": 7
+    }
+  }
+}

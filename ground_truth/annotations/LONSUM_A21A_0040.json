@@ -1,0 +1,445 @@
+﻿{
+  "version": 4,
+  "tree_id": "LONSUM_A21A_0040",
+  "tree_name": "LONSUM_A21A_0040",
+  "split": "train",
+  "metadata": {
+    "date": "2026-05-09",
+    "session_id": "20260509-DAMIMAS-894",
+    "number": 894,
+    "generated_at": "2026-05-09T14:11:28.627Z",
+    "variety": "LONSUM"
+  },
+  "images": {
+    "side_1": {
+      "filename": "LONSUM_A21A_0040_1.jpg",
+      "label_file": "LONSUM_A21A_0040_1.txt",
+      "side_index": 0,
+      "side_label": "Side 1",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 3,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.335417,
+            0.274219,
+            0.104167,
+            0.110937
+          ],
+          "bbox_pixel": [
+            272,
+            280,
+            372,
+            422
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.516667,
+            0.21875,
+            0.129167,
+            0.095312
+          ],
+          "bbox_pixel": [
+            434,
+            219,
+            558,
+            341
+          ]
+        },
+        {
+          "box_index": 2,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.614583,
+            0.275,
+            0.08125,
+            0.054688
+          ],
+          "bbox_pixel": [
+            551,
+            317,
+            629,
+            387
+          ]
+        }
+      ]
+    },
+    "side_2": {
+      "filename": "LONSUM_A21A_0040_2.jpg",
+      "label_file": "LONSUM_A21A_0040_2.txt",
+      "side_index": 1,
+      "side_label": "Side 2",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 2,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.539583,
+            0.377344,
+            0.104167,
+            0.10625
+          ],
+          "bbox_pixel": [
+            468,
+            415,
+            568,
+            551
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.430729,
+            0.357031,
+            0.123958,
+            0.084375
+          ],
+          "bbox_pixel": [
+            354,
+            403,
+            473,
+            511
+          ]
+        }
+      ]
+    },
+    "side_3": {
+      "filename": "LONSUM_A21A_0040_3.jpg",
+      "label_file": "LONSUM_A21A_0040_3.txt",
+      "side_index": 2,
+      "side_label": "Side 3",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 2,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.417187,
+            0.295703,
+            0.121875,
+            0.096094
+          ],
+          "bbox_pixel": [
+            342,
+            317,
+            459,
+            440
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.64375,
+            0.371094,
+            0.079167,
+            0.076563
+          ],
+          "bbox_pixel": [
+            580,
+            426,
+            656,
+            524
+          ]
+        }
+      ]
+    },
+    "side_4": {
+      "filename": "LONSUM_A21A_0040_4.jpg",
+      "label_file": "LONSUM_A21A_0040_4.txt",
+      "side_index": 3,
+      "side_label": "Side 4",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 3,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.398438,
+            0.335156,
+            0.088542,
+            0.06875
+          ],
+          "bbox_pixel": [
+            340,
+            385,
+            425,
+            473
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.595313,
+            0.295703,
+            0.103125,
+            0.099219
+          ],
+          "bbox_pixel": [
+            522,
+            315,
+            621,
+            442
+          ]
+        },
+        {
+          "box_index": 2,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.615104,
+            0.387891,
+            0.053125,
+            0.052344
+          ],
+          "bbox_pixel": [
+            565,
+            463,
+            616,
+            530
+          ]
+        }
+      ]
+    }
+  },
+  "bunches": [
+    {
+      "bunch_id": 1,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 0,
+          "class_name": "B3",
+          "bbox_pixel": [
+            272,
+            280,
+            372,
+            422
+          ]
+        },
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 0,
+          "class_name": "B3",
+          "bbox_pixel": [
+            468,
+            415,
+            568,
+            551
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 2,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            434,
+            219,
+            558,
+            341
+          ]
+        },
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 0,
+          "class_name": "B3",
+          "bbox_pixel": [
+            340,
+            385,
+            425,
+            473
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 3,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 3,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 2,
+          "class_name": "B3",
+          "bbox_pixel": [
+            551,
+            317,
+            629,
+            387
+          ]
+        },
+        {
+          "side": "side_3",
+          "side_index": 2,
+          "box_index": 0,
+          "class_name": "B3",
+          "bbox_pixel": [
+            342,
+            317,
+            459,
+            440
+          ]
+        },
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            522,
+            315,
+            621,
+            442
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 4,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 3,
+      "appearances": [
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            354,
+            403,
+            473,
+            511
+          ]
+        },
+        {
+          "side": "side_3",
+          "side_index": 2,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            580,
+            426,
+            656,
+            524
+          ]
+        },
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 2,
+          "class_name": "B3",
+          "bbox_pixel": [
+            565,
+            463,
+            616,
+            530
+          ]
+        }
+      ]
+    }
+  ],
+  "_confirmedLinks": [
+    {
+      "linkId": "lnk-0",
+      "sideA": 0,
+      "bboxIdA": "b0",
+      "sideB": 1,
+      "bboxIdB": "b0"
+    },
+    {
+      "linkId": "lnk-1",
+      "sideA": 1,
+      "bboxIdA": "b1",
+      "sideB": 2,
+      "bboxIdB": "b1"
+    },
+    {
+      "linkId": "lnk-2",
+      "sideA": 2,
+      "bboxIdA": "b1",
+      "sideB": 3,
+      "bboxIdB": "b2"
+    },
+    {
+      "linkId": "lnk-3",
+      "sideA": 2,
+      "bboxIdA": "b0",
+      "sideB": 3,
+      "bboxIdB": "b1"
+    },
+    {
+      "linkId": "lnk-4",
+      "sideA": 3,
+      "bboxIdA": "b1",
+      "sideB": 0,
+      "bboxIdB": "b2"
+    },
+    {
+      "linkId": "lnk-5",
+      "sideA": 3,
+      "bboxIdA": "b0",
+      "sideB": 0,
+      "bboxIdB": "b1"
+    }
+  ],
+  "summary": {
+    "total_unique_bunches": 4,
+    "total_detections": 10,
+    "duplicates_linked": 6,
+    "by_class": {
+      "B1": 0,
+      "B2": 0,
+      "B3": 4,
+      "B4": 0,
+      "other": 0
+    },
+    "by_side": {
+      "side_1": 3,
+      "side_2": 2,
+      "side_3": 2,
+      "side_4": 3
+    }
+  }
+}

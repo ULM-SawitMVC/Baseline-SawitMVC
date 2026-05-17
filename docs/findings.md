@@ -1,7 +1,7 @@
 # Research Findings
 
 Key findings from the SawitMVC multi-view oil palm bunch counting research
-(completed 2026-05-16, 953 trees, Brand-New-Dataset-YOLO).
+(completed 2026-05-16, 953 trees, SawitMVC-YOLO).
 
 ---
 

@@ -5,20 +5,21 @@ Steps:
   1. YOLO inference on all 953 trees (grouped per tree, 4-8 images each)
   2. Extract 13-dim features per tree from inference JSONs
   3. Train + evaluate SVM, RF, Linear Regression, and M01 heuristic counters
-  4. Save results to benchmarks/e2e/
+  4. Save results to results/e2e_per_tree/{name}_{counter}/
 
 Usage:
-    # Full pipeline (requires GPU for step 1)
-    python pipeline/run_e2e_pipeline.py --name y26n --weights models/y26n.pt
+    # Skip inference, use pre-computed predictions (default; CPU only)
+    python pipeline/run_e2e_pipeline.py --name y26n --skip-inference
 
-    # Skip inference, use pre-computed predictions
-    python pipeline/run_e2e_pipeline.py --name y26n --weights models/y26n.pt --skip-inference
+    # Full pipeline (requires GPU and the SawitMVC-YOLO/ image folder)
+    python pipeline/run_e2e_pipeline.py --name y26n --weights models/yolo/y26n.pt \
+        --data SawitMVC-YOLO/
 
-    # Custom dataset path
-    python pipeline/run_e2e_pipeline.py --name y26n --weights models/y26n.pt --data ./SawitMVC-YOLO/
+    # Custom ground-truth/annotation path
+    python pipeline/run_e2e_pipeline.py --name y26n --skip-inference --data ground_truth/
 """
 from __future__ import annotations
-import argparse, csv, json, re, sys
+import argparse, csv, json, os, random, re, sys
 from pathlib import Path
 from collections import defaultdict
 import numpy as np
@@ -30,6 +31,20 @@ sys.path.insert(0, str(ROOT))
 
 CLASSES = ["B1", "B2", "B3", "B4"]
 CLASS_MAP = {0: "B1", 1: "B2", 2: "B3", 3: "B4"}
+
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+os.environ["PYTHONHASHSEED"] = str(SEED)
+
+
+def _resolve_gt_dir(data_dir: Path) -> Path:
+    """Locate the annotations subdir; supports both ground_truth/ and SawitMVC-YOLO/ layouts."""
+    for sub in ("annotations", "json"):
+        candidate = data_dir / sub
+        if candidate.is_dir():
+            return candidate
+    return data_dir / "annotations"
 
 
 # ---------------------------------------------------------------------------
@@ -164,7 +179,7 @@ def step_inference(name: str, weights: Path, data_dir: Path, infer_dir: Path, co
             "tree_name": tree_id, "split": split, "detector": name, "images": images_data
         }))
         done += 1
-    print(f"Inference: {done}/{len(trees)} trees → {infer_dir}")
+    print(f"Inference: {done}/{len(trees)} trees -> {infer_dir}")
 
 
 # ---------------------------------------------------------------------------
@@ -195,7 +210,7 @@ def step_m01(name: str, infer_dir: Path, gt_dir: Path, data_dir: Path, out_dir: 
     m_val  = _compute_metrics(rows, "val")
     (out_dir / "metrics.json").write_text(json.dumps({"test": m_test, "val": m_val}, indent=2))
     pd.DataFrame(rows).to_csv(out_dir / "predictions.csv", index=False)
-    print(f"M01: Acc±1={m_test.get('macro_acc_pm1',0)*100:.2f}%  MAE={m_test.get('macro_class_mae',0):.4f} → {out_dir}")
+    print(f"M01: Acc+/-1={m_test.get('macro_acc_pm1',0)*100:.2f}%  MAE={m_test.get('macro_class_mae',0):.4f} -> {out_dir}")
 
 
 # ---------------------------------------------------------------------------
@@ -272,7 +287,7 @@ def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, data_dir: Pa
     if counter == "rf":
         fi = pd.DataFrame({"feature": FEATURE_NAMES, "importance": rf.feature_importances_}).sort_values("importance", ascending=False)
         fi.to_csv(out_dir / "feature_importance.csv", index=False)
-    print(f"{counter.upper()}: Acc±1={m_te['macro_acc_pm1']*100:.2f}%  MAE={m_te['macro_class_mae']:.4f} → {out_dir}")
+    print(f"{counter.upper()}: Acc+/-1={m_te['macro_acc_pm1']*100:.2f}%  MAE={m_te['macro_class_mae']:.4f} -> {out_dir}")
 
 
 # ---------------------------------------------------------------------------
@@ -280,26 +295,33 @@ def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, data_dir: Pa
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Unified E2E pipeline: inference → counting → evaluation")
+    p = argparse.ArgumentParser(description="Unified E2E pipeline: inference -> counting -> evaluation")
     p.add_argument("--name", required=True, help="Experiment name, e.g. y26n or y26m")
-    p.add_argument("--weights", type=Path, required=True, help="Path to YOLO .pt weights")
-    p.add_argument("--data", type=Path, default=ROOT / "SawitMVC-YOLO",
-                   help="Dataset root (default: ./SawitMVC-YOLO/)")
+    p.add_argument("--weights", type=Path, default=None,
+                   help="Path to YOLO .pt weights (default: models/yolo/{name}.pt; only required for inference)")
+    p.add_argument("--data", type=Path, default=ROOT / "ground_truth",
+                   help="Annotations + split root (default: ./ground_truth/). "
+                        "For full pipeline including YOLO inference, point this at ./SawitMVC-YOLO/ "
+                        "so the images/ subdir is also available.")
     p.add_argument("--conf", type=float, default=0.25, help="Detection confidence threshold")
     p.add_argument("--skip-inference", action="store_true",
-                   help="Skip Step 1 and use existing predictions/{name}_inference/")
+                   help="Skip Step 1 and use existing predictions/{name}_per_tree/")
     p.add_argument("--counters", nargs="+", default=["svm", "rf", "lr", "m01"],
                    choices=["svm", "rf", "lr", "m01"], help="Which counters to run")
     args = p.parse_args()
 
-    infer_dir = ROOT / "predictions" / f"{args.name}_inference"
-    gt_dir    = args.data / "json"
-    e2e_base  = ROOT / "benchmarks" / "e2e"
+    infer_dir = ROOT / "predictions" / f"{args.name}_per_tree"
+    gt_dir    = _resolve_gt_dir(args.data)
+    e2e_base  = ROOT / "results" / "e2e_per_tree"
 
     # Step 1: Inference
     if not args.skip_inference:
+        weights = args.weights or (ROOT / "models" / "yolo" / f"{args.name}.pt")
+        if not weights.exists():
+            print(f"ERROR: weights {weights} not found.")
+            raise SystemExit(1)
         print(f"\n[Step 1] Running YOLO inference: {args.name}")
-        step_inference(args.name, args.weights, args.data, infer_dir, args.conf)
+        step_inference(args.name, weights, args.data, infer_dir, args.conf)
     else:
         if not infer_dir.exists():
             print(f"ERROR: --skip-inference but {infer_dir} not found. Run without --skip-inference first.")
@@ -309,13 +331,13 @@ def main() -> None:
     # Steps 2+3: Count
     print(f"\n[Steps 2-3] Counting with: {args.counters}")
     if "m01" in args.counters:
-        step_m01(args.name, infer_dir, gt_dir, args.data, e2e_base / f"e2e_{args.name}_m01")
+        step_m01(args.name, infer_dir, gt_dir, args.data, e2e_base / f"{args.name}_m01")
     if "svm" in args.counters:
-        step_ml(args.name, "svm", infer_dir, gt_dir, args.data, e2e_base / f"e2e_{args.name}_svm")
+        step_ml(args.name, "svm", infer_dir, gt_dir, args.data, e2e_base / f"{args.name}_svm")
     if "lr" in args.counters:
-        step_ml(args.name, "lr",  infer_dir, gt_dir, args.data, e2e_base / f"e2e_{args.name}_lr")
+        step_ml(args.name, "lr",  infer_dir, gt_dir, args.data, e2e_base / f"{args.name}_lr")
     if "rf" in args.counters:
-        step_ml(args.name, "rf",  infer_dir, gt_dir, args.data, e2e_base / f"e2e_{args.name}_rf")
+        step_ml(args.name, "rf",  infer_dir, gt_dir, args.data, e2e_base / f"{args.name}_rf")
 
     print(f"\nDone. Results in {e2e_base}/")
 

@@ -14,7 +14,7 @@ A clear description of what the bug is.
 
 ```bash
 # Exact commands you ran
-python benchmarks/run_benchmark.py --data ./SawitMVC-YOLO/json/
+python benchmarks/run_benchmark.py
 ```
 
 ## Expected Behavior

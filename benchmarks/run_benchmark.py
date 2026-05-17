@@ -2,17 +2,18 @@
 """
 SawitMVC Baseline — Benchmark Runner
 ======================================
-Run the top-5 deduplication algorithms on the Brand-New-Dataset-YOLO JSON ground truth
-and print a ranked results table.
+Evaluate the top-5 deduplication heuristics on the bundled SawitMVC-YOLO ground
+truth and print a ranked results table.
 
 Usage
 -----
     python benchmarks/run_benchmark.py
-    python benchmarks/run_benchmark.py --data /path/to/json/folder
-    python benchmarks/run_benchmark.py --data ./SawitMVC-YOLO/json/ --save
+    python benchmarks/run_benchmark.py --data /path/to/annotations/folder
+    python benchmarks/run_benchmark.py --data ./ground_truth/annotations/ --save
 
 The script expects JSON files produced by the SawitMVC annotation pipeline.
-Each file corresponds to one tree and follows the schema in docs/dataset.md.
+Each file corresponds to one tree and follows the schema in docs/dataset.md
+and ground_truth/README.md.
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ from algorithms import RANKING
 
 
 CLASSES = ["B1", "B2", "B3", "B4"]
-DEFAULT_JSON_DIR = ROOT / "SawitMVC-YOLO" / "json"
+DEFAULT_JSON_DIR = ROOT / "ground_truth" / "annotations"
 
 
 # ---------------------------------------------------------------------------
@@ -145,29 +146,27 @@ def run_benchmark(trees: list[dict]) -> list[dict]:
 
 def print_table(results: list[dict], n_trees: int) -> None:
     """Print a formatted results table."""
-    medals = {1: "🥇", 2: "🥈", 3: "🥉"}
-    header = f"\nSawitMVC Baseline — Benchmark Results ({n_trees} trees)"
+    header = f"\nSawitMVC Baseline - Benchmark Results ({n_trees} trees)"
     print(header)
     print("=" * len(header))
-    print(f"{'Rank':<5} {'Algorithm':<30} {'Acc±1':>7}  {'MAE':>6}  {'Total MAE':>10}  {'Fail':>5}")
-    print("-" * 65)
+    print(f"{'Rank':<5} {'Algorithm':<30} {'Acc+/-1':>8}  {'MAE':>6}  {'Total MAE':>10}  {'Fail':>5}")
+    print("-" * 70)
     for r in results:
-        medal = medals.get(r["rank"], "  ")
         print(
-            f"{r['rank']:>3}{medal}  "
+            f"{r['rank']:>4}  "
             f"{r['algorithm']:<30} "
-            f"{r['acc1_pct']:>6.2f}%  "
+            f"{r['acc1_pct']:>7.2f}%  "
             f"{r['macro_mae']:>6.4f}  "
             f"{r['total_count_mae']:>10.4f}  "
             f"{r['n_fail']:>5}"
         )
-    print("-" * 65)
-    print(f"  {'Naive sum (reference)':<30} {'  3.78%':>7}  {'2.2867':>6}  {'9.1469':>10}")
+    print("-" * 70)
+    print(f"      {'Naive sum (reference)':<30} {'3.78%':>7}   {'2.2867':>6}  {'9.1469':>10}")
     print()
 
 
 def save_csv(results: list[dict], out_dir: Path) -> None:
-    """Save results to CSV."""
+    """Save results to CSV at results/heuristics_953/benchmark_top5.csv."""
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "benchmark_top5.csv"
     with open(path, "w", newline="") as f:
@@ -187,12 +186,12 @@ def parse_args() -> argparse.Namespace:
         "--data",
         type=Path,
         default=DEFAULT_JSON_DIR,
-        help="Path to directory of JSON ground-truth files (default: ./SawitMVC-YOLO/json/)",
+        help="Folder of ground-truth annotation JSONs (default: ./ground_truth/annotations/)",
     )
     p.add_argument(
         "--save",
         action="store_true",
-        help="Save results CSV to benchmarks/results/benchmark_top5.csv",
+        help="Save results CSV to results/heuristics_953/benchmark_top5.csv",
     )
     return p.parse_args()
 
@@ -202,10 +201,9 @@ def main() -> None:
 
     if not args.data.exists():
         print(
-            f"ERROR: Dataset directory not found: {args.data}\n"
-            "Download the dataset first:\n"
-            "  from huggingface_hub import snapshot_download\n"
-            '  snapshot_download("ULM-DS-Lab/SawitMVC-YOLO", repo_type="dataset", local_dir="./SawitMVC-YOLO")',
+            f"ERROR: Annotation directory not found: {args.data}\n"
+            "The repository bundles annotations at ./ground_truth/annotations/.\n"
+            "If you have copied or symlinked the Hugging Face release, pass --data with its path.",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -220,7 +218,7 @@ def main() -> None:
     print_table(results, len(trees))
 
     if args.save:
-        out_dir = Path(__file__).parent / "results"
+        out_dir = ROOT / "results" / "heuristics_953"
         save_csv(results, out_dir)
 
 

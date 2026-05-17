@@ -6,6 +6,47 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.3.0] — 2026-05-17
+
+### Added
+
+**Reproducibility bundle**
+- `ground_truth/annotations/` — 953 per-tree GT JSONs copied into the repository
+  (no Hugging Face credentials needed to run Tracks A, B, B', or C).
+- `ground_truth/split_manifest.csv` and `ground_truth/data.yaml` bundled.
+- `ground_truth/README.md` documents the schema, splits (763/95/95), and class
+  taxonomy.
+- `models/counters/{svm,rf,lr}.pkl` — saved scikit-learn estimators so
+  reproduction skips GridSearchCV entirely.
+- `scripts/` — five orchestration shell scripts including
+  `scripts/reproduce_all.sh` for one-command reproduction.
+- `predictions/README.md` documenting per-tree vs per-image JSON schemas.
+
+### Changed
+
+**Restructured for clarity**
+- `benchmarks/results/` → `results/heuristics_953/` (and `accuracy_953.csv` →
+  `accuracy_full.csv`).
+- `benchmarks/e2e/e2e_{m}_{c}/` → `results/e2e_per_tree/{m}_{c}/`.
+- `benchmarks/e2e/e2e_{m}_per_image_{c}/` → `results/e2e_per_image/{m}_{c}/`.
+- `benchmarks/e2e/e2e_gt_{c}/` → `results/e2e_upper_bound/gt_{c}/` (newly
+  committed alongside the move).
+- `models/y26{n,s,m}.pt` → `models/yolo/y26{n,s,m}.pt`; training logs into
+  `models/yolo/train_logs/`.
+- `predictions/y26{n,s,m}_inference/` → `predictions/y26{n,s,m}_per_tree/` for
+  naming symmetry with the per-image folders.
+- Every pipeline script's default `--data` now points to `ground_truth/`; an
+  explicit `_resolve_gt_dir` helper supports both the `annotations/` and the
+  legacy `json/` layouts so the SawitMVC-YOLO mirror still works.
+- `pipeline/run_counting_{svm,rf,lr}.py` now accept `--save-model` and
+  `--load-model` for deterministic reuse of fitted estimators.
+- `benchmarks/check_release_claims.py` reads the new `results/` paths.
+- Standardised dataset name throughout: "Brand-New-Dataset-YOLO" → "SawitMVC-YOLO".
+- README rewritten as an academic paper (Abstract → Citation) with no emojis
+  and clickable evidence links for every metric.
+
+---
+
 ## [1.2.0] — 2026-05-16
 
 ### Changed
@@ -24,7 +65,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   y26s + SVM = **70.8%**
 - Per-image: 21 combinations (3 models × 7 counters); best: y26s + SVM = **70.8%**
 - `predictions/` updated: 2,859 per-tree JSONs + 11,976 per-image JSONs
-- `benchmarks/e2e/` updated: 33 result folders
+- `benchmarks/e2e/` updated: 33 result folders (since reorganised into `results/`
+  in v1.3.0)
 
 ---
 

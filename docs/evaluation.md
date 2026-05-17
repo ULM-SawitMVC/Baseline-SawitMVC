@@ -82,7 +82,7 @@ negative means systematic under-count.
 
 ## Evaluation Dataset
 
-All benchmarks use the **Brand-New-Dataset-YOLO** canonical 953-tree dataset
+All benchmarks use the **SawitMVC-YOLO** canonical 953-tree dataset
 (post-GT-fix 2026-05-16).
 
 | Subset | Trees | Notes |
@@ -113,7 +113,7 @@ Ground truth has been validated for:
 
 ## Evaluation Protocol
 
-1. **Load** all 953 JSON files from `Brand-New-Dataset-YOLO/json/`
+1. **Load** all 953 JSON files from `ground_truth/annotations/`
 2. **Extract** detections for each tree: one dict per bounding box with keys
    `class`, `x_norm`, `y_norm`, `side_index`
 3. **Run** the algorithm's `predict(detections)` function
@@ -136,7 +136,7 @@ When contributing a new algorithm or reporting results in a paper, please includ
 | n_fail (trees outside ±1) | ✅ |
 | Per-class MAE (B1–B4) | Recommended |
 | Exact-profile accuracy | Optional |
-| Evaluation dataset | ✅ (must be 953-tree Brand-New-Dataset-YOLO) |
+| Evaluation dataset | ✅ (must be 953-tree SawitMVC-YOLO) |
 | GT version date | ✅ (must be post-fix 2026-05-16 or later) |
 
 Results on the historical 228/478/727/882-tree subsets are for reference only and
@@ -156,7 +156,7 @@ For detection models, report:
 | Model size (MB) | Weights file size |
 | Best epoch | For training reproducibility |
 
-Evaluate on the `test` split of `Brand-New-Dataset-YOLO/data.yaml`:
+Evaluate on the `test` split of `ground_truth/data.yaml`:
 ```bash
-yolo detect val model=<weights.pt> data=SawitMVC-YOLO/data.yaml split=test
+yolo detect val model=<weights.pt> data=ground_truth/data.yaml split=test
 ```

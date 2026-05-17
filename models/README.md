@@ -1,83 +1,80 @@
-# Models — YOLO26 Detection Weights
+# Models
 
-Three trained YOLO26 weights for oil palm bunch detection across B1–B4 maturity classes.
-All models trained on `SawitMVC-YOLO` (3,992 images, 4 classes), 60 epochs, seed=42.
+This folder contains every model artifact in the repository, split into two
+families.
 
----
+| Subfolder | Contents |
+|-----------|----------|
+| [`yolo/`](yolo/) | Three YOLOv26 detector weights with per-epoch training logs. |
+| [`counters/`](counters/) | Three saved scikit-learn counters used by Track B (SVM, RF, LR). See [`counters/README.md`](counters/README.md). |
 
-## Model Comparison
+## YOLOv26 detectors
 
-| File | Architecture | mAP50 | mAP50-95 | Speed | Size | Notes |
-|------|-------------|:-----:|:--------:|:-----:|:----:|-------|
-| `y26m.pt` | YOLO26m | **0.528** | **0.243** | 1.0 ms | 42 MB | Best detection accuracy |
-| `y26n.pt` | YOLO26n | 0.515 | 0.232 | **0.3 ms** | **5.2 MB** | ⚡ Best efficiency |
-| `y26s.pt` | YOLO26s | 0.511 | 0.239 | 0.4 ms | 20 MB | Balanced size/speed |
+All three weights were retrained on the bundled SawitMVC-YOLO release
+(3,992 images, four classes), with `seed=42`, `imgsz=640`, sixty epochs.
 
-**Recommended for production:** `y26n.pt` — near-best mAP50 at the lowest cost.
+| File | Architecture | mAP50 | mAP50–95 | Inference speed | Size | Recommended use |
+|------|--------------|------:|---------:|----------------:|-----:|-----------------|
+| [`yolo/y26m.pt`](yolo/y26m.pt) | YOLOv26 medium | **0.528** | **0.243** | 1.0 ms | 42 MB | Highest detection accuracy. |
+| [`yolo/y26n.pt`](yolo/y26n.pt) | YOLOv26 nano | 0.515 | 0.232 | **0.3 ms** | **5.2 MB** | Best efficiency; recommended for deployment. |
+| [`yolo/y26s.pt`](yolo/y26s.pt) | YOLOv26 small | 0.511 | 0.239 | 0.4 ms | 20 MB | Strongest paired with the SVM counter (70.79% E2E Acc±1). |
 
-**Best E2E Acc±1:** `y26n.pt` paired with M01 achieves **74.4%** — see `benchmarks/e2e/`.
+Per-epoch curves, optimizer choice, and exact CLI invocations are captured in:
 
----
+- [`yolo/train_logs/y26n_train_log.txt`](yolo/train_logs/y26n_train_log.txt)
+- [`yolo/train_logs/y26s_train_log.txt`](yolo/train_logs/y26s_train_log.txt)
+- [`yolo/train_logs/y26m_train_log.txt`](yolo/train_logs/y26m_train_log.txt)
 
-## Training Configuration
-
-All 3 models share identical hyperparameters (only architecture differs):
+### Training configuration
 
 ```yaml
-model:      yolo26{n,s,m}  # COCO pretrained weights
-data:       ul://sawit-ulm/datasets/sawitmvc-yolo
-imgsz:      640
-batch:      32
-epochs:     60
-patience:   60
-seed:       42
+model:         yolo26{n,s,m}  # COCO pretrained
+data:          SawitMVC-YOLO/data.yaml
+imgsz:         640
+batch:         32
+epochs:        60
+patience:      60
+seed:          42
 deterministic: true
-optimizer:  auto   # AdamW, lr=0.00125
+optimizer:     auto      # AdamW, lr=0.00125
 ```
 
-Full training logs per model: `models/y26n_train_log.txt`, `y26s_train_log.txt`, `y26m_train_log.txt`.
+### Per-class validation mAP50
 
----
-
-## Per-Class Validation Results (best.pt)
-
-| Model | B1 mAP50 | B2 mAP50 | B3 mAP50 | B4 mAP50 | All mAP50 |
-|-------|:--------:|:--------:|:--------:|:--------:|:---------:|
+| Model | B1 | B2 | B3 | B4 | All |
+|-------|---:|---:|---:|---:|----:|
 | y26n  | 0.740 | 0.373 | 0.577 | 0.369 | **0.515** |
 | y26s  | 0.720 | 0.427 | 0.581 | 0.317 | **0.511** |
 | y26m  | 0.788 | 0.395 | 0.602 | 0.330 | **0.528** |
 
-B1 (ripe red bunches) is the easiest class; B4 (newest, dark green) is the hardest.
+B1 (ripe red) is consistently the easiest class; B4 (small green-black) is
+the hardest because of low contrast against the canopy.
 
----
-
-## Inference Code
+## Inference usage
 
 ### Detect bunches in a single image
 
 ```python
 from ultralytics import YOLO
 
-model = YOLO("models/y26n.pt")
+model = YOLO("models/yolo/y26n.pt")
 results = model.predict("path/to/image.jpg", conf=0.25, iou=0.45)
 
 for r in results:
     for box in r.boxes:
-        cls_name = r.names[int(box.cls)]  # "B1", "B2", "B3", or "B4"
-        x_center, y_center, w, h = box.xywhn[0].tolist()  # normalized
+        cls_name = r.names[int(box.cls)]                 # "B1" .. "B4"
+        x_center, y_center, w, h = box.xywhn[0].tolist() # normalized
         print(f"{cls_name}: x={x_center:.3f}, y={y_center:.3f}")
 ```
 
-### Run detections on a full tree (4 images) and count
+### Detect and count a full tree (4 images)
 
 ```python
 from pathlib import Path
 from ultralytics import YOLO
 from algorithms.M01_selector_b2b3 import predict
 
-model = YOLO("models/y26n.pt")
-
-# Images named: TREEID_1.jpg, TREEID_2.jpg, TREEID_3.jpg, TREEID_4.jpg
+model = YOLO("models/yolo/y26n.pt")
 image_paths = sorted(Path("SawitMVC-YOLO/images/").glob("DAMIMAS_A21B_0001_*.jpg"))
 
 detections = []
@@ -92,12 +89,25 @@ for side_index, img_path in enumerate(image_paths):
                 "side_index": side_index,
             })
 
-count = predict(detections)
-print(count)  # {"B1": 1, "B2": 2, "B3": 5, "B4": 0}
+print(predict(detections))   # e.g. {"B1": 1, "B2": 2, "B3": 5, "B4": 0}
 ```
 
-### Evaluate on the val split
+### Validate against the held-out split
 
 ```bash
-yolo detect val model=models/y26n.pt data=SawitMVC-YOLO/data.yaml split=val
+yolo detect val model=models/yolo/y26n.pt \
+    data=ground_truth/data.yaml split=val
 ```
+
+(Set `data:` to the SawitMVC-YOLO `data.yaml` path if you wish to evaluate on
+the full image set.)
+
+## Counter artifacts (Track B)
+
+The SVM, Random Forest, and Linear Regression estimators used in Track B are
+serialised under [`counters/`](counters/). They were fitted on
+[`predictions/y26s_per_tree/`](../predictions/y26s_per_tree/) features and can
+be reloaded with the `--load-model` flag of each
+[`pipeline/run_counting_*.py`](../pipeline/) script. See
+[`counters/README.md`](counters/README.md) for details and regeneration
+commands.

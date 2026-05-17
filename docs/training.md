@@ -193,7 +193,7 @@ If you don't want to retrain, use the weights in `models/`:
 ```python
 from ultralytics import YOLO
 
-model = YOLO("models/y26n.pt")
+model = YOLO("models/yolo/y26n.pt")
 results = model.predict("path/to/tree_side_1.jpg", conf=0.25, iou=0.45)
 ```
 

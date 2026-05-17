@@ -6,3 +6,7 @@ __pycache__/
 *.egg-info/
 dist/
 build/
+
+# External Hugging Face mirror (images live here when downloaded; annotations
+# are bundled at ground_truth/annotations/ so the repo is self-sufficient).
+SawitMVC-YOLO/

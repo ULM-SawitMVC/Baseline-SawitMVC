@@ -9,16 +9,18 @@ medians from a held-out development set.
 
 ---
 
-## Performance Comparison (953 trees, Brand-New-Dataset-YOLO)
+## Performance comparison (953 trees, SawitMVC-YOLO)
 
-| Rank | File | Acc ±1 ↑ | Macro MAE ↓ | Total MAE ↓ | Approach |
-|:----:|------|:--------:|:-----------:|:-----------:|----------|
-| 🥇 **1** | `M01_selector_b2b3.py` | **87.62%** | 0.375 | 1.331 | Selector + B2↔B3 correction |
-| 🥈 **2** | `M02_selector_trifurc.py` | 87.62% | 0.376 | 1.331 | Trifurcation selector |
-| 🥉 **3** | `M03_blend_geometric.py` | 86.99% | 0.377 | 1.341 | Geometric mean blend |
-| **4** | `M04_blend_floor_clamped.py` | 86.99% | 0.385 | 1.342 | Floor-clamped weighted blend |
-| **5** | `M05_blend_vis_divide.py` | 86.99% | 0.388 | 1.346 | Simple weighted blend |
+| Rank | File | Acc±1 | Macro MAE | Total MAE | Approach |
+|:----:|------|------:|----------:|----------:|----------|
+| 1 | [`M01_selector_b2b3.py`](M01_selector_b2b3.py) | **87.62%** | 0.375 | 1.331 | Selector plus B2 ↔ B3 correction |
+| 2 | [`M02_selector_trifurc.py`](M02_selector_trifurc.py) | 87.62% | 0.376 | 1.331 | Trifurcation selector |
+| 3 | [`M03_blend_geometric.py`](M03_blend_geometric.py) | 86.99% | 0.377 | 1.341 | Geometric-mean blend |
+| 4 | [`M04_blend_floor_clamped.py`](M04_blend_floor_clamped.py) | 86.99% | 0.385 | 1.342 | Floor-clamped weighted blend |
+| 5 | [`M05_blend_vis_divide.py`](M05_blend_vis_divide.py) | 86.99% | 0.388 | 1.346 | Simple weighted blend |
 | — | Naive sum (reference) | 3.78% | 2.287 | 9.147 | No deduplication |
+
+Full ranking of all 29 evaluated methods: [`results/heuristics_953/accuracy_full.csv`](../results/heuristics_953/accuracy_full.csv).
 
 - **Acc ±1**: % of trees where every class prediction is within ±1 of ground truth (macro-averaged)
 - **Macro MAE**: Unweighted mean of per-class absolute errors across B1/B2/B3/B4
@@ -130,7 +132,7 @@ camera configuration where `max_per_side` semantics may not hold.
 import json
 from algorithms.M01_selector_b2b3 import predict
 
-with open("SawitMVC-YOLO/json/DAMIMAS_A21B_0001.json") as f:
+with open("ground_truth/annotations/DAMIMAS_A21B_0001.json") as f:
     tree = json.load(f)
 
 detections = [

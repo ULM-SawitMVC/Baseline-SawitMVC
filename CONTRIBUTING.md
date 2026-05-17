@@ -47,7 +47,7 @@ and evaluation tooling.
 M{NN}_{family}_{descriptor}
 ===========================
 Family: {family}
-Benchmark 953-tree (Brand-New-Dataset-YOLO, post-GT-fix 2026-05-16):
+Benchmark 953-tree (SawitMVC-YOLO, post-GT-fix 2026-05-16):
     Acc ±1 = XX.XX%  |  Macro MAE = X.XXXX  |  Total-count MAE = X.XXXX
 
 [2-3 sentence description of the approach]
@@ -88,9 +88,10 @@ def predict(detections: list) -> dict:
 
 3. **Run the benchmark** to get official numbers:
    ```bash
-   python benchmarks/run_benchmark.py --data ./SawitMVC-YOLO/json/
+   python benchmarks/run_benchmark.py --save
    ```
-   Add these numbers to your docstring.
+   The default `--data` is `./ground_truth/annotations/`, the bundled GT.
+   Add the printed Acc±1 / MAE numbers to your docstring.
 
 4. **Register** your algorithm in `algorithms/__init__.py`:
    ```python

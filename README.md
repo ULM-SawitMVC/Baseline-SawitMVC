@@ -1,336 +1,565 @@
-# SawitMVC Baseline — Multi-View Oil Palm Bunch Counting
+# SawitMVC Baseline: Multi-View Oil Palm Bunch Counting and Maturity Classification
 
-[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![Dataset: HuggingFace](https://img.shields.io/badge/Dataset-HuggingFace-yellow.svg)](https://huggingface.co/datasets/ULM-DS-Lab/SawitMVC-YOLO)
+[![Dataset: Hugging Face](https://img.shields.io/badge/Dataset-Hugging%20Face-yellow.svg)](https://huggingface.co/datasets/ULM-DS-Lab/SawitMVC-YOLO)
 
-**SawitMVC Baseline** is the official research baseline for multi-view oil palm fruit bunch
-counting and maturity classification. Given 4–8 photos of the same oil palm tree taken from
-different angles, the task is to count the **unique number of bunches per maturity class**
-(B1 → B4) without double-counting bunches visible from multiple sides.
-
-> **Core problem:** Naive summation overcounts by ~83.4% because the same bunch is
-> detected across multiple camera angles. This repository provides 5 deterministic
-> heuristic algorithms that reduce the error to ≤13% without any training.
-
-> **Note:** All YOLO baselines were retrained on the correct `SawitMVC-YOLO` dataset
-> (3 models: `y26n`, `y26s`, `y26m`). Previous 5-model results have been superseded.
+A reproducible research baseline for counting and grading fresh fruit bunches on
+oil palm trees from four to eight camera angles per tree. The repository bundles
+every artifact needed to reproduce its published numbers from a fresh clone:
+953 ground-truth annotations, three retrained YOLOv26 detectors, three saved
+machine-learning counters, and 36 pre-computed result folders. Hugging Face
+credentials are required only when retraining a detector.
 
 ---
 
-## Artifact Links
+## Abstract
 
-| Category | Clickable files |
-|----------|-----------------|
-| Model weights | [`models/y26n.pt`](models/y26n.pt), [`models/y26s.pt`](models/y26s.pt), [`models/y26m.pt`](models/y26m.pt) |
-| Training logs | [`models/y26n_train_log.txt`](models/y26n_train_log.txt), [`models/y26s_train_log.txt`](models/y26s_train_log.txt), [`models/y26m_train_log.txt`](models/y26m_train_log.txt) |
-| Heuristic benchmark | [`benchmarks/results/accuracy_953.csv`](benchmarks/results/accuracy_953.csv), [`benchmarks/results/per_tree.csv`](benchmarks/results/per_tree.csv), [`benchmarks/results/totals.csv`](benchmarks/results/totals.csv), [`benchmarks/results/mean_per_tree.csv`](benchmarks/results/mean_per_tree.csv) |
-| E2E metrics | [`benchmarks/e2e/e2e_y26s_svm/metrics.json`](benchmarks/e2e/e2e_y26s_svm/metrics.json), [`benchmarks/e2e/e2e_y26m_m01/metrics.json`](benchmarks/e2e/e2e_y26m_m01/metrics.json), [`benchmarks/e2e/e2e_y26n_svm/metrics.json`](benchmarks/e2e/e2e_y26n_svm/metrics.json) |
-| E2E predictions | [`benchmarks/e2e/e2e_y26s_svm/predictions.csv`](benchmarks/e2e/e2e_y26s_svm/predictions.csv), [`benchmarks/e2e/e2e_y26m_m01/predictions.csv`](benchmarks/e2e/e2e_y26m_m01/predictions.csv), [`benchmarks/e2e/e2e_y26n_svm/predictions.csv`](benchmarks/e2e/e2e_y26n_svm/predictions.csv) |
-| YOLO predictions | [`predictions/y26n_inference/`](predictions/y26n_inference/), [`predictions/y26s_inference/`](predictions/y26s_inference/), [`predictions/y26m_inference/`](predictions/y26m_inference/) |
-| Pipeline scripts | [`pipeline/run_e2e_pipeline.py`](pipeline/run_e2e_pipeline.py), [`pipeline/run_e2e_per_image.py`](pipeline/run_e2e_per_image.py), [`pipeline/build_counting_features.py`](pipeline/build_counting_features.py) |
-| Validation script | [`benchmarks/check_release_claims.py`](benchmarks/check_release_claims.py) |
+Counting fruit bunches on an oil palm tree from a single photograph is
+unreliable because each tree carries between zero and twenty mature bunches
+distributed unevenly around its crown. The conventional remedy — photographing
+the same tree from multiple angles and summing per-image detections — is worse
+still: a single bunch routinely appears in two or more views, so the naive
+total overshoots the true count by roughly eighty-three per cent on this
+dataset. The SawitMVC baseline addresses the resulting deduplication problem
+on **953 trees** (3,992 images, 9,823 unique bunches) from two Kalimantan
+plantations.
 
-## Results at a Glance
+The repository contributes three families of solutions and a clean upper-bound
+study. *Track A* applies five deterministic heuristics directly to the ground
+truth and reaches **87.62% within-one Acc** without any learning. *Track B*
+trains a 13-dimensional feature pipeline plus a regression counter (SVM,
+Random Forest, or Linear Regression) on noisy YOLOv26 detections; the best
+configuration reaches **70.79% Acc±1**. *Track C* repeats Track B on features
+derived from the perfect ground truth annotations and reaches **97.37% Acc±1**,
+identifying the gap of **26.58 percentage points** as detector error, not
+counter error. The detector is therefore the highest-leverage improvement
+target. Every numerical claim in this document is backed by a clickable
+artifact in [`results/`](results/), [`models/`](models/), or
+[`ground_truth/`](ground_truth/).
 
-### Heuristic Deduplication (953 trees, no training required)
+---
 
-| Rank | Algorithm | Acc ±1 | Macro MAE | Approach |
-|:----:|-----------|:------:|:---------:|----------|
-| 🥇 1 | [`M01_selector_b2b3.py`](algorithms/M01_selector_b2b3.py) | **87.62%** | 0.375 | Trifurcation selector + B2↔B3 correction |
-| 🥈 2 | [`M02_selector_trifurc.py`](algorithms/M02_selector_trifurc.py) | 87.62% | 0.376 | Trifurcation selector (base) |
-| 🥉 3 | [`M03_blend_geometric.py`](algorithms/M03_blend_geometric.py) | 86.99% | 0.377 | Geometric mean blend |
-| 4 | [`M04_blend_floor_clamped.py`](algorithms/M04_blend_floor_clamped.py) | 86.99% | 0.385 | Floor-clamped weighted blend |
-| 5 | [`M05_blend_vis_divide.py`](algorithms/M05_blend_vis_divide.py) | 86.99% | 0.388 | Visibility + adaptive divide |
-| — | Naive sum (baseline) | 3.78% | 2.287 | No deduplication |
+## 1. Introduction
 
-**Acc ±1** = percentage of trees where predicted count per class is within ±1 of ground truth (macro-averaged across 4 classes). Evaluated on 953 trees from `Brand-New-Dataset-YOLO`.
+### 1.1 Motivation
 
-### YOLO26 Detection (mAP50, val split)
+Yield estimation for oil palm plantations in Kalimantan, Indonesia depends on
+accurate per-tree counts across four maturity classes — ripe (B1), about to
+ripen (B2), unripe (B3), and youngest (B4). Field inspectors today walk the
+tree and tally by eye. Replacing the inspector with a camera and a model is
+attractive but exposes a deduplication problem that has not been studied
+in depth on a curated, multi-view dataset.
 
-All 3 models trained 60 epochs, seed=42, pretrained=True, standard augmentation on `SawitMVC-YOLO`.
+### 1.2 Problem statement
 
-| Model | mAP50 | Speed | Size | Notes |
-|-------|:-----:|:-----:|:----:|-------|
-| [`y26m.pt`](models/y26m.pt) | **0.528** | 1.0 ms | 42 MB | Best detection accuracy; log: [`y26m_train_log.txt`](models/y26m_train_log.txt) |
-| [`y26n.pt`](models/y26n.pt) | 0.515 | **0.3 ms** | **5.2 MB** | **Best efficiency (recommended)**; log: [`y26n_train_log.txt`](models/y26n_train_log.txt) |
-| [`y26s.pt`](models/y26s.pt) | 0.511 | 0.4 ms | 20 MB | Balanced size/speed; log: [`y26s_train_log.txt`](models/y26s_train_log.txt) |
+For each tree, the pipeline receives between four and eight images taken from
+distinct compass angles. A perfect detector still sees the same physical bunch
+from multiple angles, so naive aggregation across views overcounts. On the
+953-tree SawitMVC release the naive sum baseline reaches only **3.78% Acc±1**
+(see [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv)),
+while the best deduplication heuristic reaches **87.62%**.
 
-### E2E — Per-Image Approach (complete pipeline, 95 test trees)
+### 1.3 Contributions
 
-Each image is processed independently by YOLO, then grouped per tree. Counting is done
-with either simple aggregation (`max`/`mean`/`sum`) or the same ML/heuristic counters
-as the per-tree approach. Results on test split (95 trees, `split_manifest.csv`).
+1. A reproducibility bundle: 953 ground-truth JSONs and the canonical split
+   manifest, copied into the repository at
+   [`ground_truth/`](ground_truth/) so that no external download is required
+   to rerun any benchmark.
+2. Five deterministic deduplication heuristics in [`algorithms/`](algorithms/),
+   ranked by `Acc±1` in [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
+3. Three retrained YOLOv26 detectors at [`models/yolo/`](models/yolo/) (nano,
+   small, medium) with their training logs at
+   [`models/yolo/train_logs/`](models/yolo/train_logs/).
+4. Three saved ML counter artifacts at [`models/counters/`](models/counters/) so
+   end-to-end evaluation requires no retraining.
+5. A 36-folder result archive at [`results/`](results/) covering every
+   detector × counter combination across the per-tree, per-image, and
+   ground-truth tracks.
 
-> **Key finding:** Per-image + ML counter achieves **identical accuracy** to per-tree + ML counter,
-> because the 13-dim features are derived from the same per-image detection counts either way.
-> Per-image inference is therefore sufficient — no need to group images before YOLO runs.
+---
 
-```bash
-# Run all counters for one model (derives per-image JSONs from existing per-tree predictions)
-python pipeline/run_e2e_per_image.py \
-    --name y26n --weights models/y26n.pt \
-    --data ./SawitMVC-YOLO --skip-inference
+## 2. Dataset
+
+### 2.1 Source
+
+The dataset is `ULM-DS-Lab/SawitMVC-YOLO`, released on Hugging Face. The
+annotation half is mirrored in this repository under
+[`ground_truth/`](ground_truth/). The image half (3,992 JPEGs, 960 × 1280) is
+not bundled; it is required only when retraining a detector.
+
+### 2.2 Statistics
+
+| Statistic | Value | Evidence |
+|-----------|------:|----------|
+| Trees | 953 | [`ground_truth/split_manifest.csv`](ground_truth/split_manifest.csv) |
+| DAMIMAS plantation | 854 | same |
+| LONSUM plantation | 99 | same |
+| Images | 3,992 | [`ground_truth/data.yaml`](ground_truth/data.yaml) |
+| Unique bunches | 9,823 | derived from `summary.by_class` in each [`ground_truth/annotations/*.json`](ground_truth/annotations/) |
+| Raw detections in GT | 18,544 | same |
+| Deduplication ratio | 0.53 | naive sum overshoots by ~1.83× |
+| Trees with 4 sides | 908 (95.3%) | derived from `images` keys |
+| Trees with 8 sides | 45 (4.7%) | same |
+
+### 2.3 Splits
+
+The canonical split, stratified by `variety × dominant_class`, is fixed at
+**763 train / 95 val / 95 test** trees. Every script reads
+[`ground_truth/split_manifest.csv`](ground_truth/split_manifest.csv) and
+honours the `new_split` column.
+
+### 2.4 Maturity taxonomy
+
+| Class | Visual cue | Position on tree | Role |
+|:-----:|------------|------------------|------|
+| B1 | Red, large, round | Lowest, ripest | Highest commercial value |
+| B2 | Black with red transition | Above B1 | Imminent harvest target |
+| B3 | Solid black, spiky, elongated | Above B2 | Schedule for next pass |
+| B4 | Smallest, dark green-black | Highest, newest | Future inventory |
+
+### 2.5 Annotation schema
+
+Each per-tree JSON contains four nested structures: `images` (per-side
+detections), `bunches` (human-confirmed unique bunches with `appearances`
+across sides), `_confirmedLinks` (side-to-side bunch correspondences), and
+`summary` (aggregated counts). The complete schema with field types and a
+sample document is documented in
+[`ground_truth/README.md`](ground_truth/README.md).
+
+---
+
+## 3. Method
+
+### 3.1 Pipeline overview
+
+```
+       images -->  YOLOv26 detector  -->  per-image detections
+                                                 |
+                                                 v
+                                       group by tree (4-8 sides)
+                                                 |
+                            +--------------------+--------------------+
+                            |                                         |
+                            v                                         v
+              13-dim feature vector                       deterministic heuristic
+                            |                                         |
+                            v                                         v
+                   ML counter (SVM/RF/LR)                  five M01..M05 rules
+                            |                                         |
+                            +--------------------+--------------------+
+                                                 v
+                                  per-class counts  [B1, B2, B3, B4]
 ```
 
-**Simple aggregation (no training):** 3 models sorted by Acc±1
+### 3.2 Detection — YOLOv26
 
-| Rank | Detector | Agg | Acc ±1 | MAE |
-|:----:|----------|-----|:------:|:---:|
-| 1 | y26m | **max** | **64.2%** | 1.368 |
-| 2 | y26n | max | 63.7% | 1.363 |
-| 3 | y26s | max | 61.8% | 1.403 |
-| — | *(all models)* | mean | 53.9–55.8% | 1.70–1.84 |
-| — | *(all models)* | sum | 50.0–52.6% | 2.22–2.48 |
+Three model sizes were retrained from scratch on the SawitMVC-YOLO release:
+nano [`models/yolo/y26n.pt`](models/yolo/y26n.pt), small
+[`models/yolo/y26s.pt`](models/yolo/y26s.pt), and medium
+[`models/yolo/y26m.pt`](models/yolo/y26m.pt). Each run lasted sixty epochs at
+`imgsz=640`, `seed=42`, with standard augmentation and COCO pretraining. The
+exact CLI invocation and per-epoch curves are captured in
+[`models/yolo/train_logs/`](models/yolo/train_logs/).
 
-`max` is the best simple dedup: a bunch visible from multiple sides is counted once (best view).
-`sum` is worst: overcounts the same bunch detected from each side.
+### 3.3 Track A — heuristic deduplication
 
-**With ML/heuristic counter:** per-image achieves the same results as per-tree (see table below).
-All 21 per-image results (3 models × 7 counters) in [`benchmarks/e2e/`](benchmarks/e2e/) as
-`e2e_{model}_per_image_{counter}/metrics.json`.
+Five deterministic algorithms in [`algorithms/`](algorithms/) consume the
+detection list and produce per-class counts without any training. They share
+three primitives — visibility count, adaptive correction, and max-per-side
+selection — and differ only in how they combine them. The full design
+rationale lives in [`docs/algorithms.md`](docs/algorithms.md); algorithm-level
+notes are in [`algorithms/README.md`](algorithms/README.md).
+
+### 3.4 Track B — per-tree ML counters
+
+Detections for one tree are folded into a thirteen-dimensional feature vector
+by [`pipeline/build_counting_features.py`](pipeline/build_counting_features.py):
+
+```
+[ naive_sum_B1..B4 ,  max_per_side_B1..B4 ,  mean_per_side_B1..B4 ,  n_sides ]
+```
+
+Three regressors are trained on this vector:
+
+- SVM with an RBF kernel and `GridSearchCV` over `C` and `gamma` — saved at
+  [`models/counters/svm.pkl`](models/counters/svm.pkl).
+- Random Forest with `n_estimators=200`, `max_depth=10`, `random_state=42` —
+  saved at [`models/counters/rf.pkl`](models/counters/rf.pkl).
+- Linear Regression preceded by a `StandardScaler` — saved at
+  [`models/counters/lr.pkl`](models/counters/lr.pkl).
+
+All three artifacts were fitted on the y26s training split and can be reloaded
+with `--load-model` to skip training entirely. Details and regeneration
+commands are in [`models/counters/README.md`](models/counters/README.md).
+
+### 3.5 Track B' — per-image variants
+
+[`pipeline/run_e2e_per_image.py`](pipeline/run_e2e_per_image.py) runs the
+detector image-by-image, then groups results into trees. Two counter families
+apply:
+
+- *Simple aggregation* — `max`, `mean`, `sum` over per-image counts. `max`
+  approximates per-bunch deduplication; `sum` is the worst case (naive total).
+- *ML or heuristic counter* — the same 13-dim features as Track B,
+  reconstructed from the per-image grouping. Results are byte-equal to
+  Track B because both pipelines derive identical features.
+
+### 3.6 Track C — ground-truth upper bound
+
+The same counters are refitted on features derived from the ground-truth
+annotations rather than from YOLO predictions. The resulting numbers in
+[`results/e2e_upper_bound/`](results/e2e_upper_bound/) describe the ceiling
+achievable if the detector were perfect.
+
+### 3.7 Why three tracks
+
+Track A measures how much deduplication is possible from the ground-truth
+detections — the upper limit for an explicit rule. Track B measures what the
+production pipeline actually achieves on noisy detections. Track C measures
+the upper limit for a learned counter under perfect detection. The three
+together separate detector noise from counter design.
 
 ---
 
-### E2E — Per-Tree Approach (full pipeline, pre-computed)
+## 4. Experimental setup
 
-All images of a tree are grouped, detections aggregated into 13-dim features, then a ML
-counter is applied. Results on test split (95 trees, `split_manifest.csv`).
-Sorted by Acc±1. **4 counters × 3 detectors = 12 combinations.**
+### 4.1 Hardware
 
-| Rank | Detector | Counter | Acc ±1 ↑ | MAE ↓ | B1 | B2 | B3 | B4 |
-|:----:|----------|---------|:--------:|:-----:|:--:|:--:|:--:|:--:|
-| 🥇 1 | [`y26s.pt`](models/y26s.pt) | [SVM](benchmarks/e2e/e2e_y26s_svm/metrics.json) | **70.8%** | 1.147 | 93.7% | 66.3% | 53.7% | 69.5% |
-| 2 | [`y26m.pt`](models/y26m.pt) | [M01](benchmarks/e2e/e2e_y26m_m01/metrics.json) | 69.2% | 1.295 | 91.6% | 69.5% | 48.4% | 67.4% |
-| 3 | [`y26n.pt`](models/y26n.pt) | [SVM](benchmarks/e2e/e2e_y26n_svm/metrics.json) | 68.9% | 1.168 | 91.6% | 68.4% | 54.7% | 61.1% |
-| 4 | [`y26m.pt`](models/y26m.pt) | [SVM](benchmarks/e2e/e2e_y26m_svm/metrics.json) | 68.9% | 1.168 | 93.7% | 70.5% | 50.5% | 61.1% |
-| 5 | [`y26s.pt`](models/y26s.pt) | [LR](benchmarks/e2e/e2e_y26s_lr/metrics.json) | 68.7% | 1.161 | 92.6% | 67.4% | 54.7% | 60.0% |
-| 6 | [`y26n.pt`](models/y26n.pt) | [LR](benchmarks/e2e/e2e_y26n_lr/metrics.json) | 68.2% | 1.171 | 92.6% | 72.6% | 53.7% | 53.7% |
-| 7 | [`y26m.pt`](models/y26m.pt) | [LR](benchmarks/e2e/e2e_y26m_lr/metrics.json) | 67.9% | 1.174 | 92.6% | 70.5% | 51.6% | 56.8% |
-| 8 | [`y26m.pt`](models/y26m.pt) | [RF](benchmarks/e2e/e2e_y26m_rf/metrics.json) | 66.8% | 1.216 | 90.5% | 64.2% | 54.7% | 57.9% |
-| 9 | [`y26n.pt`](models/y26n.pt) | [RF](benchmarks/e2e/e2e_y26n_rf/metrics.json) | 66.8% | 1.184 | 91.6% | 68.4% | 49.5% | 57.9% |
-| 10 | [`y26s.pt`](models/y26s.pt) | [M01](benchmarks/e2e/e2e_y26s_m01/metrics.json) | 64.2% | 1.313 | 89.5% | 55.8% | 49.5% | 62.1% |
-| 11 | [`y26s.pt`](models/y26s.pt) | [RF](benchmarks/e2e/e2e_y26s_rf/metrics.json) | 64.2% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
-| 12 | [`y26n.pt`](models/y26n.pt) | [M01](benchmarks/e2e/e2e_y26n_m01/metrics.json) | 63.9% | 1.342 | 89.5% | 64.2% | 43.2% | 58.9% |
-| — | **M01 on GT** (upper bound) | — | **87.6%** | **0.375** | — | — | — | — |
+Inference and counter evaluation require only a CPU. Retraining a YOLOv26
+checkpoint needs a CUDA-capable GPU with at least 8 GB of memory. Counter
+training takes seconds on CPU.
 
-> Full analysis in [`docs/e2e_pipeline.md`](docs/e2e_pipeline.md).
-> All `metrics.json` files in [`benchmarks/e2e/`](benchmarks/e2e/).
+### 4.2 Training configuration
 
-The ~17 pp gap between best E2E (70.8%) and heuristic-on-GT represents **detector error
-propagation** — improving the detector is the highest-leverage path. See [`docs/findings.md`](docs/findings.md).
+YOLOv26 — sixty epochs, batch 16, `imgsz=640`, optimizer `auto`, COCO
+pretraining enabled, standard Ultralytics augmentation. The exact arguments
+appear in each
+[`models/yolo/train_logs/y26{n,s,m}_train_log.txt`](models/yolo/train_logs/).
+
+Counters — seed `42` in every script
+([`pipeline/run_counting_svm.py`](pipeline/run_counting_svm.py),
+[`pipeline/run_counting_rf.py`](pipeline/run_counting_rf.py),
+[`pipeline/run_counting_lr.py`](pipeline/run_counting_lr.py)). The SVM grid
+search uses `n_jobs=-1`; cross-validation scores can therefore drift by less
+than half a per cent across machines but the test split metrics are stable.
+
+### 4.3 Metrics
+
+The primary metric is **Acc±1**: the fraction of trees where the predicted
+count differs from the ground truth by at most one bunch, macro-averaged
+across the four classes. The supporting metrics are macro MAE, total-count
+MAE, and exact-profile accuracy (all four classes simultaneously correct).
+Formal definitions and implementations are in
+[`docs/evaluation.md`](docs/evaluation.md).
 
 ---
 
-## Quickstart
+## 5. Results
 
-### 1. Install dependencies
+### 5.1 Track A — heuristic deduplication on 953 trees
 
-```bash
+Evaluated on every tree in [`ground_truth/annotations/`](ground_truth/annotations/);
+the full table including the naive sum baseline is in
+[`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
+
+| Rank | Algorithm | Acc±1 | Macro MAE | Approach |
+|:----:|-----------|------:|----------:|----------|
+| 1 | [`M01_selector_b2b3`](algorithms/M01_selector_b2b3.py) | **87.62%** | 0.3746 | Trifurcation selector plus B2 ↔ B3 correction |
+| 2 | [`M02_selector_trifurc`](algorithms/M02_selector_trifurc.py) | 87.62% | 0.3757 | Trifurcation selector, base form |
+| 3 | [`M03_blend_geometric`](algorithms/M03_blend_geometric.py) | 86.99% | 0.3767 | Geometric-mean blend |
+| 4 | [`M04_blend_floor_clamped`](algorithms/M04_blend_floor_clamped.py) | 86.99% | 0.3848 | Floor-clamped weighted blend |
+| 5 | [`M05_blend_vis_divide`](algorithms/M05_blend_vis_divide.py) | 86.99% | 0.3875 | Visibility plus adaptive divide |
+| — | Naive sum baseline | 3.78% | 2.2867 | No deduplication |
+
+### 5.2 YOLOv26 detection — mAP50 on the val split
+
+| Model | mAP50 | Inference speed | Size | Training log |
+|-------|------:|----------------:|-----:|--------------|
+| [`y26m.pt`](models/yolo/y26m.pt) | **0.528** | 1.0 ms | 42 MB | [log](models/yolo/train_logs/y26m_train_log.txt) |
+| [`y26n.pt`](models/yolo/y26n.pt) | 0.515 | **0.3 ms** | **5.2 MB** | [log](models/yolo/train_logs/y26n_train_log.txt) |
+| [`y26s.pt`](models/yolo/y26s.pt) | 0.511 | 0.4 ms | 20 MB | [log](models/yolo/train_logs/y26s_train_log.txt) |
+
+`y26m` produces the best detector quality; `y26n` is the strongest size-speed
+trade-off (recommended for deployment); `y26s` produces the strongest
+end-to-end counter results despite a lower mAP50.
+
+### 5.3 Track B — per-tree end-to-end on 95 test trees
+
+Twelve combinations (three detectors × four counters). Sorted by Acc±1.
+Every row links to the underlying
+[`results/e2e_per_tree/{detector}_{counter}/metrics.json`](results/e2e_per_tree/).
+
+| Rank | Detector | Counter | Acc±1 | MAE | B1 | B2 | B3 | B4 |
+|:----:|----------|---------|------:|----:|---:|---:|---:|---:|
+| 1 | y26s | [SVM](results/e2e_per_tree/y26s_svm/metrics.json) | **70.79%** | 1.147 | 93.7% | 66.3% | 53.7% | 69.5% |
+| 2 | y26m | [M01](results/e2e_per_tree/y26m_m01/metrics.json) | 69.21% | 1.295 | 91.6% | 69.5% | 48.4% | 67.4% |
+| 3 | y26n | [SVM](results/e2e_per_tree/y26n_svm/metrics.json) | 68.95% | 1.168 | 91.6% | 68.4% | 54.7% | 61.1% |
+| 4 | y26m | [SVM](results/e2e_per_tree/y26m_svm/metrics.json) | 68.95% | 1.168 | 93.7% | 70.5% | 50.5% | 61.1% |
+| 5 | y26s | [LR](results/e2e_per_tree/y26s_lr/metrics.json) | 68.68% | 1.161 | 92.6% | 67.4% | 54.7% | 60.0% |
+| 6 | y26n | [LR](results/e2e_per_tree/y26n_lr/metrics.json) | 68.16% | 1.171 | 92.6% | 72.6% | 53.7% | 53.7% |
+| 7 | y26m | [LR](results/e2e_per_tree/y26m_lr/metrics.json) | 67.89% | 1.174 | 92.6% | 70.5% | 51.6% | 56.8% |
+| 8 | y26m | [RF](results/e2e_per_tree/y26m_rf/metrics.json) | 66.84% | 1.216 | 90.5% | 64.2% | 54.7% | 57.9% |
+| 9 | y26n | [RF](results/e2e_per_tree/y26n_rf/metrics.json) | 66.84% | 1.184 | 91.6% | 68.4% | 49.5% | 57.9% |
+| 10 | y26s | [M01](results/e2e_per_tree/y26s_m01/metrics.json) | 64.21% | 1.313 | 89.5% | 55.8% | 49.5% | 62.1% |
+| 11 | y26s | [RF](results/e2e_per_tree/y26s_rf/metrics.json) | 64.21% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
+| 12 | y26n | [M01](results/e2e_per_tree/y26n_m01/metrics.json) | 63.95% | 1.342 | 89.5% | 64.2% | 43.2% | 58.9% |
+
+### 5.4 Track B' — per-image end-to-end on 95 test trees
+
+Twenty-one combinations (three detectors × seven counters). Two views of the
+same numbers follow: a sorted simple-aggregation table, and a pointer to every
+ML/heuristic folder.
+
+Simple aggregation, sorted by detector:
+
+| Detector | max | mean | sum |
+|----------|----:|-----:|----:|
+| y26m | [64.21%](results/e2e_per_image/y26m_max/metrics.json) | [55.79%](results/e2e_per_image/y26m_mean/metrics.json) | [50.00%](results/e2e_per_image/y26m_sum/metrics.json) |
+| y26n | [63.68%](results/e2e_per_image/y26n_max/metrics.json) | [56.58%](results/e2e_per_image/y26n_mean/metrics.json) | [50.26%](results/e2e_per_image/y26n_sum/metrics.json) |
+| y26s | [61.84%](results/e2e_per_image/y26s_max/metrics.json) | [53.95%](results/e2e_per_image/y26s_mean/metrics.json) | [52.63%](results/e2e_per_image/y26s_sum/metrics.json) |
+
+`max` is the strongest simple aggregator: it counts a bunch once even if it
+appears on several sides. `sum` is the worst: it counts the same bunch up to
+eight times. ML/heuristic results per detector × counter combination are
+stored at
+[`results/e2e_per_image/{detector}_{counter}/metrics.json`](results/e2e_per_image/)
+and are within numerical noise of their Track B counterparts because both
+pipelines derive identical 13-dim feature vectors.
+
+### 5.5 Track C — ground-truth upper bound on 95 test trees
+
+| Counter | Acc±1 | Macro MAE | B1 | B2 | B3 | B4 |
+|:-------:|------:|----------:|---:|---:|---:|---:|
+| [LR](results/e2e_upper_bound/gt_lr/metrics.json) | **97.37%** | **0.276** | 100.0% | 97.9% | 93.7% | 97.9% |
+| [SVM](results/e2e_upper_bound/gt_svm/metrics.json) | 96.58% | 0.300 | 100.0% | 96.8% | 92.6% | 96.8% |
+| [RF](results/e2e_upper_bound/gt_rf/metrics.json) | 95.79% | 0.361 | 96.8% | 96.8% | 92.6% | 96.8% |
+| [M01 on GT](results/heuristics_953/accuracy_full.csv) (953 trees) | 87.62% | 0.375 | — | — | — | — |
+
+### 5.6 Cross-track summary
+
+| Track | Best result | Acc±1 | Evidence |
+|-------|-------------|------:|----------|
+| A — heuristic on full GT | M01 / M02 | 87.62% | [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv) |
+| B — per-tree on YOLO | y26s + SVM | 70.79% | [`results/e2e_per_tree/y26s_svm/metrics.json`](results/e2e_per_tree/y26s_svm/metrics.json) |
+| B' — per-image simple agg | y26m + max | 64.21% | [`results/e2e_per_image/y26m_max/metrics.json`](results/e2e_per_image/y26m_max/metrics.json) |
+| C — counter on GT features | LR | 97.37% | [`results/e2e_upper_bound/gt_lr/metrics.json`](results/e2e_upper_bound/gt_lr/metrics.json) |
+
+The Track B to Track C gap of **26.58 percentage points** is detector error,
+not counter error.
+
+---
+
+## 6. Discussion
+
+### 6.1 Detector bottleneck
+
+The 26.58-point gap between Track B's best (70.79%) and Track C's best
+(97.37%) is the most actionable finding in the repository. A perfect counter
+operating on noisy detections cannot recover the truth that the detector has
+already lost. Improving recall on partially occluded B3 bunches, in
+particular, would close most of the gap.
+
+### 6.2 B2 ↔ B3 ambiguity
+
+The transition from B2 (black with red residue) to B3 (uniform black) is
+visually continuous. Even the heuristic-on-ground-truth track stops at
+87.62%; the residual error is dominated by B2/B3 swaps that are not separable
+without cross-view embeddings or higher-resolution colour information. This
+ceiling is documented in [`docs/findings.md`](docs/findings.md).
+
+### 6.3 Heuristic vs. learned counters
+
+On noisy detections, the heuristic M01 and the learned SVM are within seven
+percentage points of each other (64.21% vs. 70.79% on y26s); on ground-truth
+features, the learned counter strongly dominates (97.37% vs. 87.62%). The
+heuristic is conservative because it cannot exploit class-conditional
+correlations; the learned counter exploits them when the detection signal is
+clean enough to support them.
+
+### 6.4 Failure modes
+
+The most informative failure modes are: under-counting B3 when bunches are
+shaded by overlapping fronds, double-counting B1 when a single ripe bunch
+splits into two detection boxes, and confusing B2 with B3 when colour
+saturation is washed out. The per-tree predictions in every
+[`results/*/predictions.csv`](results/) file are sufficient to reconstruct
+each failure case.
+
+---
+
+## 7. Reproducibility
+
+### 7.1 Prerequisites
+
+- Python ≥ 3.10
+- For retraining a detector: CUDA-capable GPU with ≥ 8 GB VRAM
+- For everything else: CPU only
+
+### 7.2 Installation
+
+```
 pip install -r requirements.txt
 ```
 
-### 2. Download the dataset
+Dependencies are pinned to minimum versions in
+[`requirements.txt`](requirements.txt).
 
-The dataset is external and is not included in this repository. The precomputed
-prediction JSONs are included under `predictions/`, but the ground-truth JSONs from
-`SawitMVC-YOLO/json/` are still required to re-run benchmarks or E2E evaluation.
-Hugging Face access may require an approved account token for this dataset.
-
-```python
-from huggingface_hub import snapshot_download
-
-snapshot_download(
-    repo_id="ULM-DS-Lab/SawitMVC-YOLO",
-    repo_type="dataset",
-    local_dir="./SawitMVC-YOLO",
-    token=True,  # uses your logged-in Hugging Face token when access is gated
-)
-```
-
-### 3. Run the benchmark
-
-```bash
-python benchmarks/run_benchmark.py --data ./SawitMVC-YOLO/json/
-```
-
-Expected output:
+### 7.3 One-command reproduction
 
 ```
-SawitMVC Baseline — Benchmark Results (953 trees)
-==================================================
-Rank  Algorithm               Acc±1    MAE
-  1   M01_selector_b2b3      87.62%  0.3746
-  2   M02_selector_trifurc   87.62%  0.3757
-  3   M03_blend_geometric    86.99%  0.3767
-  4   M04_blend_floor_clamped 86.99%  0.3848
-  5   M05_blend_vis_divide   86.99%  0.3875
+bash scripts/reproduce_all.sh
 ```
 
-### 4. Run inference on a single tree
+The script chains Track A → Track B → Track B' → Track C → headline-claims
+guard. It runs purely from the cached predictions in
+[`predictions/`](predictions/) and the bundled GT in
+[`ground_truth/`](ground_truth/); no Hugging Face access is required. Total
+runtime on CPU is under thirty minutes.
 
-```python
-import json
-from algorithms.M01_selector_b2b3 import predict
+### 7.4 Step-by-step
 
-# Load detections from a JSON ground-truth file (or your own detector output)
-with open("SawitMVC-YOLO/json/DAMIMAS_A21B_0001.json") as f:
-    tree = json.load(f)
+```
+# Track A — five heuristics on the full 953-tree set
+python benchmarks/run_benchmark.py
 
-# Build detection list from JSON
-detections = []
-for side_key, side in tree["images"].items():
-    for ann in side["annotations"]:
-        x_center = ann["bbox_yolo"][0]
-        detections.append({
-            "class": ann["class_name"],
-            "x_norm": x_center,
-            "y_norm": ann["bbox_yolo"][1],
-            "side_index": side["side_index"],
-        })
+# Track B — per-tree end-to-end for one detector
+python pipeline/run_e2e_pipeline.py --name y26s --skip-inference
 
-result = predict(detections)
-print(result)  # {"B1": 1, "B2": 2, "B3": 5, "B4": 0}
+# Track B' — per-image end-to-end for one detector
+python pipeline/run_e2e_per_image.py --name y26s --skip-inference
+
+# Track C — ground-truth upper bound
+bash scripts/reproduce_upper_bound.sh
+```
+
+Individual counter scripts accept `--load-model models/counters/{svm,rf,lr}.pkl`
+to reuse the bundled artifacts instead of refitting.
+
+### 7.5 Verification
+
+```
+python benchmarks/check_release_claims.py
+```
+
+The script compares the heuristic top-5 numbers in
+[`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv)
+and the per-tree E2E winner in
+[`results/e2e_per_tree/`](results/e2e_per_tree/) against the values quoted in
+this README. It exits 0 on success and prints the offending rows on failure.
+
+### 7.6 Full inference from images
+
+Required only when a contributor wants to retrain or re-detect:
+
+```
+# 1. Download images from Hugging Face (annotations are already bundled)
+python -c "from huggingface_hub import snapshot_download; \
+    snapshot_download('ULM-DS-Lab/SawitMVC-YOLO', repo_type='dataset', \
+    local_dir='./SawitMVC-YOLO', token=True)"
+
+# 2. Per-tree inference for one detector
+python pipeline/run_e2e_inference.py --name y26s --weights models/yolo/y26s.pt \
+    --data ./SawitMVC-YOLO/
 ```
 
 ---
 
-## Repository Structure
+## 8. Repository layout
 
 ```
 Baseline-SawitMVC/
-├── README.md                    You are here
-├── CONTRIBUTING.md              How to contribute new algorithms or fixes
-├── CHANGELOG.md                 Version history
-├── LICENSE                      CC BY-NC 4.0
-├── requirements.txt             Python dependencies
+├── README.md                         You are here
+├── CONTRIBUTING.md                   Contribution rules and PR template
+├── CHANGELOG.md                      Version history
+├── LICENSE                           CC BY-NC 4.0
+├── requirements.txt                  Python dependencies
 │
-├── algorithms/                  Top-5 heuristic deduplication algorithms
-│   ├── README.md                Algorithm guide, comparison table, input/output spec
-│   ├── __init__.py              Unified imports + ranking metadata
-│   ├── M01_selector_b2b3.py    🥇 Champion: 87.62% Acc±1
-│   ├── M02_selector_trifurc.py 🥈 Runner-up: 87.62% Acc±1
-│   ├── M03_blend_geometric.py  🥉 86.99% Acc±1
-│   ├── M04_blend_floor_clamped.py  86.99% Acc±1
-│   └── M05_blend_vis_divide.py     86.99% Acc±1
+├── ground_truth/                     Bundled annotations + split manifest
+│   ├── README.md                     Schema, class taxonomy, provenance
+│   ├── annotations/                  953 per-tree GT JSONs
+│   ├── split_manifest.csv            train/val/test (763/95/95)
+│   └── data.yaml                     YOLO class descriptor
 │
-├── models/                      Trained YOLO26 weights (all < 50 MB)
-│   ├── README.md                Model comparison, inference guide
-│   ├── y26n.pt                 ⚡ Best efficiency: mAP50=0.515, 5.2 MB
-│   ├── y26s.pt                 Standard small: mAP50=0.511, 20 MB
-│   └── y26m.pt                 Best accuracy: mAP50=0.528, 42 MB
+├── algorithms/                       Track A — five deterministic heuristics
+│   ├── README.md
+│   └── M0[1-5]_*.py
 │
-├── benchmarks/                  Reproducible benchmark suite
-│   ├── README.md                How to run, metric definitions
-│   ├── run_benchmark.py         Entry point: load data → run → print table
-│   ├── results/                 Pre-computed results (953 trees, 29 methods)
-│   │   ├── accuracy_953.csv     Full 29-method ranking
-│   │   ├── per_tree.csv         Per-tree predictions
-│   │   ├── totals.csv           Aggregate counts
-│   │   └── mean_per_tree.csv    Mean per-tree statistics
-│   └── e2e/                     All 33 E2E results (3 detectors × 11 counters)
-│       ├── e2e_y26n_m01/              metrics.json + predictions.csv
-│       ├── e2e_y26n_per_image_svm/
-│       └── … (33 folders total)
+├── pipeline/                         Track B / B' / C scripts
+│   ├── README.md
+│   ├── build_counting_features.py    13-dim feature library
+│   ├── run_counting_{svm,rf,lr}.py   Counter trainers (support --save/--load-model)
+│   ├── run_e2e_inference.py          YOLO per-tree inference
+│   ├── run_e2e_pipeline.py           Per-tree end-to-end (Track B)
+│   └── run_e2e_per_image.py          Per-image end-to-end (Track B')
 │
-├── pipeline/                    E2E pipeline scripts
-│   ├── README.md                Step-by-step replication + ablation guide
-│   ├── run_e2e_pipeline.py      Unified harness (inference → features → eval)
-│   ├── run_e2e_inference.py     YOLO inference → JSON per tree
-│   ├── build_counting_features.py  Extract 13-dim features
-│   ├── run_counting_svm.py      SVM counter (train + evaluate)
-│   └── run_counting_rf.py       RF counter (train + evaluate)
+├── benchmarks/                       Entry points
+│   ├── README.md
+│   ├── run_benchmark.py              Heuristic top-5 runner
+│   └── check_release_claims.py       Headline-claims guard
 │
-├── predictions/                 Pre-computed YOLO inference (~17 MB)
-│   ├── y26n_inference/          953 JSON files (per-tree)
-│   ├── y26s_inference/          953 JSON files (per-tree)
-│   ├── y26m_inference/          953 JSON files (per-tree)
-│   ├── y26n_per_image/          3992 JSON files (per-image, derived)
-│   ├── y26s_per_image/          3992 JSON files (per-image, derived)
-│   └── y26m_per_image/          3992 JSON files (per-image, derived)
+├── results/                          Pre-computed evaluation outputs
+│   ├── heuristics_953/               Track A (all 953 trees, 29 methods ranked)
+│   ├── e2e_per_tree/                 Track B  (12 folders, 3 detectors × 4 counters)
+│   ├── e2e_per_image/                Track B' (21 folders, 3 detectors × 7 counters)
+│   └── e2e_upper_bound/              Track C  (3 folders, counters on GT features)
 │
-├── figures/                     All visualizations
-│   ├── README.md                Figure index and descriptions
-│   ├── eda/                     23 EDA plots (dataset characteristics)
-│   └── training/                YOLO training artifacts
+├── models/
+│   ├── README.md
+│   ├── yolo/                         Detector weights and training logs
+│   │   ├── y26{n,s,m}.pt
+│   │   └── train_logs/y26{n,s,m}_train_log.txt
+│   └── counters/                     Saved ML counter artifacts
+│       ├── README.md
+│       └── {svm,rf,lr}.pkl
 │
-└── docs/                        In-depth documentation
-    ├── dataset.md               Dataset structure, classes, GT quality
-    ├── algorithms.md            How algorithms work, design rationale
-    ├── training.md              Reproduce YOLO training experiments
-    ├── evaluation.md            Metric definitions, evaluation protocol
-    ├── e2e_pipeline.md          Full E2E guide + 15-combo results + ablation recipes
-    └── findings.md              Key research findings and future work
+├── predictions/                      Cached YOLO outputs
+│   ├── y26{n,s,m}_per_tree/          953 per-tree JSONs (one per detector)
+│   └── y26{n,s,m}_per_image/         3,992 per-image JSONs (derived)
+│
+├── docs/                             Long-form documentation
+│   ├── dataset.md
+│   ├── algorithms.md
+│   ├── training.md
+│   ├── evaluation.md
+│   ├── e2e_pipeline.md
+│   └── findings.md
+│
+├── figures/                          Visualisations
+│   ├── README.md
+│   └── eda/
+│
+└── scripts/                          Orchestration shell scripts
+    ├── reproduce_heuristics.sh
+    ├── reproduce_e2e_per_tree.sh
+    ├── reproduce_e2e_per_image.sh
+    ├── reproduce_upper_bound.sh
+    └── reproduce_all.sh
 ```
 
 ---
 
-Clickable repository paths:
-[`README.md`](README.md),
-[`CONTRIBUTING.md`](CONTRIBUTING.md),
-[`CHANGELOG.md`](CHANGELOG.md),
-[`requirements.txt`](requirements.txt),
-[`algorithms/`](algorithms/),
-[`models/`](models/),
-[`benchmarks/`](benchmarks/),
-[`benchmarks/results/accuracy_953.csv`](benchmarks/results/accuracy_953.csv),
-[`benchmarks/e2e/`](benchmarks/e2e/),
-[`pipeline/`](pipeline/),
-[`predictions/`](predictions/),
-[`figures/`](figures/),
-[`docs/`](docs/).
+## 9. Contributing
 
-## Dataset
+The repository accepts three categories of contribution: a new deduplication
+heuristic (must be deterministic, must beat M05's 86.99% Acc±1 on the full
+953-tree set, must register itself in the [`algorithms/`](algorithms/)
+package), a counter improvement on the existing 13-dim features, and bug
+fixes or documentation. The detailed checklist, branch naming convention, and
+PR template are in [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
-**SawitMVC-YOLO** — 953 oil palm trees from DAMIMAS (854) and LONSUM (99) plantations
-in Kalimantan, Indonesia.
+A new algorithm typically requires four steps:
 
-| Statistic | Value |
-|-----------|-------|
-| Trees | 953 |
-| Images | 3,992 JPEG (960×1280) |
-| Unique bunches | 9,823 |
-| Raw detections | 18,544 |
-| Deduplication ratio | 0.53 (naive overcounts 1.83×) |
-| 4-side trees | 908 (95.3%) |
-| 8-side trees | 45 (4.7%) |
-| Ground truth format | JSON with confirmed cross-side links |
-
-**Maturity classes (ordinal, most → least mature):**
-
-| Class | Visual | Physical Position |
-|-------|--------|-------------------|
-| **B1** | Red, large, round | Lowest on tree |
-| **B2** | Black with red transition | Above B1 |
-| **B3** | Full black, spiky, elongated | Above B2 |
-| **B4** | Smallest, dark green-black | Highest (newest) |
-
-Download: [HuggingFace — ULM-DS-Lab/SawitMVC-YOLO](https://huggingface.co/datasets/ULM-DS-Lab/SawitMVC-YOLO)
+1. Implement `predict(detections) -> dict[str, int]` in
+   `algorithms/M{NN}_{family}_{descriptor}.py`.
+2. Register it in [`algorithms/__init__.py`](algorithms/__init__.py).
+3. Run `python benchmarks/run_benchmark.py --save` and commit the updated
+   [`results/heuristics_953/`](results/heuristics_953/) CSV.
+4. Open a pull request that includes the new metrics row.
 
 ---
 
-## How to Contribute
-
-We welcome contributions of:
-
-- **New deduplication algorithms** — must be deterministic, no training, better Acc±1 than M05
-- **Bug reports** — incorrect benchmark results, broken scripts
-- **Documentation improvements**
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for full guidelines.
-
-Quick summary:
-1. Fork this repository
-2. Create a branch: `git checkout -b algo/your-algorithm-name`
-3. Add your algorithm as `algorithms/M{NN}_family_descriptor.py`
-4. Run `python benchmarks/run_benchmark.py` and include results in your PR
-5. Open a pull request using the provided template
-
----
-
-## Citation
-
-If you use this dataset or baseline in your research, please cite:
+## 10. Citation
 
 ```bibtex
 @dataset{sawitmvc2026,
@@ -346,5 +575,5 @@ If you use this dataset or baseline in your research, please cite:
 
 ## License
 
-This project is licensed under [CC BY-NC 4.0](LICENSE).
-You may use, share, and adapt this work for **non-commercial purposes** with attribution.
+This project is licensed under [CC BY-NC 4.0](LICENSE). You may use, share,
+and adapt the work for non-commercial purposes with attribution.

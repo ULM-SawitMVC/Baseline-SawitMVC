@@ -151,11 +151,12 @@ Example: `DAMIMAS_A21B_0001_1.jpg` (site DAMIMAS, block A21B, tree 0001, side 1)
 
 ## Downloading the Dataset
 
-The dataset is external and is not committed to this repository. This repository
-includes precomputed detector predictions under `predictions/`, but any benchmark
-or E2E re-evaluation still needs the ground-truth JSON files from
-`SawitMVC-YOLO/json/`. If the Hugging Face dataset is gated, log in or pass an
-approved token.
+The ground-truth annotations needed for every benchmark in this repository are
+bundled at [`ground_truth/annotations/`](../ground_truth/annotations/) — no
+external download is required for Tracks A, B, B', or C. The corresponding
+3,992 JPEG images live on Hugging Face and are needed only when retraining a
+detector. If the Hugging Face dataset is gated, log in or pass an approved
+token.
 
 ```python
 from huggingface_hub import snapshot_download

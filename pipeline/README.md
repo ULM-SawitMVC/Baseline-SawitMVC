@@ -1,170 +1,152 @@
 # Pipeline — End-to-End Replication Scripts
 
-Two E2E approaches available (produce identical ML-counter results since features are the same):
+This folder houses every script in Tracks B, B', and C of the SawitMVC
+baseline. All scripts read the bundled ground truth at
+[`ground_truth/annotations/`](../ground_truth/annotations/) and the canonical
+split at [`ground_truth/split_manifest.csv`](../ground_truth/split_manifest.csv).
+They write results under [`results/`](../results/) and YOLO predictions under
+[`predictions/`](../predictions/).
 
-| Approach | Script | Description |
-|----------|--------|-------------|
-| **Per-tree** | `run_e2e_pipeline.py` | Groups all 4-8 images per tree → 1 JSON → ML counting |
-| **Per-image** | `run_e2e_per_image.py` | Each image processed independently → group → ML counting |
+## Two end-to-end approaches
 
-Both approaches support the same 7 counters: `max`, `mean`, `sum`, `m01`, `svm`, `rf`, `lr`.
-The per-image approach additionally supports simple aggregation (`max`/`mean`/`sum`) before ML.
+| Approach | Driver | Output folder |
+|----------|--------|---------------|
+| Per-tree (Track B) | [`run_e2e_pipeline.py`](run_e2e_pipeline.py) | [`results/e2e_per_tree/`](../results/e2e_per_tree/) |
+| Per-image (Track B') | [`run_e2e_per_image.py`](run_e2e_per_image.py) | [`results/e2e_per_image/`](../results/e2e_per_image/) |
 
----
+Per-tree groups the 4–8 images of a tree before inference and produces one
+JSON per tree. Per-image runs inference image-by-image and groups afterwards.
+Both pipelines derive identical 13-dimensional feature vectors and therefore
+yield numerically identical ML-counter results; the per-image pipeline adds
+three simple aggregators (`max`, `mean`, `sum`) that the per-tree pipeline
+does not need.
 
-## Scripts Overview
+## Script inventory
 
 | Script | Purpose |
 |--------|---------|
-| `run_e2e_inference.py` | YOLO inference grouped per tree (4-8 images → 1 JSON) |
-| `run_e2e_per_image.py` | **Complete per-image pipeline**: YOLO per image → group → max/mean/sum/M01/SVM/RF/LR |
-| `build_counting_features.py` | Extract 13-dim feature vectors from inference JSONs |
-| `run_counting_svm.py` | SVM counter (RBF kernel, GridSearchCV) |
-| `run_counting_rf.py` | Random Forest counter (n=200, max_depth=10) |
-| `run_counting_lr.py` | **Linear Regression** counter (interpretable baseline) |
-| `run_e2e_pipeline.py` | Unified harness: inference → SVM + RF + LR + M01 |
+| [`run_e2e_inference.py`](run_e2e_inference.py) | YOLO inference grouped per tree (one JSON per tree). |
+| [`run_e2e_pipeline.py`](run_e2e_pipeline.py) | Unified Track B harness: inference plus SVM, RF, LR, and M01. |
+| [`run_e2e_per_image.py`](run_e2e_per_image.py) | Track B' harness with seven counters: `max`, `mean`, `sum`, `m01`, `svm`, `rf`, `lr`. |
+| [`build_counting_features.py`](build_counting_features.py) | 13-dim feature library; importable or runnable. |
+| [`run_counting_svm.py`](run_counting_svm.py) | SVM counter (RBF + `GridSearchCV`); supports `--save-model` / `--load-model`. |
+| [`run_counting_rf.py`](run_counting_rf.py) | Random Forest counter (`n=200`, `max_depth=10`, `random_state=42`). |
+| [`run_counting_lr.py`](run_counting_lr.py) | Linear regression with `StandardScaler`; emits a coefficients CSV. |
 
----
+Each script pins `random`, `numpy.random`, and `PYTHONHASHSEED` to `42`.
 
-## Quick Start (Full Pipeline in One Command)
+## Quick start
 
-**Per-tree approach** (groups all images per tree before counting):
-```bash
-# From repo root — download dataset first (see docs/dataset.md)
-python pipeline/run_e2e_pipeline.py \
-    --name y26n \
-    --weights models/y26n.pt
-
-# Output:
-#   predictions/y26n_inference/        ← 953 JSON files (skipped if exists)
-#   benchmarks/e2e/e2e_y26n_svm/       ← SVM metrics.json + predictions.csv
-#   benchmarks/e2e/e2e_y26n_rf/        ← RF  metrics.json + predictions.csv
-#   benchmarks/e2e/e2e_y26n_lr/        ← LR  metrics.json + predictions.csv
-#   benchmarks/e2e/e2e_y26n_m01/       ← M01 metrics.json
-```
-
-**Per-image approach** (each image processed independently, then grouped):
-```bash
-# Using pre-computed per-tree predictions (no GPU needed — derives per-image data automatically)
-python pipeline/run_e2e_per_image.py \
-    --name y26n \
-    --weights models/y26n.pt \
-    --data ./SawitMVC-YOLO \
-    --skip-inference
-
-# Output (7 counters):
-#   predictions/y26n_per_image/                   ← 3992 per-image JSONs
-#   benchmarks/e2e/e2e_y26n_per_image_max/        ← simple max agg
-#   benchmarks/e2e/e2e_y26n_per_image_mean/
-#   benchmarks/e2e/e2e_y26n_per_image_sum/
-#   benchmarks/e2e/e2e_y26n_per_image_m01/        ← M01 heuristic
-#   benchmarks/e2e/e2e_y26n_per_image_svm/        ← SVM counter
-#   benchmarks/e2e/e2e_y26n_per_image_lr/         ← LR counter
-#   benchmarks/e2e/e2e_y26n_per_image_rf/         ← RF counter
-```
-
----
-
-## Step-by-Step (Manual)
-
-### Step 1 — YOLO Inference
-
-> **Skip this step** if using pre-computed predictions in `predictions/`.
+Reproduce the per-tree pipeline for the best detector, reusing the cached
+predictions and the bundled ground truth:
 
 ```bash
-python pipeline/run_e2e_inference.py \
-    --name y26n \
-    --weights models/y26n.pt
-# → predictions/y26n_inference/{tree_id}.json (953 files)
+python pipeline/run_e2e_pipeline.py --name y26s --skip-inference
+# Writes:
+#   results/e2e_per_tree/y26s_svm/{metrics.json, predictions.csv}
+#   results/e2e_per_tree/y26s_rf/{metrics.json, predictions.csv, feature_importance.csv}
+#   results/e2e_per_tree/y26s_lr/{metrics.json, predictions.csv, coefficients.csv}
+#   results/e2e_per_tree/y26s_m01/{metrics.json, predictions.csv}
 ```
 
-### Step 2 — Feature Extraction
-
-Extracts a 13-dim feature vector per tree from the YOLO inference JSONs.
+Per-image variant (also CPU-only when `--skip-inference` is set):
 
 ```bash
-python pipeline/build_counting_features.py \
-    --inference-dir predictions/y26n_inference/
-# → used internally by run_counting_svm.py / run_counting_rf.py
+python pipeline/run_e2e_per_image.py --name y26s --skip-inference
+# Writes seven folders under results/e2e_per_image/y26s_{max,mean,sum,m01,svm,rf,lr}/.
 ```
 
-### Step 3 — Train Counter and Evaluate
+## Step-by-step
+
+### Step 1 — YOLO inference
+
+Required only when retraining or rerunning detection. The repository ships
+pre-computed per-tree predictions for every detector in
+[`predictions/`](../predictions/).
 
 ```bash
-# SVM (RBF kernel, GridSearchCV)
-python pipeline/run_counting_svm.py \
-    --inference-dir predictions/y26n_inference/
-
-# Random Forest (n=200, max_depth=10)
-python pipeline/run_counting_rf.py \
-    --inference-dir predictions/y26n_inference/
+python pipeline/run_e2e_inference.py --name y26s \
+    --weights models/yolo/y26s.pt --data ./SawitMVC-YOLO/
+# Output: predictions/y26s_per_tree/{tree_id}.json (953 files)
 ```
 
----
+### Step 2 — Feature extraction
 
-## Pre-computed Predictions
-
-The `predictions/` folder contains YOLO inference outputs for all 3 trained models
-(953 trees × 3 detectors = 2,859 JSON files, ~17 MB total).
-
-**You can skip Step 1** entirely and run Steps 2–3 directly on existing predictions:
+The library reconstructs a 13-dim feature vector per tree.
 
 ```bash
-python pipeline/run_counting_svm.py \
-    --inference-dir predictions/y26m_inference/
+python pipeline/build_counting_features.py --inference-dir predictions/y26s_per_tree/
 ```
 
-Available prediction sets:
+### Step 3 — Counter training and evaluation
 
-| Folder | Detector | mAP50 |
-|--------|----------|:-----:|
-| `y26m_inference/` | YOLO26m | **0.528** |
-| `y26n_inference/` | YOLO26n | 0.515 |
-| `y26s_inference/` | YOLO26s | 0.511 |
-
----
-
-## Feature Vector Format (13 dimensions)
-
-| Feature | Description |
-|---------|-------------|
-| `naive_sum_B1–B4` | Raw detection count per class (4 features) |
-| `max_per_side_B1–B4` | Max detections on any single camera side per class (4 features) |
-| `mean_per_side_B1–B4` | Mean detections per side per class (4 features) |
-| `n_sides` | Number of camera sides (4 or 8) |
-
-Target: `[gt_B1, gt_B2, gt_B3, gt_B4]` — unique GT bunch count per class.
-
----
-
-## Designing a New Ablation
-
-### New detector (e.g., your retrained model)
+Either refit the counter (default behaviour) or reload an artifact from
+[`models/counters/`](../models/counters/) and skip training.
 
 ```bash
-python pipeline/run_e2e_pipeline.py \
-    --name my_new_detector \
-    --weights path/to/my_weights.pt
-# Results → benchmarks/e2e/e2e_my_new_detector_{svm,rf,lr,m01}/
+# Refit and save
+python pipeline/run_counting_svm.py --inference-dir predictions/y26s_per_tree \
+    --save-model models/counters/svm.pkl
+
+# Reload and evaluate only
+python pipeline/run_counting_svm.py --inference-dir predictions/y26s_per_tree \
+    --load-model models/counters/svm.pkl
 ```
 
-Then compare with pre-computed baselines in `benchmarks/e2e/`.
+The same `--save-model` / `--load-model` pair exists in `run_counting_rf.py`
+and `run_counting_lr.py`.
+
+## Feature vector specification
+
+The 13 dimensions, in order:
+
+```
+naive_sum_B1,  naive_sum_B2,  naive_sum_B3,  naive_sum_B4,
+max_per_side_B1, max_per_side_B2, max_per_side_B3, max_per_side_B4,
+mean_per_side_B1, mean_per_side_B2, mean_per_side_B3, mean_per_side_B4,
+n_sides
+```
+
+Target: `[gt_B1, gt_B2, gt_B3, gt_B4]` — the unique GT bunch count per class
+read from `summary.by_class` in each ground-truth JSON.
+
+## Cached predictions
+
+| Folder | Detector | Files | mAP50 |
+|--------|----------|------:|------:|
+| [`predictions/y26m_per_tree/`](../predictions/y26m_per_tree/) | YOLOv26 medium | 953 | 0.528 |
+| [`predictions/y26n_per_tree/`](../predictions/y26n_per_tree/) | YOLOv26 nano | 953 | 0.515 |
+| [`predictions/y26s_per_tree/`](../predictions/y26s_per_tree/) | YOLOv26 small | 953 | 0.511 |
+| [`predictions/y26m_per_image/`](../predictions/y26m_per_image/) | derived from per-tree | 3,992 | — |
+| [`predictions/y26n_per_image/`](../predictions/y26n_per_image/) | derived | 3,992 | — |
+| [`predictions/y26s_per_image/`](../predictions/y26s_per_image/) | derived | 3,992 | — |
+
+## Designing a new ablation
+
+### New detector
+
+```bash
+python pipeline/run_e2e_pipeline.py --name my_detector \
+    --weights path/to/my_weights.pt --data ./SawitMVC-YOLO/
+```
+
+The script will inference, extract features, train each counter, and write
+results to `results/e2e_per_tree/my_detector_{svm,rf,lr,m01}/`.
 
 ### New counting algorithm
 
-1. Add your algorithm as `algorithms/M{NN}_your_algo.py` with `predict(detections) -> dict`
-2. Edit `pipeline/run_e2e_pipeline.py` to include it alongside the SVM/RF/M01 block
-3. Re-run using existing predictions (no re-inference needed):
+1. Implement `predict(detections) -> dict[str, int]` in
+   `algorithms/M{NN}_{family}_{descriptor}.py`.
+2. Register it in [`algorithms/__init__.py`](../algorithms/__init__.py).
+3. Re-run the heuristic benchmark:
+   ```bash
+   python benchmarks/run_benchmark.py --save
+   ```
+4. Compare against the existing rows in
+   [`results/heuristics_953/accuracy_full.csv`](../results/heuristics_953/accuracy_full.csv).
 
-```bash
-python pipeline/run_e2e_pipeline.py \
-    --name y26n \
-    --weights models/y26n.pt \
-    --skip-inference
-```
+### New features
 
-### New feature engineering
-
-Edit `pipeline/build_counting_features.py` to add features (e.g., bbox aspect ratio,
-spatial density, inter-side class agreement) and re-run the SVM/RF steps.
-All 2,859 pre-computed prediction JSONs remain valid inputs.
+Extend [`build_counting_features.py`](build_counting_features.py) by adding to
+`FEATURE_NAMES` and to `extract_features(...)`. All 2,859 cached prediction
+JSONs remain valid inputs; only the SVM / RF / LR runs need to be repeated.

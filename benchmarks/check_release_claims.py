@@ -3,8 +3,8 @@ Release consistency checks for stored benchmark artifacts.
 
 This script verifies the small set of public headline claims that are easy to
 make stale during release edits:
-  - heuristic top-5 metrics from results/accuracy_953.csv
-  - canonical E2E best result from benchmarks/e2e/*/metrics.json
+  - heuristic top-5 metrics from results/heuristics_953/accuracy_full.csv
+  - canonical E2E best result from results/e2e_per_tree/*/metrics.json
   - canonical E2E test split size
 
 It does not parse prose tables; use it as a guardrail before updating README/docs.
@@ -24,7 +24,7 @@ EXPECTED_HEURISTICS = {
     "M04_blend_floor_clamped": (86.99, 0.3848),
     "M05_blend_vis_divide": (86.99, 0.3875),
 }
-EXPECTED_E2E_BEST = ("e2e_y26s_svm", 0.7079, 1.1474, 95)
+EXPECTED_E2E_BEST = ("y26s_svm", 0.7079, 1.1474, 95)
 
 
 def _close(a: float, b: float, tol: float = 5e-4) -> bool:
@@ -32,7 +32,7 @@ def _close(a: float, b: float, tol: float = 5e-4) -> bool:
 
 
 def check_heuristics() -> list[str]:
-    path = ROOT / "benchmarks" / "results" / "accuracy_953.csv"
+    path = ROOT / "results" / "heuristics_953" / "accuracy_full.csv"
     with open(path, encoding="utf-8", newline="") as f:
         rows = {r["method"]: r for r in csv.DictReader(f)}
 
@@ -46,20 +46,18 @@ def check_heuristics() -> list[str]:
         mae = float(row["MAE"])
         if not _close(acc, exp_acc, 0.005) or not _close(mae, exp_mae):
             errors.append(
-                f"{method}: expected Acc±1={exp_acc}, MAE={exp_mae}; "
-                f"found Acc±1={acc}, MAE={mae}"
+                f"{method}: expected Acc+/-1={exp_acc}, MAE={exp_mae}; "
+                f"found Acc+/-1={acc}, MAE={mae}"
             )
     return errors
 
 
 def check_e2e() -> list[str]:
-    e2e_dir = ROOT / "benchmarks" / "e2e"
+    e2e_dir = ROOT / "results" / "e2e_per_tree"
     best: tuple[float, str, dict] | None = None
     errors: list[str] = []
 
-    for metrics_path in sorted(e2e_dir.glob("e2e_y26?_*/metrics.json")):
-        if "_per_image_" in metrics_path.parent.name:
-            continue
+    for metrics_path in sorted(e2e_dir.glob("y26?_*/metrics.json")):
         data = json.loads(metrics_path.read_text(encoding="utf-8"))
         test = data.get("test", {})
         n_trees = int(test.get("n_trees", 0))
@@ -80,8 +78,8 @@ def check_e2e() -> list[str]:
     if name != exp_name or not _close(acc, exp_acc) or not _close(mae, exp_mae) or n_trees != exp_n:
         errors.append(
             "Unexpected E2E best: "
-            f"{name} Acc±1={acc:.4f}, MAE={mae:.4f}, n={n_trees}; "
-            f"expected {exp_name} Acc±1={exp_acc:.4f}, MAE={exp_mae:.4f}, n={exp_n}"
+            f"{name} Acc+/-1={acc:.4f}, MAE={mae:.4f}, n={n_trees}; "
+            f"expected {exp_name} Acc+/-1={exp_acc:.4f}, MAE={exp_mae:.4f}, n={exp_n}"
         )
     return errors
 

@@ -18,12 +18,12 @@ does this algorithm exploit? How is it different from the existing top-5?
 
 ## Benchmark Results
 
-Run `python benchmarks/run_benchmark.py --data ./SawitMVC-YOLO/json/` and paste
-the results for your algorithm:
+Run `python benchmarks/run_benchmark.py --save` and paste the results for your
+algorithm (the default `--data` is `./ground_truth/annotations/`):
 
 ```
 Algorithm: M{NN}_your_algorithm
-Dataset:   Brand-New-Dataset-YOLO (953 trees, post-GT-fix 2026-05-16)
+Dataset:   SawitMVC-YOLO (953 trees, post-GT-fix 2026-05-16)
 
 Acc ±1:          XX.XX%
 Macro class-MAE: X.XXXX

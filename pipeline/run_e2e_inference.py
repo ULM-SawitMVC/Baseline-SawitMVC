@@ -14,8 +14,9 @@ in a single JSON with this structure:
     }
 
 Usage:
-    python pipeline/run_e2e_inference.py --name y26n --weights models/y26n.pt
-    python pipeline/run_e2e_inference.py --name y26n --weights models/y26n.pt --data ./SawitMVC-YOLO/
+    python pipeline/run_e2e_inference.py --name y26n --weights models/yolo/y26n.pt
+    python pipeline/run_e2e_inference.py --name y26n --weights models/yolo/y26n.pt \
+        --data ./SawitMVC-YOLO/
 """
 from __future__ import annotations
 import argparse, json, re
@@ -69,7 +70,7 @@ def run_inference(name: str, weights: Path, data_dir: Path, out_dir: Path, conf:
 
     split_map = _load_splits(data_dir)
     trees = _group_by_tree(data_dir, split_map)
-    print(f"Found {len(trees)} trees | Output → {out_dir}")
+    print(f"Found {len(trees)} trees | Output -> {out_dir}")
 
     for tree_id, sides in sorted(trees.items()):
         out_path = out_dir / f"{tree_id}.json"
@@ -112,18 +113,23 @@ def run_inference(name: str, weights: Path, data_dir: Path, out_dir: Path, conf:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="YOLO inference — per tree (all sides → 1 JSON)")
+    p = argparse.ArgumentParser(description="YOLO inference — per tree (all sides into one JSON)")
     p.add_argument("--name", required=True, help="Experiment name (used for output folder)")
-    p.add_argument("--weights", type=Path, required=True, help="Path to .pt weights file")
+    p.add_argument("--weights", type=Path, default=None,
+                   help="Path to .pt weights (default: models/yolo/{name}.pt)")
     p.add_argument("--data", type=Path, default=ROOT / "SawitMVC-YOLO",
-                   help="Dataset root (default: ./SawitMVC-YOLO/)")
+                   help="Dataset root that contains images/ (default: ./SawitMVC-YOLO/)")
     p.add_argument("--out", type=Path, default=None,
-                   help="Output folder (default: predictions/{name}_inference/)")
+                   help="Output folder (default: predictions/{name}_per_tree/)")
     p.add_argument("--conf", type=float, default=0.25, help="Detection confidence threshold")
     args = p.parse_args()
 
-    out_dir = args.out or ROOT / "predictions" / f"{args.name}_inference"
-    run_inference(args.name, args.weights, args.data, out_dir, args.conf)
+    out_dir = args.out or ROOT / "predictions" / f"{args.name}_per_tree"
+    weights = args.weights or (ROOT / "models" / "yolo" / f"{args.name}.pt")
+    if not weights.exists():
+        print(f"ERROR: weights {weights} not found.")
+        raise SystemExit(1)
+    run_inference(args.name, weights, args.data, out_dir, args.conf)
 
 
 if __name__ == "__main__":

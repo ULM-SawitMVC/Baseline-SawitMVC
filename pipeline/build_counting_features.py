@@ -2,7 +2,10 @@
 Feature extraction library — 13-dim per tree.
 
 Library: from pipeline.build_counting_features import load_dataset, extract_features
-CLI:     python pipeline/build_counting_features.py --inference-dir predictions/y26n_inference/
+CLI:     python pipeline/build_counting_features.py --inference-dir predictions/y26n_per_tree/
+
+Feature layout (13 dims): naive_sum_{B1..B4}, max_per_side_{B1..B4},
+mean_per_side_{B1..B4}, n_sides.
 """
 from __future__ import annotations
 import csv, json
@@ -78,8 +81,8 @@ def load_dataset(
 
     Args:
         inference_dir: Folder of prediction JSONs (one per tree).
-        gt_dir:        SawitMVC-YOLO/json/ folder.
-        data_dir:      Dataset root for split_manifest.csv (defaults to gt_dir parent).
+        gt_dir:        Ground-truth JSON folder (e.g. ground_truth/annotations/).
+        data_dir:      Folder containing split_manifest.csv (defaults to gt_dir parent).
     Returns:
         X (n,13), y (n,4), tree_ids, splits
     """
@@ -106,8 +109,8 @@ if __name__ == "__main__":
     ROOT = Path(__file__).resolve().parent.parent
     p = argparse.ArgumentParser(description="Extract 13-dim counting features")
     p.add_argument("--inference-dir", type=Path,
-                   default=ROOT / "predictions" / "y26n_inference")
-    p.add_argument("--gt-dir", type=Path, default=ROOT / "SawitMVC-YOLO" / "json")
+                   default=ROOT / "predictions" / "y26n_per_tree")
+    p.add_argument("--gt-dir", type=Path, default=ROOT / "ground_truth" / "annotations")
     args = p.parse_args()
     X, y, ids, splits = load_dataset(args.inference_dir, args.gt_dir)
     from collections import Counter

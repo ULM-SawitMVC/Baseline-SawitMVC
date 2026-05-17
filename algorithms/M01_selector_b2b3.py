@@ -2,7 +2,7 @@
 Algorithm: selector_with_b2b3.
 
 Canonical benchmark: 953 trees, Acc±1 = 87.62%, MAE = 0.3746,
-n_fail = 118. See benchmarks/results/accuracy_953.csv.
+n_fail = 118. See results/heuristics_953/accuracy_full.csv.
 
 The algorithm applies two corrections in sequence:
 

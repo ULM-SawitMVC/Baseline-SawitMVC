@@ -18,19 +18,19 @@ Full ML/heuristic counters (identical features to per-tree pipeline):
   lr   : Linear Regression + StandardScaler (interpretable)
 
 Usage:
-    # Full run (requires GPU + dataset)
-    python pipeline/run_e2e_per_image.py --name y26n --weights models/y26n.pt
-
     # Skip inference: derive per-image from existing per-tree predictions (no GPU needed)
-    python pipeline/run_e2e_per_image.py --name y26n --weights models/y26n.pt \\
-        --data /workspace/SawitMVC-YOLO --skip-inference
+    python pipeline/run_e2e_per_image.py --name y26n --skip-inference
+
+    # Full run (requires GPU + images at SawitMVC-YOLO/)
+    python pipeline/run_e2e_per_image.py --name y26n --weights models/yolo/y26n.pt \\
+        --data SawitMVC-YOLO/
 
     # Run only specific counters
-    python pipeline/run_e2e_per_image.py --name y26n --weights models/y26n.pt \\
-        --skip-inference --counters max svm lr
+    python pipeline/run_e2e_per_image.py --name y26n --skip-inference \\
+        --counters max svm lr
 """
 from __future__ import annotations
-import argparse, json, re, sys
+import argparse, json, os, random, re, sys
 from collections import defaultdict
 from pathlib import Path
 import numpy as np
@@ -42,6 +42,20 @@ sys.path.insert(0, str(ROOT))
 
 CLASSES = ["B1", "B2", "B3", "B4"]
 CLASS_MAP = {0: "B1", 1: "B2", 2: "B3", 3: "B4"}
+
+SEED = 42
+random.seed(SEED)
+np.random.seed(SEED)
+os.environ["PYTHONHASHSEED"] = str(SEED)
+
+
+def _resolve_gt_dir(data_dir: Path) -> Path:
+    """Locate the annotations subdir; supports both ground_truth/ and SawitMVC-YOLO/ layouts."""
+    for sub in ("annotations", "json"):
+        candidate = data_dir / sub
+        if candidate.is_dir():
+            return candidate
+    return data_dir / "annotations"
 
 
 # ---------------------------------------------------------------------------
@@ -101,8 +115,8 @@ def _save_results(rows: list[dict], out_dir: Path, name: str, counter: str) -> N
     (out_dir / "metrics.json").write_text(json.dumps({"test": m_test, "val": m_val}, indent=2))
     pd.DataFrame(rows).to_csv(out_dir / "predictions.csv", index=False)
     n_test = len([r for r in rows if r["split"] == "test"])
-    print(f"{counter.upper()}: Acc±1={m_test.get('macro_acc_pm1', 0)*100:.2f}%  "
-          f"MAE={m_test.get('macro_class_mae', 0):.4f}  (n={n_test}) → {out_dir}")
+    print(f"{counter.upper()}: Acc+/-1={m_test.get('macro_acc_pm1', 0)*100:.2f}%  "
+          f"MAE={m_test.get('macro_class_mae', 0):.4f}  (n={n_test}) -> {out_dir}")
 
 
 # ---------------------------------------------------------------------------
@@ -155,7 +169,7 @@ def run_inference_per_image(name: str, weights: Path, data_dir: Path,
     model = YOLO(str(weights))
     per_image_dir.mkdir(parents=True, exist_ok=True)
     images = sorted((data_dir / "images").rglob("*.jpg"))
-    print(f"Running inference on {len(images)} images → {per_image_dir}")
+    print(f"Running inference on {len(images)} images -> {per_image_dir}")
     done = 0
     for img_path in images:
         out_path = per_image_dir / f"{img_path.stem}.json"
@@ -378,8 +392,8 @@ def step_ml(name: str, counter: str, per_image_dir: Path, gt_dir: Path,
         fi = pd.DataFrame({"feature": FEATURE_NAMES, "importance": rf.feature_importances_}).sort_values("importance", ascending=False)
         fi.to_csv(out_dir / "feature_importance.csv", index=False)
     n_test = len(rows_te)
-    print(f"{counter.upper()}: Acc±1={m_te.get('macro_acc_pm1', 0)*100:.2f}%  "
-          f"MAE={m_te.get('macro_class_mae', 0):.4f}  (n={n_test}) → {out_dir}")
+    print(f"{counter.upper()}: Acc+/-1={m_te.get('macro_acc_pm1', 0)*100:.2f}%  "
+          f"MAE={m_te.get('macro_class_mae', 0):.4f}  (n={n_test}) -> {out_dir}")
 
 
 # ---------------------------------------------------------------------------
@@ -388,7 +402,7 @@ def step_ml(name: str, counter: str, per_image_dir: Path, gt_dir: Path,
 
 def main() -> None:
     p = argparse.ArgumentParser(
-        description="Complete E2E per-image pipeline: inference → group by tree → counter",
+        description="Complete E2E per-image pipeline: inference -> group by tree -> counter",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Counters:
@@ -401,9 +415,11 @@ Counters:
   lr    Linear Regression + StandardScaler (interpretable)
         """)
     p.add_argument("--name", required=True, help="Experiment name, e.g. y26n or y26m")
-    p.add_argument("--weights", type=Path, required=True, help="Path to YOLO .pt weights")
-    p.add_argument("--data", type=Path, default=ROOT / "SawitMVC-YOLO",
-                   help="Dataset root (default: ./SawitMVC-YOLO/)")
+    p.add_argument("--weights", type=Path, default=None,
+                   help="Path to YOLO .pt weights (default: models/yolo/{name}.pt; only required for inference)")
+    p.add_argument("--data", type=Path, default=ROOT / "ground_truth",
+                   help="Annotations + split root (default: ./ground_truth/). "
+                        "For full pipeline, point this at ./SawitMVC-YOLO/ so the images/ subdir is available.")
     p.add_argument("--conf", type=float, default=0.25, help="Detection confidence threshold")
     p.add_argument("--skip-inference", action="store_true",
                    help="Skip inference. If per-image JSONs don't exist, derives from per-tree predictions.")
@@ -414,14 +430,18 @@ Counters:
     args = p.parse_args()
 
     per_image_dir = ROOT / "predictions" / f"{args.name}_per_image"
-    per_tree_dir  = ROOT / "predictions" / f"{args.name}_inference"
-    gt_dir        = args.data / "json"
-    e2e_base      = ROOT / "benchmarks" / "e2e"
+    per_tree_dir  = ROOT / "predictions" / f"{args.name}_per_tree"
+    gt_dir        = _resolve_gt_dir(args.data)
+    e2e_base      = ROOT / "results" / "e2e_per_image"
 
     # Step 1: Inference
     if not args.skip_inference:
+        weights = args.weights or (ROOT / "models" / "yolo" / f"{args.name}.pt")
+        if not weights.exists():
+            print(f"ERROR: weights {weights} not found.")
+            raise SystemExit(1)
         print(f"\n[Step 1] Per-image YOLO inference: {args.name}")
-        run_inference_per_image(args.name, args.weights, args.data, per_image_dir, args.conf)
+        run_inference_per_image(args.name, weights, args.data, per_image_dir, args.conf)
     else:
         n_existing = len(list(per_image_dir.glob("*.json"))) if per_image_dir.exists() else 0
         if n_existing > 0:
@@ -429,7 +449,7 @@ Counters:
         elif per_tree_dir.exists():
             print(f"[Step 1] Per-image JSONs not found. Deriving from per-tree predictions in {per_tree_dir} ...")
             n = derive_per_image_from_per_tree(per_tree_dir, per_image_dir, args.name)
-            print(f"  Derived {n} per-image JSONs → {per_image_dir}")
+            print(f"  Derived {n} per-image JSONs -> {per_image_dir}")
         else:
             print(f"ERROR: No per-image JSONs at {per_image_dir} and no per-tree at {per_tree_dir}.")
             print("Run without --skip-inference to generate predictions.")
@@ -441,7 +461,7 @@ Counters:
     # Steps 2+3: Count with selected counters
     print(f"\n[Steps 2-3] Counters: {args.counters}")
     for ctr in args.counters:
-        out_dir = e2e_base / f"e2e_{args.name}_per_image_{ctr}"
+        out_dir = e2e_base / f"{args.name}_{ctr}"
         if ctr in ("max", "mean", "sum"):
             step_aggregation(args.name, ctr, per_image_dir, gt_dir, args.data, out_dir)
         elif ctr == "m01":

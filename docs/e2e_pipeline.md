@@ -30,7 +30,7 @@ SawitMVC-YOLO/images/
    └────┬────┘────────────┘
         │
         ▼
- benchmarks/e2e/{combo}/metrics.json
+ results/e2e_per_tree/{combo}/metrics.json
 ```
 
 ---
@@ -55,7 +55,7 @@ Evaluated on the **test split** (95 trees, `split_manifest.csv`). Sorted by Acc�
 | 12 | y26n | M01 | 63.9% | 1.342 | 89.5% | 64.2% | 43.2% | 58.9% |
 | — | **Heuristic M01 (GT input)** | — | **87.6%** | **0.375** | — | — | — | — |
 
-> Full metrics per combination in `benchmarks/e2e/e2e_{detector}_{counter}/metrics.json`
+> Full metrics per combination in `results/e2e_per_tree/{detector}_{counter}/metrics.json`
 
 ---
 
@@ -117,7 +117,7 @@ python -c "
 import json, os
 combos = ['my_experiment_svm', 'my_experiment_rf', 'my_experiment_m01']
 for c in combos:
-    path = f'benchmarks/e2e/e2e_{c}/metrics.json'
+    path = f'results/e2e_per_tree/{c}/metrics.json'
     if os.path.exists(path):
         d = json.load(open(path))['test']
         print(f'{c}: Acc±1={d[\"macro_acc_pm1\"]*100:.1f}%, MAE={d[\"macro_class_mae\"]:.3f}')
@@ -129,8 +129,8 @@ for c in combos:
 ```bash
 # Use any of the 3 pre-computed prediction sets
 python pipeline/run_counting_svm.py \
-    --inference-dir predictions/y26n_inference/
-# → benchmarks/e2e/e2e_y26n_svm/metrics.json
+    --inference-dir predictions/y26n_per_tree/
+# → results/e2e_per_tree/y26n_svm/metrics.json
 ```
 
 
@@ -140,7 +140,7 @@ python pipeline/run_counting_svm.py \
 # Edit pipeline/build_counting_features.py to add your features
 # Then re-run with existing predictions:
 python pipeline/run_counting_svm.py \
-    --inference-dir predictions/y26m_inference/
+    --inference-dir predictions/y26m_per_tree/
 ```
 
 
@@ -149,16 +149,16 @@ python pipeline/run_counting_svm.py \
 ```bash
 # All 3 detectors × 4 counters — uses pre-computed predictions, no GPU needed
 for model in y26n y26s y26m; do
-    python pipeline/run_counting_svm.py --inference-dir predictions/${model}_inference/
-    python pipeline/run_counting_rf.py  --inference-dir predictions/${model}_inference/
-    python pipeline/run_counting_lr.py  --inference-dir predictions/${model}_inference/
+    python pipeline/run_counting_svm.py --inference-dir predictions/${model}_per_tree/
+    python pipeline/run_counting_rf.py  --inference-dir predictions/${model}_per_tree/
+    python pipeline/run_counting_lr.py  --inference-dir predictions/${model}_per_tree/
 done
 ```
 ---
 
 ## Metrics Files Structure
 
-Each `benchmarks/e2e/e2e_{detector}_{counter}/` folder contains:
+Each `results/e2e_per_tree/{detector}_{counter}/` folder contains:
 
 ```
 metrics.json        ← Primary results (test + val split)

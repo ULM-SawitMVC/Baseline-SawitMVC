@@ -1,0 +1,263 @@
+﻿{
+  "version": 4,
+  "tree_id": "LONSUM_A21A_0017",
+  "tree_name": "LONSUM_A21A_0017",
+  "split": "train",
+  "metadata": {
+    "date": "2026-05-09",
+    "session_id": "20260509-DAMIMAS-871",
+    "number": 871,
+    "generated_at": "2026-05-09T14:10:40.508Z",
+    "variety": "LONSUM"
+  },
+  "images": {
+    "side_1": {
+      "filename": "LONSUM_A21A_0017_1.jpg",
+      "label_file": "LONSUM_A21A_0017_1.txt",
+      "side_index": 0,
+      "side_label": "Side 1",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 1,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.5375,
+            0.535547,
+            0.091667,
+            0.124219
+          ],
+          "bbox_pixel": [
+            472,
+            606,
+            560,
+            765
+          ]
+        }
+      ]
+    },
+    "side_2": {
+      "filename": "LONSUM_A21A_0017_2.jpg",
+      "label_file": "LONSUM_A21A_0017_2.txt",
+      "side_index": 1,
+      "side_label": "Side 2",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 2,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.325,
+            0.566797,
+            0.1375,
+            0.102344
+          ],
+          "bbox_pixel": [
+            246,
+            660,
+            378,
+            791
+          ]
+        },
+        {
+          "box_index": 1,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.696354,
+            0.558203,
+            0.105208,
+            0.063281
+          ],
+          "bbox_pixel": [
+            618,
+            674,
+            719,
+            755
+          ]
+        }
+      ]
+    },
+    "side_3": {
+      "filename": "LONSUM_A21A_0017_3.jpg",
+      "label_file": "LONSUM_A21A_0017_3.txt",
+      "side_index": 2,
+      "side_label": "Side 3",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 1,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.593229,
+            0.585547,
+            0.107292,
+            0.117969
+          ],
+          "bbox_pixel": [
+            518,
+            674,
+            621,
+            825
+          ]
+        }
+      ]
+    },
+    "side_4": {
+      "filename": "LONSUM_A21A_0017_4.jpg",
+      "label_file": "LONSUM_A21A_0017_4.txt",
+      "side_index": 3,
+      "side_label": "Side 4",
+      "width": 960,
+      "height": 1280,
+      "bbox_count": 1,
+      "annotations": [
+        {
+          "box_index": 0,
+          "class_id": 2,
+          "class_name": "B3",
+          "bbox_yolo": [
+            0.697917,
+            0.600781,
+            0.09375,
+            0.054688
+          ],
+          "bbox_pixel": [
+            625,
+            734,
+            715,
+            804
+          ]
+        }
+      ]
+    }
+  },
+  "bunches": [
+    {
+      "bunch_id": 1,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 2,
+      "appearances": [
+        {
+          "side": "side_1",
+          "side_index": 0,
+          "box_index": 0,
+          "class_name": "B3",
+          "bbox_pixel": [
+            472,
+            606,
+            560,
+            765
+          ]
+        },
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 1,
+          "class_name": "B3",
+          "bbox_pixel": [
+            618,
+            674,
+            719,
+            755
+          ]
+        }
+      ]
+    },
+    {
+      "bunch_id": 2,
+      "class": "B3",
+      "class_mismatch": false,
+      "appearance_count": 3,
+      "appearances": [
+        {
+          "side": "side_2",
+          "side_index": 1,
+          "box_index": 0,
+          "class_name": "B3",
+          "bbox_pixel": [
+            246,
+            660,
+            378,
+            791
+          ]
+        },
+        {
+          "side": "side_3",
+          "side_index": 2,
+          "box_index": 0,
+          "class_name": "B3",
+          "bbox_pixel": [
+            518,
+            674,
+            621,
+            825
+          ]
+        },
+        {
+          "side": "side_4",
+          "side_index": 3,
+          "box_index": 0,
+          "class_name": "B3",
+          "bbox_pixel": [
+            625,
+            734,
+            715,
+            804
+          ]
+        }
+      ]
+    }
+  ],
+  "_confirmedLinks": [
+    {
+      "linkId": "lnk-0",
+      "sideA": 0,
+      "bboxIdA": "b0",
+      "sideB": 1,
+      "bboxIdB": "b1"
+    },
+    {
+      "linkId": "lnk-1",
+      "sideA": 1,
+      "bboxIdA": "b0",
+      "sideB": 2,
+      "bboxIdB": "b0"
+    },
+    {
+      "linkId": "lnk-2",
+      "sideA": 2,
+      "bboxIdA": "b0",
+      "sideB": 3,
+      "bboxIdB": "b0"
+    }
+  ],
+  "summary": {
+    "total_unique_bunches": 2,
+    "total_detections": 5,
+    "duplicates_linked": 3,
+    "by_class": {
+      "B1": 0,
+      "B2": 0,
+      "B3": 2,
+      "B4": 0,
+      "other": 0
+    },
+    "by_side": {
+      "side_1": 1,
+      "side_2": 2,
+      "side_3": 1,
+      "side_4": 1
+    }
+  }
+}
