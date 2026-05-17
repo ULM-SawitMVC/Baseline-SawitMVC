@@ -154,13 +154,13 @@ sample document is documented in
 
 ### 3.2 Detection — YOLOv26
 
-Three model sizes were retrained from scratch on the SawitMVC-YOLO release:
-nano [`models/yolo/y26n.pt`](models/yolo/y26n.pt), small
+Three model sizes were fine-tuned from COCO-pretrained YOLO26 weights on the
+SawitMVC-YOLO release: nano [`models/yolo/y26n.pt`](models/yolo/y26n.pt), small
 [`models/yolo/y26s.pt`](models/yolo/y26s.pt), and medium
-[`models/yolo/y26m.pt`](models/yolo/y26m.pt). Each run lasted sixty epochs at
-`imgsz=640`, `seed=42`, with standard augmentation and COCO pretraining. The
-exact CLI invocation and per-epoch curves are captured in
-[`models/yolo/train_logs/`](models/yolo/train_logs/).
+[`models/yolo/y26m.pt`](models/yolo/y26m.pt). Each run used sixty epochs,
+`batch=32`, `imgsz=640`, `patience=60`, `seed=42`, deterministic training, and
+standard Ultralytics augmentation. The exact CLI invocation and per-epoch curves
+are captured in [`models/yolo/train_logs/`](models/yolo/train_logs/).
 
 ### 3.3 Track A — heuristic deduplication
 
@@ -232,9 +232,9 @@ training takes seconds on CPU.
 
 ### 4.2 Training configuration
 
-YOLOv26 — sixty epochs, batch 16, `imgsz=640`, optimizer `auto`, COCO
-pretraining enabled, standard Ultralytics augmentation. The exact arguments
-appear in each
+YOLOv26 — sixty epochs, `batch=32`, `imgsz=640`, `patience=60`, `seed=42`,
+deterministic training, optimizer `auto`, COCO pretraining enabled, and standard
+Ultralytics augmentation. The exact arguments appear in each
 [`models/yolo/train_logs/y26{n,s,m}_train_log.txt`](models/yolo/train_logs/).
 
 Counters — seed `42` in every script
