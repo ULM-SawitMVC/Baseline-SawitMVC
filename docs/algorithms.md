@@ -23,7 +23,7 @@ The algorithms in this repository reduce that error to ≤ 13%.
 
 All top-5 algorithms combine variants of three estimators:
 
-### 1. `visibility_count` (used by M01–M04: M06)
+### 1. `visibility_count` (used by M01–M04, M06)
 
 Assigns a weight to each detection based on its horizontal position in the frame.
 
@@ -53,7 +53,7 @@ count[c] = round(naive[c] / (BASE_FACTORS[c] × (dup_rate / 1.79)))
 **Intuition:** Dense trees have a lower per-class duplication rate because bunches are
 harder to capture from multiple angles when the canopy is full.
 
-### 3. `max_per_side` (used by M01–M04: M07)
+### 3. `max_per_side` (used by M01–M04, M07)
 
 A hard physical floor: the unique count cannot be less than the maximum count seen on
 any single side.
@@ -69,7 +69,7 @@ on that tree, they can't all be duplicates of each other from the same viewpoint
 
 ## Algorithm Families
 
-### Selector (M01: M02)
+### Selector (M01, M02)
 
 Routes each tree to a different base estimator depending on its detection profile.
 The trifurcation logic in M01/M02 identifies three regimes:
