@@ -22,8 +22,8 @@ the same tree from multiple angles and summing per-image detections — is worse
 still: a single bunch routinely appears in two or more views, so the naive
 total overshoots the true count by roughly eighty-three per cent on this
 dataset. The SawitMVC baseline addresses the resulting deduplication problem
-on **953 trees** (3,992 images, 9,823 unique bunches) from two Kalimantan
-plantations.
+on **953 trees** (3,992 images, 9,823 unique bunches) from two commercial
+plantations in Kabupaten Tanah Laut, Kalimantan, Indonesia.
 
 The repository contributes three families of solutions and a clean upper-bound
 study. *Track A* applies five deterministic heuristics directly to the ground
@@ -133,10 +133,14 @@ sample document is documented in
 
 ### 3.1 Pipeline overview
 
+The pipeline proceeds in three stages: detect bunches per image, count and
+deduplicate across views, then evaluate the full end-to-end chain.
+
 ```
+  Stage 1 — Detection
        images -->  YOLOv26 detector  -->  per-image detections
                                                  |
-                                                 v
+  Stage 2 — Counting                             v
                                        group by tree (4-8 sides)
                                                  |
                             +--------------------+--------------------+
@@ -147,10 +151,12 @@ sample document is documented in
                             v                                         v
                    ML counter (SVM/RF/LR)                  five M01..M05 rules
                             |                                         |
-                            +--------------------+--------------------+
+  Stage 3 — End-to-End      +--------------------+--------------------+
                                                  v
                                   per-class counts  [B1, B2, B3, B4]
 ```
+
+**Stage 1 — Detection**
 
 ### 3.2 Detection — YOLOv26
 
@@ -161,6 +167,8 @@ SawitMVC-YOLO release: nano [`models/yolo/y26n.pt`](models/yolo/y26n.pt), small
 `batch=32`, `imgsz=640`, `patience=60`, `seed=42`, deterministic training, and
 standard Ultralytics augmentation. The exact CLI invocation and per-epoch curves
 are captured in [`models/yolo/train_logs/`](models/yolo/train_logs/).
+
+**Stage 2 — Counting**
 
 ### 3.3 Track A — heuristic deduplication
 
@@ -193,7 +201,17 @@ All three artifacts were fitted on the y26s training split and can be reloaded
 with `--load-model` to skip training entirely. Details and regeneration
 commands are in [`models/counters/README.md`](models/counters/README.md).
 
-### 3.5 Track B' — per-image variants
+### 3.5 Track C — ground-truth upper bound
+
+The same counters are refitted on features derived from the ground-truth
+annotations rather than from YOLO predictions. The resulting numbers in
+[`results/e2e_upper_bound/`](results/e2e_upper_bound/) describe the ceiling
+achievable if the detector were perfect, and serve as the reference for
+isolating detector error from counter error.
+
+**Stage 3 — End-to-End Pipeline**
+
+### 3.6 Track B' — per-image variants
 
 [`pipeline/run_e2e_per_image.py`](pipeline/run_e2e_per_image.py) runs the
 detector image-by-image, then groups results into trees. Two counter families
@@ -205,20 +223,15 @@ apply:
   reconstructed from the per-image grouping. Results are byte-equal to
   Track B because both pipelines derive identical features.
 
-### 3.6 Track C — ground-truth upper bound
+### 3.7 How the three stages connect
 
-The same counters are refitted on features derived from the ground-truth
-annotations rather than from YOLO predictions. The resulting numbers in
-[`results/e2e_upper_bound/`](results/e2e_upper_bound/) describe the ceiling
-achievable if the detector were perfect.
-
-### 3.7 Why three tracks
-
-Track A measures how much deduplication is possible from the ground-truth
-detections — the upper limit for an explicit rule. Track B measures what the
-production pipeline actually achieves on noisy detections. Track C measures
-the upper limit for a learned counter under perfect detection. The three
-together separate detector noise from counter design.
+Stage 1 (Detection) establishes how well the YOLO model localises and
+classifies bunches. Stage 2 (Counting) establishes how well algorithms
+deduplicate across views given either perfect detections (Track A / Track C)
+or noisy YOLO detections (Track B). Stage 3 (End-to-End) joins the two and
+reports the combined system accuracy. Comparing Track B against Track C
+isolates detector error from counter design error — a 26.58-point gap that
+points to the detector as the highest-leverage improvement target.
 
 ---
 
@@ -257,7 +270,23 @@ Formal definitions and implementations are in
 
 ## 5. Results
 
-### 5.1 Track A — heuristic deduplication on 953 trees
+**Stage 1 — Detection**
+
+### 5.1 YOLOv26 detection — mAP50 on the val split
+
+| Model | mAP50 | Inference speed | Size | Training log |
+|-------|------:|----------------:|-----:|--------------|
+| [`y26m.pt`](models/yolo/y26m.pt) | **0.528** | 1.0 ms | 42 MB | [log](models/yolo/train_logs/y26m_train_log.txt) |
+| [`y26n.pt`](models/yolo/y26n.pt) | 0.515 | **0.3 ms** | **5.2 MB** | [log](models/yolo/train_logs/y26n_train_log.txt) |
+| [`y26s.pt`](models/yolo/y26s.pt) | 0.511 | 0.4 ms | 20 MB | [log](models/yolo/train_logs/y26s_train_log.txt) |
+
+`y26m` produces the best detector quality; `y26n` is the strongest size-speed
+trade-off (recommended for deployment); `y26s` produces the strongest
+end-to-end counter results despite a lower mAP50.
+
+**Stage 2 — Counting**
+
+### 5.2 Track A — heuristic deduplication on 953 trees
 
 Evaluated on every tree in [`ground_truth/annotations/`](ground_truth/annotations/);
 the full table including the naive sum baseline is in
@@ -272,19 +301,21 @@ the full table including the naive sum baseline is in
 | 5 | [`M05_blend_vis_divide`](algorithms/M05_blend_vis_divide.py) | 86.99% | 0.3875 | Visibility plus adaptive divide |
 | — | Naive sum baseline | 3.78% | 2.2867 | No deduplication |
 
-### 5.2 YOLOv26 detection — mAP50 on the val split
+### 5.3 Track C — ground-truth upper bound on 95 test trees
 
-| Model | mAP50 | Inference speed | Size | Training log |
-|-------|------:|----------------:|-----:|--------------|
-| [`y26m.pt`](models/yolo/y26m.pt) | **0.528** | 1.0 ms | 42 MB | [log](models/yolo/train_logs/y26m_train_log.txt) |
-| [`y26n.pt`](models/yolo/y26n.pt) | 0.515 | **0.3 ms** | **5.2 MB** | [log](models/yolo/train_logs/y26n_train_log.txt) |
-| [`y26s.pt`](models/yolo/y26s.pt) | 0.511 | 0.4 ms | 20 MB | [log](models/yolo/train_logs/y26s_train_log.txt) |
+Counters trained on perfect ground-truth features; shows the ceiling achievable
+if the detector were ideal.
 
-`y26m` produces the best detector quality; `y26n` is the strongest size-speed
-trade-off (recommended for deployment); `y26s` produces the strongest
-end-to-end counter results despite a lower mAP50.
+| Counter | Acc±1 | Macro MAE | B1 | B2 | B3 | B4 |
+|:-------:|------:|----------:|---:|---:|---:|---:|
+| [LR](results/e2e_upper_bound/gt_lr/metrics.json) | **97.37%** | **0.276** | 100.0% | 97.9% | 93.7% | 97.9% |
+| [SVM](results/e2e_upper_bound/gt_svm/metrics.json) | 96.58% | 0.300 | 100.0% | 96.8% | 92.6% | 96.8% |
+| [RF](results/e2e_upper_bound/gt_rf/metrics.json) | 95.79% | 0.361 | 96.8% | 96.8% | 92.6% | 96.8% |
+| [M01 on GT](results/heuristics_953/accuracy_full.csv) (953 trees) | 87.62% | 0.375 | — | — | — | — |
 
-### 5.3 Track B — per-tree end-to-end on 95 test trees
+**Stage 3 — End-to-End**
+
+### 5.4 Track B — per-tree end-to-end on 95 test trees
 
 Twelve combinations (three detectors × four counters). Sorted by Acc±1.
 Every row links to the underlying
@@ -305,7 +336,7 @@ Every row links to the underlying
 | 11 | y26s | [RF](results/e2e_per_tree/y26s_rf/metrics.json) | 64.21% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
 | 12 | y26n | [M01](results/e2e_per_tree/y26n_m01/metrics.json) | 63.95% | 1.342 | 89.5% | 64.2% | 43.2% | 58.9% |
 
-### 5.4 Track B' — per-image end-to-end on 95 test trees
+### 5.5 Track B' — per-image end-to-end on 95 test trees
 
 Twenty-one combinations (three detectors × seven counters). Two views of the
 same numbers follow: a sorted simple-aggregation table, and a pointer to every
@@ -327,23 +358,14 @@ stored at
 and are within numerical noise of their Track B counterparts because both
 pipelines derive identical 13-dim feature vectors.
 
-### 5.5 Track C — ground-truth upper bound on 95 test trees
-
-| Counter | Acc±1 | Macro MAE | B1 | B2 | B3 | B4 |
-|:-------:|------:|----------:|---:|---:|---:|---:|
-| [LR](results/e2e_upper_bound/gt_lr/metrics.json) | **97.37%** | **0.276** | 100.0% | 97.9% | 93.7% | 97.9% |
-| [SVM](results/e2e_upper_bound/gt_svm/metrics.json) | 96.58% | 0.300 | 100.0% | 96.8% | 92.6% | 96.8% |
-| [RF](results/e2e_upper_bound/gt_rf/metrics.json) | 95.79% | 0.361 | 96.8% | 96.8% | 92.6% | 96.8% |
-| [M01 on GT](results/heuristics_953/accuracy_full.csv) (953 trees) | 87.62% | 0.375 | — | — | — | — |
-
 ### 5.6 Cross-track summary
 
 | Track | Best result | Acc±1 | Evidence |
 |-------|-------------|------:|----------|
 | A — heuristic on full GT | M01 / M02 | 87.62% | [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv) |
+| C — counter on GT features | LR | 97.37% | [`results/e2e_upper_bound/gt_lr/metrics.json`](results/e2e_upper_bound/gt_lr/metrics.json) |
 | B — per-tree on YOLO | y26s + SVM | 70.79% | [`results/e2e_per_tree/y26s_svm/metrics.json`](results/e2e_per_tree/y26s_svm/metrics.json) |
 | B' — per-image simple agg | y26m + max | 64.21% | [`results/e2e_per_image/y26m_max/metrics.json`](results/e2e_per_image/y26m_max/metrics.json) |
-| C — counter on GT features | LR | 97.37% | [`results/e2e_upper_bound/gt_lr/metrics.json`](results/e2e_upper_bound/gt_lr/metrics.json) |
 
 The Track B to Track C gap of **26.58 percentage points** is detector error,
 not counter error.
@@ -360,15 +382,7 @@ operating on noisy detections cannot recover the truth that the detector has
 already lost. Improving recall on partially occluded B3 bunches, in
 particular, would close most of the gap.
 
-### 6.2 B2 ↔ B3 ambiguity
-
-The transition from B2 (black with red residue) to B3 (uniform black) is
-visually continuous. Even the heuristic-on-ground-truth track stops at
-87.62%; the residual error is dominated by B2/B3 swaps that are not separable
-without cross-view embeddings or higher-resolution colour information. This
-ceiling is documented in [`docs/findings.md`](docs/findings.md).
-
-### 6.3 Heuristic vs. learned counters
+### 6.2 Heuristic vs. learned counters
 
 On noisy detections, the heuristic M01 and the learned SVM are within seven
 percentage points of each other (64.21% vs. 70.79% on y26s); on ground-truth
@@ -376,6 +390,14 @@ features, the learned counter strongly dominates (97.37% vs. 87.62%). The
 heuristic is conservative because it cannot exploit class-conditional
 correlations; the learned counter exploits them when the detection signal is
 clean enough to support them.
+
+### 6.3 B2 ↔ B3 ambiguity
+
+The transition from B2 (black with red residue) to B3 (uniform black) is
+visually continuous. Even the heuristic-on-ground-truth track stops at
+87.62%; the residual error is dominated by B2/B3 swaps that are not separable
+without cross-view embeddings or higher-resolution colour information. This
+ceiling is documented in [`docs/findings.md`](docs/findings.md).
 
 ### 6.4 Failure modes
 

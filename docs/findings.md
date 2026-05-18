@@ -132,9 +132,9 @@ visibility weights) is more robust.
    (instead of treating each side independently) could resolve B2↔B3 ambiguity
    using relative spatial information.
 
-3. **Domain adaptation** — The current models are trained only on DAMIMAS and LONSUM.
-   Adding data from other plantation varieties and geographic regions would improve
-   robustness.
+3. **Domain adaptation** — The current models are trained only on the DAMIMAS and LONSUM
+   plantations in Kabupaten Tanah Laut, Kalimantan. Adding data from other plantation
+   varieties and geographic regions would improve robustness.
 
 ### Medium priority (incremental improvement)
 

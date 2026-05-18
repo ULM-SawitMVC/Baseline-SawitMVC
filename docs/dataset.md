@@ -1,7 +1,7 @@
 # Dataset — SawitMVC-YOLO
 
 **SawitMVC-YOLO** is a multi-view oil palm bunch detection and counting dataset
-collected from commercial oil palm plantations in Kalimantan, Indonesia.
+collected from two commercial plantations in Kabupaten Tanah Laut, Kalimantan, Indonesia.
 
 ---
 
@@ -25,9 +25,9 @@ collected from commercial oil palm plantations in Kalimantan, Indonesia.
 
 | Source | Trees | Region |
 |--------|------:|--------|
-| DAMIMAS | 854 | South Kalimantan |
-| LONSUM | 99 | East Kalimantan |
-| **Total** | **953** | Kalimantan, Indonesia |
+| DAMIMAS | 854 | Kabupaten Tanah Laut, Kalimantan |
+| LONSUM | 99 | Kabupaten Tanah Laut, Kalimantan |
+| **Total** | **953** | Kabupaten Tanah Laut, Kalimantan, Indonesia |
 
 ---
 
