@@ -23,7 +23,7 @@ still: a single bunch routinely appears in two or more views, so the naive
 total overshoots the true count by roughly eighty-three per cent on this
 dataset. The SawitMVC baseline addresses the resulting deduplication problem
 on **953 trees** (3,992 images, 9,823 unique bunches) from two commercial
-plantations in Kabupaten Tanah Laut, Kalimantan, Indonesia.
+plantations in Kabupaten Tanah Laut, Kalimantan Selatan, Indonesia.
 
 The repository contributes three families of solutions and a clean upper-bound
 study. *Track A* applies five deterministic heuristics directly to the ground

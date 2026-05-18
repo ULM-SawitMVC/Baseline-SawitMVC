@@ -133,7 +133,7 @@ visibility weights) is more robust.
    using relative spatial information.
 
 3. **Domain adaptation** — The current models are trained only on the DAMIMAS and LONSUM
-   plantations in Kabupaten Tanah Laut, Kalimantan. Adding data from other plantation
+   plantations in Kabupaten Tanah Laut, Kalimantan Selatan, Indonesia. Adding data from other plantation
    varieties and geographic regions would improve robustness.
 
 ### Medium priority (incremental improvement)
