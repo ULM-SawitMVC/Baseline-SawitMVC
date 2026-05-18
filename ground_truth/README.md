@@ -1,4 +1,4 @@
-# Ground Truth — SawitMVC-YOLO Annotations
+﻿# Ground Truth: SawitMVC-YOLO Annotations
 
 This folder bundles every artifact needed to reproduce the SawitMVC baseline
 without contacting an external dataset host. With this folder committed, both
@@ -25,12 +25,12 @@ cached predictions in [`predictions/`](../predictions/).
 tree_id, variety, dominant_class, strat_key, B1, B2, B3, B4, new_split
 ```
 
-- `tree_id` — canonical identifier, e.g. `DAMIMAS_A21B_0001`.
-- `variety` — plantation source (`DAMIMAS` or `LONSUM`).
-- `dominant_class` — most abundant maturity class on the tree, used for stratification.
-- `strat_key` — `{variety}_{dominant_class}`.
-- `B1…B4` — unique bunch counts per maturity class for that tree.
-- `new_split` — one of `train`, `val`, `test`.
+- `tree_id`, canonical identifier, e.g. `DAMIMAS_A21B_0001`.
+- `variety`, plantation source (`DAMIMAS` or `LONSUM`).
+- `dominant_class`, most abundant maturity class on the tree, used for stratification.
+- `strat_key`, `{variety}_{dominant_class}`.
+- `B1…B4`, unique bunch counts per maturity class for that tree.
+- `new_split`, one of `train`, `val`, `test`.
 
 Sample rows (first three trees):
 

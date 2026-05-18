@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to SawitMVC Baseline will be documented here.
 
@@ -6,19 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.3.0] — 2026-05-17
+## [1.3.0] - 2026-05-17
 
 ### Added
 
 **Reproducibility bundle**
-- `ground_truth/annotations/` — 953 per-tree GT JSONs copied into the repository
+- `ground_truth/annotations/`, 953 per-tree GT JSONs copied into the repository
   (no Hugging Face credentials needed to run Tracks A, B, B', or C).
 - `ground_truth/split_manifest.csv` and `ground_truth/data.yaml` bundled.
 - `ground_truth/README.md` documents the schema, splits (763/95/95), and class
   taxonomy.
-- `models/counters/{svm,rf,lr}.pkl` — saved scikit-learn estimators so
+- `models/counters/{svm,rf,lr}.pkl`, saved scikit-learn estimators so
   reproduction skips GridSearchCV entirely.
-- `scripts/` — five orchestration shell scripts including
+- `scripts/`, five orchestration shell scripts including
   `scripts/reproduce_all.sh` for one-command reproduction.
 - `predictions/README.md` documenting per-tree vs per-image JSON schemas.
 
@@ -47,17 +47,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.2.0] — 2026-05-16
+## [1.2.0] - 2026-05-16
 
 ### Changed
 
-**Models replaced — all previous model weights superseded**
+**Models replaced, all previous model weights superseded**
 - Previous 5 models (`y26n_vanilla_local`, `y26s_vanilla_local`, `y26m_vanilla_local`,
   `y26s_nopretrained`, `y26s_noaug`) were trained on a corrupt dataset and have been removed
 - Replaced with 3 correctly-trained models on the validated `SawitMVC-YOLO` dataset:
-  - `y26n.pt` — YOLO26n, mAP50=0.515, 5.2 MB, 0.3 ms/frame
-  - `y26s.pt` — YOLO26s, mAP50=0.511, 20 MB, 0.4 ms/frame
-  - `y26m.pt` — YOLO26m, mAP50=0.528, 42 MB, 1.0 ms/frame
+  - `y26n.pt`, YOLO26n, mAP50=0.515, 5.2 MB, 0.3 ms/frame
+  - `y26s.pt`, YOLO26s, mAP50=0.511, 20 MB, 0.4 ms/frame
+  - `y26m.pt`, YOLO26m, mAP50=0.528, 42 MB, 1.0 ms/frame
   - All trained: 60 epochs, seed=42, pretrained=True, standard augmentation
 
 **All E2E benchmarks rerun with new models**
@@ -70,15 +70,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.1.0] — 2026-05-16
+## [1.1.0] - 2026-05-16
 
 ### Added
 
 **E2E Pipeline (complete)**
 - `pipeline/` folder with 5 runnable scripts for full E2E replication
-- `pipeline/README.md` — step-by-step guide + ablation recipes
+- `pipeline/README.md`, step-by-step guide + ablation recipes
 - Per-image pipeline extended with ML counters (max/mean/sum/M01/SVM/RF/LR)
-- `docs/e2e_pipeline.md` — complete guide with results table, key findings, and ablation scenarios
+- `docs/e2e_pipeline.md`, complete guide with results table, key findings, and ablation scenarios
 
 **Documentation**
 - Complete E2E results table in README (all combinations, per-class breakdown)
@@ -86,18 +86,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [1.0.0] — 2026-05-16
+## [1.0.0] - 2026-05-16
 
 ### Added
 
 **Algorithms**
-- `M01_selector_b2b3` — Champion heuristic, 87.62% Acc±1 on 953 trees
-- `M02_selector_trifurc` — Trifurcation selector (base of M01), 87.62% Acc±1
-- `M03_blend_geometric` — Geometric mean blend, 86.99% Acc±1
-- `M04_blend_floor_clamped` — Floor-clamped weighted blend, 86.99% Acc±1
-- `M05_blend_vis_divide` — Simple weighted blend, 86.99% Acc±1
+- `M01_selector_b2b3`, Champion heuristic, 87.62% Acc±1 on 953 trees
+- `M02_selector_trifurc`, Trifurcation selector (base of M01), 87.62% Acc±1
+- `M03_blend_geometric`, Geometric mean blend, 86.99% Acc±1
+- `M04_blend_floor_clamped`, Floor-clamped weighted blend, 86.99% Acc±1
+- `M05_blend_vis_divide`, Simple weighted blend, 86.99% Acc±1
 
-**Models (YOLO26, initial training — superseded in v1.2.0)**
+**Models (YOLO26, initial training, superseded in v1.2.0)**
 - Initial 5-model set (see v1.2.0 for corrected versions)
 
 **Benchmarks**
@@ -111,11 +111,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - 35 training plots (5 models × 7 types: confusion matrices, PR curves, training curves)
 
 **Documentation**
-- `docs/dataset.md` — Dataset description, classes, GT quality
-- `docs/algorithms.md` — Algorithm design and rationale
-- `docs/training.md` — YOLO training reproduction guide
-- `docs/evaluation.md` — Metric definitions and evaluation protocol
-- `docs/findings.md` — Key research findings
+- `docs/dataset.md`, Dataset description, classes, GT quality
+- `docs/algorithms.md`, Algorithm design and rationale
+- `docs/training.md`, YOLO training reproduction guide
+- `docs/evaluation.md`, Metric definitions and evaluation protocol
+- `docs/findings.md`, Key research findings
 
 **Ground truth status (as of this release)**
 - 0 same-side uniqueness violations (8 wrap-around trees fixed)

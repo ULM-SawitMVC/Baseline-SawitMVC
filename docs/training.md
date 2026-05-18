@@ -1,4 +1,4 @@
-# Training — Reproduce YOLO26 Experiments
+﻿# Training: Reproduce YOLO26 Experiments
 
 All three public YOLO26 detection models can be reproduced using the commands and
 configurations in this document. Training requires a GPU with ≥ 8 GB VRAM.
@@ -38,7 +38,7 @@ snapshot_download('ULM-DS-Lab/SawitMVC-YOLO', repo_type='dataset', local_dir='./
 
 All experiments use the same base hyperparameters unless stated otherwise.
 
-### 1. YOLO26n — Vanilla (Recommended)
+### 1. YOLO26n: Vanilla (Recommended)
 
 ```bash
 yolo detect train \
@@ -55,7 +55,7 @@ yolo detect train \
 
 Expected: **mAP50 ≈ 0.515**.
 
-### 2. YOLO26s — Vanilla
+### 2. YOLO26s: Vanilla
 
 ```bash
 yolo detect train \
@@ -67,7 +67,7 @@ yolo detect train \
 
 Expected: **mAP50 ≈ 0.511**.
 
-### 3. YOLO26m — Vanilla
+### 3. YOLO26m: Vanilla
 
 ```bash
 yolo detect train \
@@ -79,7 +79,7 @@ yolo detect train \
 
 Expected: **mAP50 ≈ 0.528**.
 
-### 4. YOLO26s — No Pretrained Weights (Scratch)
+### 4. YOLO26s: No Pretrained Weights (Scratch)
 
 ```bash
 yolo detect train \
@@ -91,7 +91,7 @@ yolo detect train \
 
 Expected: **mAP50 ≈ 0.511** at best epoch ~57 (needs more epochs without head start).
 
-### 5. YOLO26s — No Augmentation (Ablation)
+### 5. YOLO26s: No Augmentation (Ablation)
 
 ```bash
 yolo detect train \
@@ -102,7 +102,7 @@ yolo detect train \
     name=y26s
 ```
 
-Expected: **mAP50 ≈ 0.465**, early stopping at epoch ~6 (overfitting).
+Expected: **mAP50 ≈ 0.465**: early stopping at epoch ~6 (overfitting).
 
 ---
 
@@ -175,13 +175,13 @@ errors propagate differently through each counter.
 
 Based on 13+ training experiments (archived in the research repository):
 
-- ❌ `imgsz=800` — no improvement, 40% slower
-- ❌ Focal loss — no improvement
-- ❌ Naive class oversampling — destabilized training
-- ❌ SGD / AdamW sweep — Ultralytics auto-optimizer matches or beats manual selection
-- ❌ `label_smoothing=0.1` — no improvement
-- ❌ YOLOv9e / RT-DETR / RF-DETR — did not beat YOLO26n within compute budget
-- ❌ Two-stage classifier (DINOv2 + EfficientNet) — violated no-training constraint and
+- ❌ `imgsz=800`, no improvement, 40% slower
+- ❌ Focal loss, no improvement
+- ❌ Naive class oversampling, destabilized training
+- ❌ SGD / AdamW sweep, Ultralytics auto-optimizer matches or beats manual selection
+- ❌ `label_smoothing=0.1`, no improvement
+- ❌ YOLOv9e / RT-DETR / RF-DETR, did not beat YOLO26n within compute budget
+- ❌ Two-stage classifier (DINOv2 + EfficientNet), violated no-training constraint and
   did not transfer well to the B2↔B3 ambiguity
 
 ---

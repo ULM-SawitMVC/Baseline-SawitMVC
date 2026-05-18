@@ -1,4 +1,4 @@
-# End-to-End Pipeline — Complete Guide
+﻿# End-to-End Pipeline: Complete Guide
 
 This document covers the full E2E pipeline: from trained YOLO weights to final
 counting accuracy, including all pre-computed results and how to run new ablations.
@@ -53,7 +53,7 @@ Evaluated on the **test split** (95 trees, `split_manifest.csv`). Sorted by Acc�
 | 10 | y26s | M01 | 64.2% | 1.313 | 89.5% | 55.8% | 49.5% | 62.1% |
 | 11 | y26s | RF | 64.2% | 1.255 | 93.7% | 62.1% | 47.4% | 53.7% |
 | 12 | y26n | M01 | 63.9% | 1.342 | 89.5% | 64.2% | 43.2% | 58.9% |
-| — | **Heuristic M01 (GT input)** | — | **87.6%** | **0.375** | — | — | — | — |
+| - | **Heuristic M01 (GT input)** | - | **87.6%** | **0.375** | - | - | - | - |
 
 > Full metrics per combination in `results/e2e_per_tree/{detector}_{counter}/metrics.json`
 
@@ -90,7 +90,7 @@ error patterns matter as much as aggregate mAP50.
 
 | Setup | Input | Acc±1 | MAE | Gap to ceiling |
 |-------|-------|:-----:|:---:|:--------------:|
-| Heuristic M01 on GT | Perfect detections | 87.6% | 0.375 | — |
+| Heuristic M01 on GT | Perfect detections | 87.6% | 0.375 | - |
 | Best E2E (y26s→SVM) | YOLO predictions | 70.8% | 1.147 | −16.8 pp |
 | Worst E2E (y26s→RF) | YOLO predictions | 64.2% | 1.255 | −23.4 pp |
 
@@ -147,7 +147,7 @@ python pipeline/run_counting_svm.py \
 ### Scenario D: Replicate the exact baseline numbers
 
 ```bash
-# All 3 detectors × 4 counters — uses pre-computed predictions, no GPU needed
+# All 3 detectors × 4 counters, uses pre-computed predictions, no GPU needed
 for model in y26n y26s y26m; do
     python pipeline/run_counting_svm.py --inference-dir predictions/${model}_per_tree/
     python pipeline/run_counting_rf.py  --inference-dir predictions/${model}_per_tree/
@@ -195,7 +195,7 @@ feature_importance.csv  ← RF only: feature importance ranking
 
 | Setup | Input | Acc±1 | MAE | Gap to ceiling |
 |-------|-------|:-----:|:---:|:--------------:|
-| SVM on GT features | Perfect detections | **96.1%** | 0.318 | — |
+| SVM on GT features | Perfect detections | **96.1%** | 0.318 | - |
 | Heuristic M01 on GT | Perfect detections | 87.6% | 0.375 | −8.5 pp |
 | Best E2E (y26s→SVM) | YOLO predictions | 70.8% | 1.147 | −16.8 pp |
 | Worst E2E (y26s→RF) | YOLO predictions | 64.2% | 1.255 | −23.4 pp |

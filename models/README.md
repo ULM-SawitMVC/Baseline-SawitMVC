@@ -1,4 +1,4 @@
-# Models
+﻿# Models
 
 This folder contains every model artifact in the repository, split into two
 families.

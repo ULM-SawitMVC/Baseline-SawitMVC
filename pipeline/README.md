@@ -1,4 +1,4 @@
-# Pipeline — End-to-End Replication Scripts
+﻿# Pipeline: End-to-End Replication Scripts
 
 This folder houses every script in Tracks B, B', and C of the SawitMVC
 baseline. All scripts read the bundled ground truth at
@@ -58,7 +58,7 @@ python pipeline/run_e2e_per_image.py --name y26s --skip-inference
 
 ## Step-by-step
 
-### Step 1 — YOLO inference
+### Step 1: YOLO inference
 
 Required only when retraining or rerunning detection. The repository ships
 pre-computed per-tree predictions for every detector in
@@ -70,7 +70,7 @@ python pipeline/run_e2e_inference.py --name y26s \
 # Output: predictions/y26s_per_tree/{tree_id}.json (953 files)
 ```
 
-### Step 2 — Feature extraction
+### Step 2: Feature extraction
 
 The library reconstructs a 13-dim feature vector per tree.
 
@@ -78,7 +78,7 @@ The library reconstructs a 13-dim feature vector per tree.
 python pipeline/build_counting_features.py --inference-dir predictions/y26s_per_tree/
 ```
 
-### Step 3 — Counter training and evaluation
+### Step 3: Counter training and evaluation
 
 Either refit the counter (default behaviour) or reload an artifact from
 [`models/counters/`](../models/counters/) and skip training.
@@ -107,7 +107,7 @@ mean_per_side_B1, mean_per_side_B2, mean_per_side_B3, mean_per_side_B4,
 n_sides
 ```
 
-Target: `[gt_B1, gt_B2, gt_B3, gt_B4]` — the unique GT bunch count per class
+Target: `[gt_B1, gt_B2, gt_B3, gt_B4]`, the unique GT bunch count per class
 read from `summary.by_class` in each ground-truth JSON.
 
 ## Cached predictions
@@ -117,9 +117,9 @@ read from `summary.by_class` in each ground-truth JSON.
 | [`predictions/y26m_per_tree/`](../predictions/y26m_per_tree/) | YOLOv26 medium | 953 | 0.528 |
 | [`predictions/y26n_per_tree/`](../predictions/y26n_per_tree/) | YOLOv26 nano | 953 | 0.515 |
 | [`predictions/y26s_per_tree/`](../predictions/y26s_per_tree/) | YOLOv26 small | 953 | 0.511 |
-| [`predictions/y26m_per_image/`](../predictions/y26m_per_image/) | derived from per-tree | 3,992 | — |
-| [`predictions/y26n_per_image/`](../predictions/y26n_per_image/) | derived | 3,992 | — |
-| [`predictions/y26s_per_image/`](../predictions/y26s_per_image/) | derived | 3,992 | — |
+| [`predictions/y26m_per_image/`](../predictions/y26m_per_image/) | derived from per-tree | 3,992 | - |
+| [`predictions/y26n_per_image/`](../predictions/y26n_per_image/) | derived | 3,992 | - |
+| [`predictions/y26s_per_image/`](../predictions/y26s_per_image/) | derived | 3,992 | - |
 
 ## Designing a new ablation
 

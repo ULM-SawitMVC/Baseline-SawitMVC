@@ -1,4 +1,4 @@
-# Evaluation — Metrics and Protocol
+﻿# Evaluation: Metrics and Protocol
 
 This document defines all metrics used in the SawitMVC Baseline benchmark and
 describes the evaluation protocol to ensure fair, reproducible comparisons.
@@ -41,7 +41,7 @@ Macro MAE = (1/N) × Σ_tree [ (|P[B1]-G[B1]| + |P[B2]-G[B2]| + |P[B3]-G[B3]| + 
 
 This metric penalizes large errors proportionally and is sensitive to systematic
 class-level bias. M07 has the lowest Macro MAE (0.368) even though it is ranked 7th
-by Acc±1 — different optima for different metrics.
+by Acc±1, different optima for different metrics.
 
 ### Total-count MAE
 
@@ -68,14 +68,14 @@ Percentage of trees where the full 4-class prediction vector is exactly correct:
 Exact = count(trees where P[c] == G[c] for ALL c) / total_trees × 100%
 ```
 
-The best algorithm achieves only 27.07% exact-profile accuracy — highlighting the
+The best algorithm achieves only 27.07% exact-profile accuracy, highlighting the
 inherent difficulty of the 4-class joint prediction.
 
 ### Per-class MAE and bias
 
 Per-class MAE: `MAE[c] = mean(|P[c] - G[c]|)` for each class c.
 
-Per-class bias: `bias[c] = mean(P[c] - G[c])` — positive means systematic over-count,
+Per-class bias: `bias[c] = mean(P[c] - G[c])`, positive means systematic over-count,
 negative means systematic under-count.
 
 ---
@@ -89,10 +89,10 @@ All benchmarks use the **SawitMVC-YOLO** canonical 953-tree dataset
 |--------|------:|-------|
 | Full dataset | 953 | Primary benchmark |
 | Train split | 758 | Never used for algorithm tuning |
-| Val split | — | |
+| Val split | - | |
 | Test split | 95 | Secondary reference; identical trend to full |
 
-**All algorithms are evaluated on all 953 trees** — not just the test split — because
+**All algorithms are evaluated on all 953 trees**: not just the test split, because
 the heuristic algorithms have no trainable parameters. The full dataset provides a
 more stable estimate of generalization performance.
 

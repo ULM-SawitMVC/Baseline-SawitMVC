@@ -1,4 +1,4 @@
-# Contributing to SawitMVC Baseline
+﻿# Contributing to SawitMVC Baseline
 
 Thank you for your interest in contributing! This project welcomes contributions in
 several areas: new deduplication algorithms, bug fixes, documentation improvements,
@@ -32,13 +32,13 @@ and evaluation tooling.
 
 ### Requirements (all must be met for inclusion)
 
-- [ ] **Deterministic** — same input always produces same output; no random seeds
-- [ ] **No training** — no gradient computation, no embeddings, no learned parameters
-- [ ] **Correct signature** — `predict(detections: list) -> dict` exactly
-- [ ] **Benchmark result** — run `python benchmarks/run_benchmark.py` and include results
-- [ ] **Minimum performance** — Acc±1 ≥ 85.00% on the full 953-tree dataset
-- [ ] **Docstring** — includes benchmark result, approach description, and generation note
-- [ ] **Self-contained or explicit imports** — only imports from `algorithms/` or stdlib/numpy
+- [ ] **Deterministic**: same input always produces same output; no random seeds
+- [ ] **No training**: no gradient computation, no embeddings, no learned parameters
+- [ ] **Correct signature**, `predict(detections: list) -> dict` exactly
+- [ ] **Benchmark result**: run `python benchmarks/run_benchmark.py` and include results
+- [ ] **Minimum performance**: Acc±1 ≥ 85.00% on the full 953-tree dataset
+- [ ] **Docstring**: includes benchmark result, approach description, and generation note
+- [ ] **Self-contained or explicit imports**: only imports from `algorithms/` or stdlib/numpy
 
 ### Algorithm file template
 
@@ -64,13 +64,13 @@ def predict(detections: list) -> dict:
 
     Args:
         detections: List of detection dicts, each with keys:
-            - "class"      : str   — "B1", "B2", "B3", or "B4"
-            - "x_norm"     : float — normalized x-center of bbox (0.0–1.0)
-            - "y_norm"     : float — normalized y-center of bbox (0.0–1.0)
-            - "side_index" : int   — camera side index (0-based)
+            - "class"      : str  , "B1", "B2", "B3", or "B4"
+            - "x_norm"     : float, normalized x-center of bbox (0.0–1.0)
+            - "y_norm"     : float, normalized y-center of bbox (0.0–1.0)
+            - "side_index" : int  , camera side index (0-based)
 
     Returns:
-        dict with keys "B1", "B2", "B3", "B4" — predicted unique bunch counts.
+        dict with keys "B1", "B2", "B3", "B4", predicted unique bunch counts.
     """
     # Your implementation here
     raise NotImplementedError
@@ -126,8 +126,8 @@ Please include:
 
 ## Code Style
 
-- **PEP 8** — 4-space indentation, ≤ 88 characters per line
-- **Type hints** — required on `predict()`, optional elsewhere
+- **PEP 8**, 4-space indentation, ≤ 88 characters per line
+- **Type hints**: required on `predict()`, optional elsewhere
 - **No external dependencies** beyond `numpy`, `scipy`, and Python stdlib
   (avoid `pandas`, `torch`, `sklearn` inside algorithm files)
 - **No print statements** inside algorithm files; use return values only
@@ -138,7 +138,7 @@ Please include:
 
 1. Ensure your algorithm passes the benchmark with Acc±1 ≥ 85.00%
 2. Fill in the PR template checklist completely
-3. Keep PRs focused — one algorithm or fix per PR
+3. Keep PRs focused, one algorithm or fix per PR
 4. PRs are reviewed for correctness (determinism, no training, signature) and
    benchmark reproducibility
 
@@ -164,5 +164,5 @@ Algorithm files follow the pattern: `M{NN}_{family}_{descriptor}.py`
 
 Examples: `M30_selector_b1b4.py`, `M31_blend_entropy.py`, `M32_weight_aspect.py`
 
-IDs are **permanent** — once assigned, they never change, even if the algorithm is
+IDs are **permanent**: once assigned, they never change, even if the algorithm is
 superseded by a better one.

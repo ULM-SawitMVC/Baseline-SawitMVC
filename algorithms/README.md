@@ -1,15 +1,15 @@
-# Algorithms — Multi-View Deduplication
+﻿# Algorithms: Multi-View Deduplication
 
 This folder contains the top-5 deterministic heuristic algorithms for deduplicating
 oil palm bunch detections across multiple camera views.
 
-**Constraint:** All algorithms are 100% algorithmic — no training, no embeddings,
+**Constraint:** All algorithms are 100% algorithmic, no training, no embeddings,
 no gradient computation. Every parameter is derived from first principles or dataset
 medians from a held-out development set.
 
 ---
 
-## Performance comparison (953 trees, SawitMVC-YOLO)
+## Performance comparison (953 trees: SawitMVC-YOLO)
 
 | Rank | File | Acc±1 | Macro MAE | Total MAE | Approach |
 |:----:|------|------:|----------:|----------:|----------|
@@ -18,7 +18,7 @@ medians from a held-out development set.
 | 3 | [`M03_blend_geometric.py`](M03_blend_geometric.py) | 86.99% | 0.377 | 1.341 | Geometric-mean blend |
 | 4 | [`M04_blend_floor_clamped.py`](M04_blend_floor_clamped.py) | 86.99% | 0.385 | 1.342 | Floor-clamped weighted blend |
 | 5 | [`M05_blend_vis_divide.py`](M05_blend_vis_divide.py) | 86.99% | 0.388 | 1.346 | Simple weighted blend |
-| — | Naive sum (reference) | 3.78% | 2.287 | 9.147 | No deduplication |
+| - | Naive sum (reference) | 3.78% | 2.287 | 9.147 | No deduplication |
 
 Full ranking of all 29 evaluated methods: [`results/heuristics_953/accuracy_full.csv`](../results/heuristics_953/accuracy_full.csv).
 
@@ -37,10 +37,10 @@ A flat list of all bounding-box detections across all camera sides for a single 
 ```python
 detections = [
     {
-        "class":      "B3",   # str — one of "B1", "B2", "B3", "B4"
-        "x_norm":     0.512,  # float — normalized x-center of bbox (0.0–1.0)
-        "y_norm":     0.341,  # float — normalized y-center of bbox (0.0–1.0)
-        "side_index": 0,      # int   — camera side (0-based, wraps around)
+        "class":      "B3",   # str, one of "B1", "B2", "B3", "B4"
+        "x_norm":     0.512,  # float, normalized x-center of bbox (0.0–1.0)
+        "y_norm":     0.341,  # float, normalized y-center of bbox (0.0–1.0)
+        "side_index": 0,      # int  , camera side (0-based, wraps around)
     },
     # ... more detections
 ]
@@ -63,17 +63,17 @@ Predicted unique bunch count per maturity class after deduplication.
 
 ## Algorithm Descriptions
 
-### M01 — `selector_b2b3` (Champion)
+### M01: `selector_b2b3` (Champion)
 
 **Strategy:** Route each tree to the best estimator based on its detection profile,
 then fix B2↔B3 ambiguity with a post-prediction reallocation.
 
-**Stage 1 — Trifurcation selector:**
+**Stage 1, Trifurcation selector:**
 - Dense B3-dominated tree (`b3_frac ≥ 0.60`, `n_total ≥ 25`) → `median3_floor`
 - B1-rich, B3-moderate tree (`naive_B1 ≥ 3`, `b3_frac < 0.45`, `naive_B4 < 10`) → `adaptive_corrected`
 - Default → `geometric_mean_blend`
 
-**Stage 2 — B2↔B3 split correction:**
+**Stage 2, B2↔B3 split correction:**
 Preserve the combined B2+B3 total from Stage 1 but redistribute using the naive B2:B3
 ratio from raw detections. This corrects systematic class confusion without changing the
 total count.
@@ -84,7 +84,7 @@ than the individual class predictions.
 
 ---
 
-### M02 — `selector_trifurc`
+### M02: `selector_trifurc`
 
 Same trifurcation logic as M01 (Stage 1 only). Without the B2↔B3 correction, Acc±1 is
 identical but MAE is 0.001 higher. Useful when you need the selector behavior without
@@ -92,11 +92,11 @@ post-processing.
 
 ---
 
-### M03 — `blend_geometric`
+### M03: `blend_geometric`
 
 **Strategy:** `sqrt(visibility × adaptive)` per class, floored at `max_per_side`.
 
-- `visibility`: Gaussian weighting by horizontal position — detections near the center
+- `visibility`: Gaussian weighting by horizontal position, detections near the center
   of a frame are more likely unique (weight ≈ 1), edge detections have lower weight.
 - `adaptive`: Global divisor that decreases as total detection count increases (dense
   trees have a lower duplication rate per class).
@@ -105,7 +105,7 @@ post-processing.
 
 ---
 
-### M04 — `blend_floor_clamped`
+### M04: `blend_floor_clamped`
 
 **Strategy:** `round(0.6 × visibility + 0.4 × adaptive)`, floored at `max_per_side`.
 
@@ -114,9 +114,9 @@ geometric mean; useful when interpretability of weighting coefficients matters.
 
 ---
 
-### M05 — `blend_vis_divide`
+### M05: `blend_vis_divide`
 
-**Strategy:** `round(0.6 × visibility + 0.4 × adaptive)` — no floor.
+**Strategy:** `round(0.6 × visibility + 0.4 × adaptive)`, no floor.
 
 The simplest method in the top-5. No floor constraint, making it the most conservative
 estimator. Recommended as a baseline when applying the algorithms to a new dataset or

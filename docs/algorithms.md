@@ -1,4 +1,4 @@
-# Algorithms — Design and Rationale
+﻿# Algorithms: Design and Rationale
 
 This document explains the multi-view deduplication problem and how the top-5
 algorithms solve it without any training.
@@ -11,7 +11,7 @@ Given a tree photographed from N sides (N=4 or N=8), each side produces a set of
 bounding-box detections with class labels (B1–B4). The same physical bunch appears
 in up to 3 consecutive views (4-side trees) or 6 consecutive views (8-side trees).
 
-**Goal:** predict `{B1: int, B2: int, B3: int, B4: int}` — the unique count of
+**Goal:** predict `{B1: int, B2: int, B3: int, B4: int}`, the unique count of
 bunches per maturity class.
 
 **Naive sum:** simply adding up all detections overcounts by a factor of ~1.83.
@@ -23,7 +23,7 @@ The algorithms in this repository reduce that error to ≤ 13%.
 
 All top-5 algorithms combine variants of three estimators:
 
-### 1. `visibility_count` (used by M01–M04, M06)
+### 1. `visibility_count` (used by M01–M04: M06)
 
 Assigns a weight to each detection based on its horizontal position in the frame.
 
@@ -53,7 +53,7 @@ count[c] = round(naive[c] / (BASE_FACTORS[c] × (dup_rate / 1.79)))
 **Intuition:** Dense trees have a lower per-class duplication rate because bunches are
 harder to capture from multiple angles when the canopy is full.
 
-### 3. `max_per_side` (used by M01–M04, M07)
+### 3. `max_per_side` (used by M01–M04: M07)
 
 A hard physical floor: the unique count cannot be less than the maximum count seen on
 any single side.
@@ -63,13 +63,13 @@ floor[c] = max(count of class c detections on any single side_index)
 ```
 
 **Intuition:** If side 2 has 5 B3 bunches visible, there must be at least 5 B3 bunches
-on that tree — they can't all be duplicates of each other from the same viewpoint.
+on that tree, they can't all be duplicates of each other from the same viewpoint.
 
 ---
 
 ## Algorithm Families
 
-### Selector (M01, M02)
+### Selector (M01: M02)
 
 Routes each tree to a different base estimator depending on its detection profile.
 The trifurcation logic in M01/M02 identifies three regimes:
@@ -123,12 +123,12 @@ training) is a higher-leverage improvement than improving the counting algorithm
 
 The most important insight from this research is that B2 and B3 are **visually
 indistinguishable from a single camera angle** at approximately 10–12% of trees (95–118
-trees out of 953). This is not label noise — manual audit confirmed 0% labeling errors.
+trees out of 953). This is not label noise, manual audit confirmed 0% labeling errors.
 
 The confusion is inherent: during the transition from B2 to B3 maturity, bunches have
 intermediate visual properties that cannot be resolved even by human annotators with
 full context. The theoretical ceiling for algorithms without cross-view embeddings
-is approximately **89.6% Acc±1** — which is why the 90% target was abandoned as
+is approximately **89.6% Acc±1**: which is why the 90% target was abandoned as
 unreachable under the no-training constraint.
 
 Per-class MAE breakdown for M01 (best method):
@@ -149,7 +149,7 @@ dataset:
 | M12_selector_overrides | 97.37% | 85.94% | −11.43 pp |
 | M17_selector_regime | 96.05% | 85.62% | −10.43 pp |
 | **M05_blend_vis_divide** | ~86% | **86.99%** | **+1 pp** |
-| **M01_selector_b2b3** | n/a | **87.62%** | — |
+| **M01_selector_b2b3** | n/a | **87.62%** | - |
 
 The lesson: narrow override rules that fit a small dev set consistently overfit when
 the dataset grows. Simple blend and selector methods generalize better.

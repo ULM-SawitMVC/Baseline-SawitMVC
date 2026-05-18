@@ -1,4 +1,4 @@
-# Predictions — Cached YOLO Outputs
+﻿# Predictions: Cached YOLO Outputs
 
 This folder mirrors every YOLOv26 inference output used by the end-to-end
 tracks. Bundling these JSONs (`~48 MB`) lets contributors reproduce every

@@ -1,4 +1,4 @@
-# Benchmarks — Reproducible Evaluation
+﻿# Benchmarks: Reproducible Evaluation
 
 This folder contains the two top-level scripts that drive every evaluation in
 the repository. All pre-computed numerical artifacts live one level up under
@@ -6,8 +6,8 @@ the repository. All pre-computed numerical artifacts live one level up under
 
 | Script | Purpose |
 |--------|---------|
-| [`run_benchmark.py`](run_benchmark.py) | Track A — runs the five heuristic deduplicators across all 953 trees and prints a ranked table. |
-| [`check_release_claims.py`](check_release_claims.py) | Release guard — verifies that the headline numbers in [`README.md`](../README.md) still match the artifacts in [`results/`](../results/). |
+| [`run_benchmark.py`](run_benchmark.py) | Track A, runs the five heuristic deduplicators across all 953 trees and prints a ranked table. |
+| [`check_release_claims.py`](check_release_claims.py) | Release guard, verifies that the headline numbers in [`README.md`](../README.md) still match the artifacts in [`results/`](../results/). |
 
 ## Quick run
 

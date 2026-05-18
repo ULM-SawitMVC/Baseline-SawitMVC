@@ -1,4 +1,4 @@
-# Research Findings
+﻿# Research Findings
 
 Key findings from the SawitMVC multi-view oil palm bunch counting research
 (completed 2026-05-16, 953 trees, SawitMVC-YOLO).
@@ -24,7 +24,7 @@ YOLO detection errors (missed detections, wrong class labels, false positives)
 corrupting the feature vectors used by the counter.
 
 **All 12 canonical E2E combinations** (3 detectors × 4 counters) land in a narrow
-64–71% Acc±1 range on the 95-tree `split_manifest.csv` test split — confirming
+64–71% Acc±1 range on the 95-tree `split_manifest.csv` test split, confirming
 that detector quality dominates once the counter family is fixed.
 
 ---
@@ -36,8 +36,8 @@ from any single camera angle. This is a genuine dataset property, not label nois
 
 **Evidence:**
 - Manual audit (audit-JSON-01): label noise confirmed at ≈ 0%
-- Per-class MAE for B3 is 0.757 — nearly 5× higher than B1 (0.181)
-- If B3 MAE were 0 (perfect), total Macro MAE would still be 0.209 — above the 0.2 target
+- Per-class MAE for B3 is 0.757, nearly 5× higher than B1 (0.181)
+- If B3 MAE were 0 (perfect), total Macro MAE would still be 0.209, above the 0.2 target
 - Estimated theoretical ceiling for no-training algorithms: **~89.6% Acc±1**
 - 99–118 trees are structurally ambiguous and cannot be classified correctly without
   cross-view or temporal features
@@ -75,7 +75,7 @@ No single estimator is optimal across all profiles.
 **Summary:** Earlier ablations found YOLO26s from scratch can reach mAP50=0.511,
 matching the public y26s result.
 
-**Explanation:** Oil palm bunch images are close-up agricultural photographs — very
+**Explanation:** Oil palm bunch images are close-up agricultural photographs, very
 different from the COCO distribution. COCO weights do not transfer meaningful low-level
 features for this task. Scratch training generally converges more slowly, but can
 still reach competitive final mAP50.
@@ -110,7 +110,7 @@ largest regression on the 953-tree canonical dataset.
 | M12_selector_overrides | 97.37% | 85.94% | −11.43 pp |
 | M17_selector_regime | 96.05% | 85.62% | −10.43 pp |
 | **M05_blend_vis_divide** | ~86% | **86.99%** | **stable** |
-| **M01_selector_b2b3** | n/a | **87.62%** | — |
+| **M01_selector_b2b3** | n/a | **87.62%** | - |
 
 Narrow override rules and regime-specific corrections that boost performance on small
 development sets consistently fail to generalize. Simple geometric reasoning (blends,
@@ -122,34 +122,34 @@ visibility weights) is more robust.
 
 ### High priority (high expected impact)
 
-1. **Better detection backbone** — The 25-pp gap between GT and E2E performance
+1. **Better detection backbone:** The 25-pp gap between GT and E2E performance
    makes the detector the primary target. Potential approaches:
    - Multi-scale fusion (FPN) specialized for close-up agricultural imagery
    - Self-supervised pretraining on unlabeled oil palm images
    - Larger training datasets from additional plantation sites
 
-2. **Cross-view feature fusion** — A model that sees all N sides simultaneously
+2. **Cross-view feature fusion:** A model that sees all N sides simultaneously
    (instead of treating each side independently) could resolve B2↔B3 ambiguity
    using relative spatial information.
 
-3. **Domain adaptation** — The current models are trained only on the DAMIMAS and LONSUM
+3. **Domain adaptation:** The current models are trained only on the DAMIMAS and LONSUM
    plantations in Kabupaten Tanah Laut, Kalimantan Selatan, Indonesia. Adding data from other plantation
    varieties and geographic regions would improve robustness.
 
 ### Medium priority (incremental improvement)
 
-4. **Uncertainty quantification** — Identifying the ~10–12% of trees that are
+4. **Uncertainty quantification:** Identifying the ~10–12% of trees that are
    structurally ambiguous (likely B2↔B3 confusion) and flagging them for human review
    could improve practical accuracy in deployment.
 
-5. **Semi-supervised annotation** — The current JSON ground truth uses manual cross-view
+5. **Semi-supervised annotation:** The current JSON ground truth uses manual cross-view
    linking. A semi-supervised pipeline could scale annotation to larger datasets.
 
-6. **Temporal consistency** — If the same tree is photographed at multiple harvest
+6. **Temporal consistency:** If the same tree is photographed at multiple harvest
    cycles, temporal priors on bunch counts could improve accuracy.
 
 ### Low priority (diminishing returns)
 
-7. Ensemble of top-5 heuristics — early experiments show at most +0.3 pp improvement
-8. Hyperparameter search for existing methods — already near the algorithmic ceiling
-9. Class rebalancing — B3 dominates at 51.6%; oversampling B1/B4 destabilizes training
+7. Ensemble of top-5 heuristics, early experiments show at most +0.3 pp improvement
+8. Hyperparameter search for existing methods, already near the algorithmic ceiling
+9. Class rebalancing, B3 dominates at 51.6%; oversampling B1/B4 destabilizes training

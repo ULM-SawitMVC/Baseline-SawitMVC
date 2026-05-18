@@ -1,4 +1,4 @@
-## Description
+﻿## Description
 
 <!-- Briefly describe what this PR adds or fixes. -->
 
@@ -34,7 +34,7 @@
 
 - [ ] Code follows PEP 8
 - [ ] No print statements in algorithm files
-- [ ] PR is focused — one algorithm or fix per PR
+- [ ] PR is focused, one algorithm or fix per PR
 
 ---
 
@@ -43,7 +43,7 @@
 <!-- Paste the output of `python benchmarks/run_benchmark.py` here -->
 
 ```
-SawitMVC Baseline — Benchmark Results (953 trees)
+SawitMVC Baseline, Benchmark Results (953 trees)
 ...
 ```
 
