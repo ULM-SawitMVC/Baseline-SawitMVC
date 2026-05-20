@@ -117,16 +117,39 @@ Three ML counters operate on this vector: SVM (RBF + GridSearchCV), Random Fores
 | RF | +0.063 | −0.188 | +0.167 | +0.260 |
 | M01 | +0.417 | −0.344 | +0.854 | −0.698 |
 
-### Track A — Heuristic Counting on Ground Truth (953 trees)
+### Track A — Heuristic Counting on Ground Truth
 
-| Rank | Algorithm | Acc±1 | Macro MAE |
-|:----:|-----------|------:|----------:|
-| 1 | M01_selector_b2b3 | **87.62%** | 0.375 |
-| 2 | M02_selector_trifurc | 87.62% | 0.376 |
-| 3 | M03_blend_geometric | 86.99% | 0.377 |
-| — | Naive sum baseline | 3.78% | 2.287 |
+> Metrics computed directly from GT annotations (no detector noise). Two Acc±1 variants are reported: **Macro** = per-class average over B1–B4; **Joint** = fraction of trees where all 4 classes are simultaneously within ±1.
 
-Full table: [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
+#### Naive Sum Baseline (no deduplication)
+
+| Set | n | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
+|-----|--:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
+| Full | 953 | 46.88% | 3.78% | 2.2867 | 65.37% | 51.21% | 9.23% | 61.70% |
+| Test | 141 | 50.00% | 6.38% | 2.1418 | 70.92% | 51.77% | 11.35% | 65.96% |
+
+Per-class MAE:
+
+| Set | MAE B1 | MAE B2 | MAE B3 | MAE B4 |
+|-----|-------:|-------:|-------:|-------:|
+| Full | 1.1312 | 1.7933 | 4.8625 | 1.3599 |
+| Test | 0.9362 | 1.7021 | 4.7092 | 1.2199 |
+
+#### M01 Heuristic (best deterministic deduplication)
+
+| Set | n | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
+|-----|--:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
+| Full | 953 | 95.41% | 87.62% | 0.3746 | 97.59% | 95.59% | 90.87% | 97.59% |
+| Test | 141 | **95.92%** | **87.23%** | **0.3404** | 97.87% | 97.16% | 89.36% | 99.29% |
+
+Per-class MAE:
+
+| Set | MAE B1 | MAE B2 | MAE B3 | MAE B4 |
+|-----|-------:|-------:|-------:|-------:|
+| Full | 0.1658 | 0.3337 | 0.7062 | 0.2928 |
+| Test | 0.1489 | 0.2766 | 0.6809 | 0.2553 |
+
+Full heuristic ranking (29 methods): [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
 
 ### Track C — Upper Bound (ML counter on perfect GT features, 95 test trees)
 
