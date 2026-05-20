@@ -91,9 +91,11 @@ Research baseline untuk menghitung dan mengklasifikasi kematangan tandan buah se
 ## Tech stack
 
 - **Python** ≥ 3.10
-- **YOLOv26** (Ultralytics) — detektor objek, 3 ukuran: nano/small/medium
-- **scikit-learn** — SVM (RBF kernel + GridSearchCV), Random Forest, Linear Regression
-- **numpy** — feature extraction
+- **YOLOv26** (Ultralytics) — detektor objek; baseline aktif: `y26mv2` (medium)
+- **scikit-learn** — Ridge (RidgeCV), ElasticNet (MultiTaskElasticNetCV), LR, SVM, RF
+- **XGBoost / LightGBM** — dipakai di eksperimen ablasi (v3/v4), bukan stored baseline
+- **Optuna** — Bayesian HPO di exp_counting_v4.py (60–80 trials)
+- **numpy / pandas** — feature extraction dan result aggregation
 - GPU hanya dibutuhkan saat retraining YOLO; semua evaluasi bisa di CPU
 
 ---
@@ -109,15 +111,17 @@ Research baseline untuk menghitung dan mengklasifikasi kematangan tandan buah se
 | B4 | Terkecil, hijau-hitam | Paling atas | Inventaris masa depan |
 
 ### Tiga track eksperimen
-- **Track A** — 5 heuristik deterministik langsung pada ground truth → best: **87.62% Acc±1** (M01)
-- **Track B** — Counter ML pada fitur 13-dim dari deteksi `y26mv2` → stored baseline: **75.71% Acc±1** (LR), best experiment: **77.48%** (Ridge + F_all)
-- **Track C** — Upper bound: counter ML pada fitur dari ground truth → best: **97.87% Acc±1** (SVM)
+- **Track A** — 5 heuristik deterministik langsung pada ground truth → best M01: **95.92% Macro / 87.23% Joint Acc±1** (141 test)
+- **Track B** — Counter ML pada fitur dari deteksi `y26mv2` → stored baseline LR+F0 13-dim: **75.71% Macro / 30.50% Joint**; best experiment Ridge+F_all 67-dim: **77.48% Macro / 32.62% Joint**
+- **Track C** — Upper bound: counter ML pada fitur dari ground truth → best SVM+F0: **97.87% Macro / 91.49% Joint Acc±1** (141 test)
 
-Gap Track B vs Track C = **20.39 poin** → sumber utama error adalah detektor, bukan counter.
+Gap Track B → Track C = **20.39 pp Macro** → sumber utama error adalah detektor (B3 recall 65.6%, B4 recall 38.9%), bukan counter.
 
 ### Metric utama
-**Acc±1**: fraksi pohon di mana prediksi ≤ 1 dari ground truth, di-macro-average atas 4 kelas.
-Supporting: Macro MAE, total-count MAE, exact-profile accuracy.
+- **Macro Acc±1**: rata-rata per-kelas dari fraksi pohon di mana `|pred − gt| ≤ 1`
+- **Joint Acc±1**: fraksi pohon di mana **semua 4 kelas** sekaligus dalam ±1 (lebih ketat)
+- **Macro MAE**: rata-rata per-kelas dari mean absolute error
+- Supporting: per-class bias (signed mean error, + = overcount)
 
 ---
 
@@ -126,16 +130,17 @@ Supporting: Macro MAE, total-count MAE, exact-profile accuracy.
 ```
 algorithms/          # 5 heuristik deterministik (M01..M05)
 pipeline/            # Script current baseline: Track B + Track C
+experiments/         # Counting ablation: exp_counting_v3.py (80 config), exp_counting_v4.py (Optuna+stacking)
 benchmarks/          # Entry points: run_benchmark.py, check_release_claims.py
 ground_truth/        # 953 JSON anotasi per pohon + split_manifest.csv
 predictions/         # Cached YOLO outputs for current baseline (y26mv2_per_tree)
-results/             # Output evaluasi aktif + experiment CSVs
-models/yolo/         # Bobot YOLO current baseline: y26mv2
+results/             # Output evaluasi aktif + experiment CSVs (results/experiments/)
+models/yolo/         # Bobot YOLO current baseline: y26mv2.pt
 models/counters/     # Artefak counter: svm.pkl, rf.pkl, lr.pkl
 SawitMVC-YOLO/       # Gambar dataset (YOLO format, images + labels)
 docs/                # Dokumentasi panjang (algorithms.md, evaluation.md, dll)
 scripts/             # Shell scripts: reproduce_all.sh, dll
-archive/             # Old experiments; not part of latest baseline surface
+archive/             # Old detectors (y26n, y26s, y26m) + old experiments; bukan bagian baseline aktif
 ```
 
 ---
@@ -144,12 +149,14 @@ archive/             # Old experiments; not part of latest baseline surface
 
 | File | Peran |
 |------|-------|
-| `algorithms/M01_selector_b2b3.py` | Algoritma heuristik terbaik (87.62%) |
+| `algorithms/M01_selector_b2b3.py` | Algoritma heuristik terbaik (95.92% Macro, 87.23% Joint) |
 | `algorithms/__init__.py` | Registry semua algoritma |
-| `pipeline/build_counting_features.py` | Ekstraksi fitur 13-dim per pohon |
+| `pipeline/build_counting_features.py` | Ekstraksi fitur F0 13-dim per pohon |
 | `pipeline/run_e2e_pipeline.py` | End-to-end Track B (per-tree) |
 | `pipeline/run_e2e_inference.py` | Inference YOLO per pohon |
-| `pipeline/run_counting_{svm,rf,lr}.py` | Trainer counter ML |
+| `pipeline/run_counting_{svm,rf,lr}.py` | Trainer counter ML (stored baseline) |
+| `experiments/exp_counting_v3.py` | 80 config ablasi fitur — best: Ridge+F_all 67-dim → 77.48% |
+| `experiments/exp_counting_v4.py` | 170-dim + Optuna + stacking — konfirmasi ceiling 77.48% |
 | `benchmarks/run_benchmark.py` | Runner benchmark Track A |
 | `benchmarks/check_release_claims.py` | Verifikasi angka klaim di README |
 | `ground_truth/split_manifest.csv` | Split 716/96/141 (train/val/test) |
@@ -162,17 +169,24 @@ archive/             # Old experiments; not part of latest baseline surface
 # Track A: 5 heuristik pada 953 pohon
 python benchmarks/run_benchmark.py
 
-# Track B: end-to-end satu detektor
-python pipeline/run_e2e_pipeline.py --name y26mv2 --skip-inference
+# Track B: end-to-end (dari cached predictions, tanpa GPU)
+python pipeline/run_e2e_pipeline.py --name y26mv2 --skip-inference --counters svm lr rf m01
 
-# Track C: upper bound
+# Track C: upper bound (ML counter pada GT features)
 bash scripts/reproduce_upper_bound.sh
 
-# Reproduksi semua (dari cached predictions, tanpa GPU)
+# Reproduksi semua (dari cached predictions)
 bash scripts/reproduce_all.sh
 
 # Verifikasi klaim di README
 python benchmarks/check_release_claims.py
+
+# Counting ablation experiments
+python experiments/exp_counting_v3.py   # 80 config feature ablation
+python experiments/exp_counting_v4.py   # 170-dim + Optuna + stacking (ceiling probe)
+
+# Print metrics untuk split tertentu
+python scripts/report_metrics.py y26mv2 test
 
 # Download dataset dari Hugging Face (hanya untuk retraining)
 python -c "from huggingface_hub import snapshot_download; snapshot_download('ULM-DS-Lab/SawitMVC-YOLO', repo_type='dataset', local_dir='./SawitMVC-YOLO', token=True)"
@@ -201,15 +215,24 @@ Untuk menambah algoritma baru:
 
 ---
 
-## Feature vector (13 dimensi)
+## Feature vectors
 
+**F0 — 13-dim (stored baseline, `pipeline/build_counting_features.py`):**
 ```python
-# dari pipeline/build_counting_features.py
-[naive_sum_B1, naive_sum_B2, naive_sum_B3, naive_sum_B4,   # 4: total deteksi
- max_per_side_B1, ..., max_per_side_B4,                     # 4: max di satu sudut
- mean_per_side_B1, ..., mean_per_side_B4,                   # 4: rata-rata per sudut
- n_sides]                                                    # 1: jumlah sudut (4 atau 8)
+[naive_sum_B1..B4,       # 4: total deteksi per kelas
+ max_per_side_B1..B4,    # 4: max di satu sudut
+ mean_per_side_B1..B4,   # 4: rata-rata per sudut
+ n_sides]                # 1: jumlah sudut (4 atau 8)
 ```
+
+**F_all — 67-dim (best experiment, `experiments/exp_counting_v3.py`):**
+F0 + per-class:
+- **conf group** (×4 kelas): `conf_sum`, `conf_mean`, `conf_max`, `high_conf≥0.5`, `vhigh_conf≥0.6`
+- **distrib group** (×4): `std_per_side`, `min_per_side`, `cv`, `n_sides_det`, `consistency`
+- **spatial group** (×4): `mean_cy` (vertical centroid), `mean_area` (bbox area)
+- **cross-class**: `total_naive`, `frac_Bc` (×4), `b3_b23_frac`
+
+`mean_cy` adalah fitur paling informatif tunggal — tiap kelas menempati zona vertikal berbeda di pohon.
 
 ---
 
