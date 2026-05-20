@@ -125,8 +125,10 @@ Two Acc±1 variants: **Macro** = per-class average over B1–B4; **Joint** = fra
 |----------|--------|-----|------------:|------------:|----------:|--------:|--------:|--------:|--------:|
 | Naive Sum | GT annotations | 953 trees | 46.88% | 3.78% | 2.2867 | +1.131 | +1.793 | +4.863 | +1.360 |
 | Naive Sum | GT annotations | 141 test | 50.00% | 6.38% | 2.1418 | +0.936 | +1.702 | +4.709 | +1.220 |
-| Track A: Heuristic | M01 | 953 trees | 95.41% | 87.62% | 0.3746 | +0.128 | +0.193 | +0.188 | −0.098 |
-| Track A: Heuristic | M01 | 141 test | 95.92% | 87.23% | 0.3404 | +0.106 | +0.149 | +0.099 | −0.099 |
+| Track A: Heuristic | M15 (divide by global factor) | 953 trees | 95.17% | 85.94% | 0.3909 | +0.168 | +0.152 | +0.342 | −0.026 |
+| Track A: Heuristic | M15 (divide by global factor) | 141 test | 95.39% | 85.11% | 0.3759 | +0.135 | +0.135 | +0.262 | −0.064 |
+| Track A: Heuristic | M01 (best complex) | 953 trees | 95.41% | 87.62% | 0.3746 | +0.128 | +0.193 | +0.188 | −0.098 |
+| Track A: Heuristic | M01 (best complex) | 141 test | 95.92% | 87.23% | 0.3404 | +0.106 | +0.149 | +0.099 | −0.099 |
 | Track B: E2E | y26mv2 + LR | 141 test | **75.71%** | — | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
 | Track C: GT upper bound | LR on GT features | 95 test | — | — | **0.276** | — | — | — | — |
 
