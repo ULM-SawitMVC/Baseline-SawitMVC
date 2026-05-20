@@ -4,8 +4,9 @@ Release consistency checks for stored benchmark artifacts.
 This script verifies the small set of public headline claims that are easy to
 make stale during release edits:
   - heuristic top-5 metrics from results/heuristics_953/accuracy_full.csv
-  - canonical E2E best result from results/e2e_per_tree/*/metrics.json
-  - canonical E2E test split size
+  - canonical baseline E2E best result from results/e2e_per_tree/*/metrics.json
+  - v3 experiment winner from results/experiments/counting_v3_results.csv
+  - v4 deep-probe ceiling from results/experiments/counting_v4_results.csv
 
 It does not parse prose tables; use it as a guardrail before updating README/docs.
 """
@@ -25,6 +26,9 @@ EXPECTED_HEURISTICS = {
     "M05_blend_vis_divide": (86.99, 0.3875),
 }
 EXPECTED_E2E_BEST = ("y26mv2_lr", 0.7571, 1.0479, 141)
+EXPECTED_V3_BEST = ("F_all", "Ridge", "train_only", 67, 0.7748, 0.3262, 1.0355)
+EXPECTED_V4_TOP = ("ElasticNet + F0+spatial (train)", 0.7677, 0.3121, 1.0390)
+EXPECTED_V4_CEILING = 0.7748
 
 
 def _close(a: float, b: float, tol: float = 5e-4) -> bool:
@@ -62,7 +66,7 @@ def check_e2e() -> list[str]:
         test = data.get("test", {})
         n_trees = int(test.get("n_trees", 0))
         if n_trees != 141:
-            errors.append(f"{metrics_path.parent.name}: expected n_trees=95, found {n_trees}")
+            errors.append(f"{metrics_path.parent.name}: expected n_trees=141, found {n_trees}")
         acc = float(test.get("macro_acc_pm1", 0.0))
         if best is None or acc > best[0]:
             best = (acc, metrics_path.parent.name, test)
@@ -84,8 +88,73 @@ def check_e2e() -> list[str]:
     return errors
 
 
+def check_v3_experiments() -> list[str]:
+    path = ROOT / "results" / "experiments" / "counting_v3_results.csv"
+    with open(path, encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+
+    if not rows:
+        return [f"No rows found in {path}"]
+
+    best = max(rows, key=lambda r: float(r["macro"]))
+    exp_features, exp_model, exp_strategy, exp_dims, exp_acc, exp_joint, exp_mae = EXPECTED_V3_BEST
+    errors: list[str] = []
+    if (
+        best["features"] != exp_features
+        or best["model"] != exp_model
+        or best["strategy"] != exp_strategy
+        or int(best["n_dim"]) != exp_dims
+        or not _close(float(best["macro"]), exp_acc, 5e-4)
+        or not _close(float(best["joint"]), exp_joint, 5e-4)
+        or not _close(float(best["mae"]), exp_mae, 5e-4)
+    ):
+        errors.append(
+            "Unexpected v3 best: "
+            f"{best['features']} + {best['model']} ({best['strategy']}, {best['n_dim']} dim) "
+            f"Acc+/-1={float(best['macro']):.4f}, Joint={float(best['joint']):.4f}, "
+            f"MAE={float(best['mae']):.4f}"
+        )
+    return errors
+
+
+def check_v4_experiments() -> list[str]:
+    path = ROOT / "results" / "experiments" / "counting_v4_results.csv"
+    with open(path, encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+
+    if not rows:
+        return [f"No rows found in {path}"]
+
+    best = max(rows, key=lambda r: float(r["macro_acc"]))
+    exp_name, exp_acc, exp_joint, exp_mae = EXPECTED_V4_TOP
+    errors: list[str] = []
+    if (
+        best["config"] != exp_name
+        or not _close(float(best["macro_acc"]), exp_acc, 5e-4)
+        or not _close(float(best["joint_acc"]), exp_joint, 5e-4)
+        or not _close(float(best["macro_mae"]), exp_mae, 5e-4)
+    ):
+        errors.append(
+            "Unexpected v4 top row: "
+            f"{best['config']} Acc+/-1={float(best['macro_acc']):.4f}, "
+            f"Joint={float(best['joint_acc']):.4f}, MAE={float(best['macro_mae']):.4f}"
+        )
+
+    if float(best["macro_acc"]) >= EXPECTED_V4_CEILING:
+        errors.append(
+            "Unexpected v4 ceiling break: "
+            f"best v4 Acc+/-1={float(best['macro_acc']):.4f} should stay below {EXPECTED_V4_CEILING:.4f}"
+        )
+    return errors
+
+
 def main() -> None:
-    errors = check_heuristics() + check_e2e()
+    errors = (
+        check_heuristics()
+        + check_e2e()
+        + check_v3_experiments()
+        + check_v4_experiments()
+    )
     if errors:
         print("Release claim check failed:")
         for err in errors:
