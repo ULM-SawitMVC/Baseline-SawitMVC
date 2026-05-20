@@ -129,22 +129,67 @@ Two Acc±1 variants: **Macro** = per-class average over B1–B4; **Joint** = fra
 | Track A: Heuristic | M15 (divide by global factor) | 141 test | 95.39% | 85.11% | 0.3759 | +0.135 | +0.135 | +0.262 | −0.064 |
 | Track A: Heuristic | M01 (best complex) | 953 trees | 95.41% | 87.62% | 0.3746 | +0.128 | +0.193 | +0.188 | −0.098 |
 | Track A: Heuristic | M01 (best complex) | 141 test | 95.92% | 87.23% | 0.3404 | +0.106 | +0.149 | +0.099 | −0.099 |
-| Track B: E2E | y26mv2 + LR | 141 test | **75.71%** | 28.69% | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
+| Track B: E2E | y26mv2 + LR (baseline) | 141 test | 75.71% | 28.69% | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
+| Track B: E2E | y26mv2 + Ridge + F1† | 141 test | **76.60%** | 30.50% | 1.046 | +0.014 | −0.050 | −0.177 | +0.028 |
+| Track B: E2E | y26mv2 + LR + F2‡ | 141 test | 76.42% | **33.33%** | 1.046 | +0.014 | −0.085 | −0.135 | +0.106 |
 | Track C: GT upper bound | LR on GT features | 95 test | 97.37% | **90.53%** | **0.276** | −0.053 | +0.021 | +0.168 | +0.000 |
 
-Full heuristic ranking (29 methods): [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
+† F1 = baseline 13 dims + confidence features (conf-weighted sum, mean conf, high-conf count ≥ 0.5, n\_sides\_detected per class) → 29 dims  
+‡ F2 = baseline 13 dims + structural features (per-side std, min\_per\_side, bbox area mean, detection density per class) → 29 dims
 
-**Gap Track B → Track C: 21.66 pp** — this gap is detector error, not counter error. Improving recall on B3 and B4 is the highest-leverage target.
+Full heuristic ranking (29 methods): [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).  
+Full counting experiment results (20 configs): [`results/experiments/counting_v2_results.csv`](results/experiments/counting_v2_results.csv).
+
+**Gap Track B → Track C: 20.77 pp** — this gap is detector error, not counter error. Improving recall on B3 and B4 is the highest-leverage target.
+
+---
+
+## Counting Experiments
+
+20 configurations tested across 4 feature sets × 5 models (`experiments/exp_counting_v2.py`):
+
+**Feature sets:**
+
+| Tag | Dims | Description |
+|-----|-----:|-------------|
+| F0 | 13 | Baseline (naive\_sum, max\_per\_side, mean\_per\_side, n\_sides) |
+| F1 | 29 | F0 + confidence features (conf-weighted sum, mean conf, high-conf count ≥ 0.5, n\_sides\_detected) |
+| F2 | 29 | F0 + structural features (per-side std, min\_per\_side, bbox area mean, detection density) |
+| F3 | 45 | F0 + F1 + F2 combined |
+
+**Models tested:** Linear Regression, Ridge (RidgeCV), Gradient Boosting (GBR), XGBoost, LightGBM.
+
+**Top 2 per feature set (test Macro Acc±1):**
+
+| Feature Set | Model | Macro Acc±1 | Joint Acc±1 | Macro MAE |
+|-------------|-------|------------:|------------:|----------:|
+| **F1 (confidence)** | **Ridge** | **76.60%** | 30.50% | 1.046 |
+| F2 (structural) | LR | 76.42% | **33.33%** | 1.046 |
+| F0 (baseline) | Ridge | 76.06% | 28.37% | 1.053 |
+| F3 (all) | Ridge | 76.42% | 29.79% | 1.046 |
+
+**Top 2 per model (test Macro Acc±1):**
+
+| Model | Feature Set | Macro Acc±1 | Joint Acc±1 | Macro MAE |
+|-------|-------------|------------:|------------:|----------:|
+| Ridge | F1 | 76.60% | 30.50% | 1.046 |
+| LR | F2 | 76.42% | 33.33% | 1.046 |
+| LGB | F0 | 75.00% | 32.62% | 1.066 |
+| XGB | F1 | 74.47% | 27.66% | 1.048 |
+| GBR | F1 | 73.23% | 29.79% | 1.085 |
+
+**Key observations:** Linear models (LR, Ridge) consistently outperform tree-based methods (GBR, XGB, LGB) on this dataset. The small training set (716 trees) causes tree-based models to overfit. Feature engineering yields modest gains (+0.89 pp Macro Acc±1, +4.64 pp Joint Acc±1) — the primary bottleneck remains the detector.
 
 ---
 
 ## Key Findings
 
-- **LR is the best counter** consistently across test and val splits.
+- **Ridge + confidence features (F1) is the best counter** — 76.60% Macro Acc±1 / 30.50% Joint Acc±1.
+- **LR + structural features (F2)** achieves the highest Joint Acc±1 (33.33%) — better calibration across all 4 classes simultaneously.
 - **B3 is the hardest class** (~51–56% Acc±1) — partially occluded, solid-black appearance blends with B2.
 - **B1 is the easiest** (>95% Acc±1) — large, red, visually distinctive.
 - All counters tend to **undercount B2 and B3** (negative bias).
-- The 21.66-point gap between Track B and Track C confirms the bottleneck is the detector, not the counting algorithm.
+- The 20.77-point gap between Track B and Track C confirms the bottleneck is the detector, not the counting algorithm.
 
 ---
 
