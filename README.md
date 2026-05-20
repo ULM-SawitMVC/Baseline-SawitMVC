@@ -129,7 +129,7 @@ Two Acc±1 variants: **Macro** = per-class average over B1–B4; **Joint** = fra
 | Track A: Heuristic | M15 (divide by global factor) | 141 test | 95.39% | 85.11% | 0.3759 | +0.135 | +0.135 | +0.262 | −0.064 |
 | Track A: Heuristic | M01 (best complex) | 953 trees | 95.41% | 87.62% | 0.3746 | +0.128 | +0.193 | +0.188 | −0.098 |
 | Track A: Heuristic | M01 (best complex) | 141 test | 95.92% | 87.23% | 0.3404 | +0.106 | +0.149 | +0.099 | −0.099 |
-| Track B: E2E | y26mv2 + LR | 141 test | **75.71%** | — | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
+| Track B: E2E | y26mv2 + LR | 141 test | **75.71%** | 28.69% | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
 | Track C: GT upper bound | LR on GT features | 95 test | 97.37% | **90.53%** | **0.276** | −0.053 | +0.021 | +0.168 | +0.000 |
 
 Full heuristic ranking (29 methods): [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
