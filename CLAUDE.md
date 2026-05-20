@@ -1,5 +1,85 @@
 # SawitMVC Baseline — CLAUDE.md
 
+---
+
+## RERUN PLAN: y26mv2 Full Evaluation (75/10/15 split)
+> Status: **PENDING** — hapus bagian ini setelah selesai run di cloud
+
+### Tujuan
+Jalankan inference dengan model `y26me60p60b32s42v2.pt` pada split baru (716/96/141),
+lalu evaluasi semua counter (SVM, LR, RF, M01) dan collect metrics berikut:
+per-class MAE, macro class-MAE, exact profile accuracy, total count MAE,
+total ±1 accuracy, per-class bias.
+
+### Step 0 — Setup cloud
+```bash
+git clone https://github.com/ULM-SawitMVC/Baseline-SawitMVC.git
+cd Baseline-SawitMVC
+pip install -r requirements.txt
+python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+```
+
+### Step 1 — Download dataset dari Hugging Face
+```bash
+python -c "
+from huggingface_hub import snapshot_download
+snapshot_download(
+    'ULM-DS-Lab/SawitMVC-YOLO',
+    repo_type='dataset',
+    local_dir='./SawitMVC-YOLO',
+    token=True
+)
+"
+```
+
+### Step 2 — Siapkan weights
+```bash
+cp models/yolo/y26me60p60b32s42v2.pt models/yolo/y26mv2.pt
+```
+
+### Step 3 — Inference + evaluasi semua counter
+```bash
+python pipeline/run_e2e_pipeline.py \
+    --name y26mv2 \
+    --weights models/yolo/y26mv2.pt \
+    --data SawitMVC-YOLO/ \
+    --counters svm lr rf m01
+```
+Output: `predictions/y26mv2_per_tree/` (953 JSONs) +
+`results/e2e_per_tree/y26mv2_{svm,lr,rf,m01}/metrics.json`
+
+Estimasi waktu: ~3 menit inference (GPU A100) + <5 menit evaluasi.
+
+### Step 4 — Print metrics
+```bash
+python scripts/report_metrics.py y26mv2 test
+python scripts/report_metrics.py y26mv2 val
+```
+
+### Step 5 — Ambil hasil & push
+```bash
+tar -czf y26mv2_results.tar.gz \
+    predictions/y26mv2_per_tree/ \
+    results/e2e_per_tree/y26mv2_svm/ \
+    results/e2e_per_tree/y26mv2_lr/ \
+    results/e2e_per_tree/y26mv2_rf/ \
+    results/e2e_per_tree/y26mv2_m01/
+# download y26mv2_results.tar.gz ke lokal, extract, lalu:
+git add predictions/y26mv2_per_tree/ results/e2e_per_tree/y26mv2_*/
+git commit -m "add y26mv2 inference predictions and evaluation results"
+git push
+```
+
+### Checklist
+- [ ] Clone + install di cloud
+- [ ] Dataset HF berhasil didownload
+- [ ] `cp` weights ke `y26mv2.pt`
+- [ ] `run_e2e_pipeline.py` selesai tanpa error
+- [ ] `report_metrics.py` menampilkan angka untuk test + val
+- [ ] Hasil di-download dan di-push ke repo
+
+---
+
 ## Project overview
 
 Research baseline untuk menghitung dan mengklasifikasi kematangan tandan buah segar (TBS) kelapa sawit dari banyak sudut kamera (multi-view). Masalah utama: satu tandan muncul di beberapa foto dari sudut berbeda, sehingga penjumlahan naif overcounts ~83%.
