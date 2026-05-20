@@ -70,7 +70,8 @@ What an ML counter achieves when the detector is perfect.
 
 | Method | Features | Set | Macro Acc±1 | Joint Acc±1 | Macro MAE |
 |--------|----------|-----|------------:|------------:|----------:|
-| LR on GT features | F0 (13-dim) | 95 test | **97.37%** | **90.53%** | **0.276** |
+| LR on GT features | F0 (13-dim) | 141 test | 97.52% | 90.07% | 0.277 |
+| **SVM on GT features** | **F0 (13-dim)** | **141 test** | **97.87%** | **91.49%** | **0.266** |
 
 ---
 
@@ -128,9 +129,9 @@ Acc±1 variants: **Macro** = per-class average over B1–B4; **Joint** = all 4 c
 | Track B | LR (baseline) | F0 13-dim | 141 test | 75.71% | 30.50% | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
 | Track B | ElasticNet | F0+spatial 21-dim | 141 test | 76.77% | 31.21% | 1.039 | +0.014 | −0.064 | −0.156 | +0.035 |
 | Track B | **Ridge** | **F_all 67-dim** | **141 test** | **77.48%** | **32.62%** | **1.036** | +0.014 | −0.078 | −0.177 | +0.071 |
-| Track C | LR on GT | F0 GT det. | 95 test | 97.37% | 90.53% | 0.276 | −0.053 | +0.021 | +0.168 | +0.000 |
+| Track C | **SVM on GT** | F0 GT det. | 141 test | **97.87%** | **91.49%** | **0.266** | −0.043 | −0.021 | −0.092 | −0.043 |
 
-**Gap Track B → Track C: 19.89 pp** — entirely detector error. Improving B3/B4 recall is the only path to gains beyond 77.48%.
+**Gap Track B → Track C: 20.39 pp** — entirely detector error. Improving B3/B4 recall is the only path to gains beyond 77.48%.
 
 ---
 
@@ -141,7 +142,7 @@ Acc±1 variants: **Macro** = per-class average over B1–B4; **Joint** = all 4 c
 - **77.48% is the ML-counter ceiling** on current YOLO detections — confirmed by exhaustive v4 probing (200+ dims, Optuna, stacking). B2 YOLO–GT correlation r = 0.421: 82% of its variance is detector noise.
 - **Linear models dominate** (LR, Ridge, ElasticNet > XGB, LGB, RF) — 716 training trees is too small for tree-based methods.
 - **B3 hardest** (57% Acc±1, recall 65.6%); **B4 most under-detected** (recall 38.9%, 0.85× average count).
-- **19.89 pp gap to Track C is entirely detector error** — retraining YOLO with improved B3/B4 recall is the highest-leverage next step.
+- **20.39 pp gap to Track C is entirely detector error** — retraining YOLO with improved B3/B4 recall is the highest-leverage next step.
 
 ---
 

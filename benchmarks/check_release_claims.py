@@ -29,6 +29,7 @@ EXPECTED_E2E_BEST = ("y26mv2_lr", 0.7571, 1.0479, 141)
 EXPECTED_V3_BEST = ("F_all", "Ridge", "train_only", 67, 0.7748, 0.3262, 1.0355)
 EXPECTED_V4_TOP = ("ElasticNet + F0+spatial (train)", 0.7677, 0.3121, 1.0390)
 EXPECTED_V4_CEILING = 0.7748
+EXPECTED_TRACK_C_BEST = ("gt_svm", 0.9787, 0.9149, 0.2660, 141)
 
 
 def _close(a: float, b: float, tol: float = 5e-4) -> bool:
@@ -148,12 +149,64 @@ def check_v4_experiments() -> list[str]:
     return errors
 
 
+def check_track_c() -> list[str]:
+    root = ROOT / "results" / "e2e_upper_bound"
+    best: tuple[float, str, float, float, int] | None = None
+    errors: list[str] = []
+
+    for metrics_path in sorted(root.glob("gt_*/metrics.json")):
+        data = json.loads(metrics_path.read_text(encoding="utf-8"))
+        test = data.get("test", {})
+        pred_path = metrics_path.parent / "predictions.csv"
+        with open(pred_path, encoding="utf-8", newline="") as f:
+            rows = list(csv.DictReader(f))
+
+        n = len(rows)
+        joint = 0.0
+        for row in rows:
+            ok = True
+            for c in ("B1", "B2", "B3", "B4"):
+                if abs(int(row[f"pred_{c}"]) - int(row[f"gt_{c}"])) > 1:
+                    ok = False
+                    break
+            joint += 1.0 if ok else 0.0
+        joint /= n if n else 1.0
+
+        macro = float(test.get("macro_acc_pm1", 0.0))
+        mae = float(test.get("macro_class_mae", 0.0))
+        n_trees = int(test.get("n_trees", 0))
+        item = (macro, metrics_path.parent.name, joint, mae, n_trees)
+        if best is None or item[0] > best[0]:
+            best = item
+
+    if best is None:
+        return ["No Track C metrics found"]
+
+    exp_name, exp_acc, exp_joint, exp_mae, exp_n = EXPECTED_TRACK_C_BEST
+    acc, name, joint, mae, n_trees = best
+    if (
+        name != exp_name
+        or not _close(acc, exp_acc, 5e-4)
+        or not _close(joint, exp_joint, 5e-4)
+        or not _close(mae, exp_mae, 5e-4)
+        or n_trees != exp_n
+    ):
+        errors.append(
+            "Unexpected Track C best: "
+            f"{name} Acc+/-1={acc:.4f}, Joint={joint:.4f}, MAE={mae:.4f}, n={n_trees}; "
+            f"expected {exp_name} Acc+/-1={exp_acc:.4f}, Joint={exp_joint:.4f}, "
+            f"MAE={exp_mae:.4f}, n={exp_n}"
+        )
+    return errors
+
+
 def main() -> None:
     errors = (
         check_heuristics()
         + check_e2e()
         + check_v3_experiments()
         + check_v4_experiments()
+        + check_track_c()
     )
     if errors:
         print("Release claim check failed:")
