@@ -3,7 +3,7 @@
 ---
 
 ## RERUN PLAN: y26mv2 Full Evaluation (75/10/15 split)
-> Status: **PENDING** — hapus bagian ini setelah selesai run di cloud
+> Status: **DONE** — baseline aktif sudah memakai split `716/96/141` dan artefak Track B/C terbaru sudah tersimpan di repo.
 
 ### Tujuan
 Jalankan inference dengan model `y26me60p60b32s42v2.pt` pada split baru (716/96/141),
@@ -110,11 +110,10 @@ Research baseline untuk menghitung dan mengklasifikasi kematangan tandan buah se
 
 ### Tiga track eksperimen
 - **Track A** — 5 heuristik deterministik langsung pada ground truth → best: **87.62% Acc±1** (M01)
-- **Track B** — Counter ML (SVM/RF/LR) pada fitur 13-dim dari deteksi YOLO → best: **70.79% Acc±1** (y26s + SVM)
-- **Track B'** — Per-image variant (max/mean/sum aggregation) → best: **64.21%** (y26m + max)
-- **Track C** — Upper bound: counter ML pada fitur dari ground truth → best: **97.37% Acc±1** (LR)
+- **Track B** — Counter ML pada fitur 13-dim dari deteksi `y26mv2` → stored baseline: **75.71% Acc±1** (LR), best experiment: **77.48%** (Ridge + F_all)
+- **Track C** — Upper bound: counter ML pada fitur dari ground truth → best: **97.87% Acc±1** (SVM)
 
-Gap Track B vs Track C = **26.58 poin** → sumber utama error adalah detektor, bukan counter.
+Gap Track B vs Track C = **20.39 poin** → sumber utama error adalah detektor, bukan counter.
 
 ### Metric utama
 **Acc±1**: fraksi pohon di mana prediksi ≤ 1 dari ground truth, di-macro-average atas 4 kelas.
@@ -126,16 +125,17 @@ Supporting: Macro MAE, total-count MAE, exact-profile accuracy.
 
 ```
 algorithms/          # 5 heuristik deterministik (M01..M05)
-pipeline/            # Script counter ML + end-to-end pipeline
+pipeline/            # Script current baseline: Track B + Track C
 benchmarks/          # Entry points: run_benchmark.py, check_release_claims.py
 ground_truth/        # 953 JSON anotasi per pohon + split_manifest.csv
-predictions/         # Cached YOLO outputs (y26n/s/m × per_tree/per_image)
-results/             # Output evaluasi ter-precompute (36 folder)
-models/yolo/         # Bobot YOLO: y26n.pt, y26s.pt, y26m.pt
+predictions/         # Cached YOLO outputs for current baseline (y26mv2_per_tree)
+results/             # Output evaluasi aktif + experiment CSVs
+models/yolo/         # Bobot YOLO current baseline: y26mv2
 models/counters/     # Artefak counter: svm.pkl, rf.pkl, lr.pkl
 SawitMVC-YOLO/       # Gambar dataset (YOLO format, images + labels)
 docs/                # Dokumentasi panjang (algorithms.md, evaluation.md, dll)
 scripts/             # Shell scripts: reproduce_all.sh, dll
+archive/             # Old experiments; not part of latest baseline surface
 ```
 
 ---
@@ -148,12 +148,11 @@ scripts/             # Shell scripts: reproduce_all.sh, dll
 | `algorithms/__init__.py` | Registry semua algoritma |
 | `pipeline/build_counting_features.py` | Ekstraksi fitur 13-dim per pohon |
 | `pipeline/run_e2e_pipeline.py` | End-to-end Track B (per-tree) |
-| `pipeline/run_e2e_per_image.py` | End-to-end Track B' (per-image) |
 | `pipeline/run_e2e_inference.py` | Inference YOLO per pohon |
 | `pipeline/run_counting_{svm,rf,lr}.py` | Trainer counter ML |
 | `benchmarks/run_benchmark.py` | Runner benchmark Track A |
 | `benchmarks/check_release_claims.py` | Verifikasi angka klaim di README |
-| `ground_truth/split_manifest.csv` | Split 763/95/95 (train/val/test) |
+| `ground_truth/split_manifest.csv` | Split 716/96/141 (train/val/test) |
 
 ---
 
@@ -164,10 +163,7 @@ scripts/             # Shell scripts: reproduce_all.sh, dll
 python benchmarks/run_benchmark.py
 
 # Track B: end-to-end satu detektor
-python pipeline/run_e2e_pipeline.py --name y26s --skip-inference
-
-# Track B': per-image variant
-python pipeline/run_e2e_per_image.py --name y26s --skip-inference
+python pipeline/run_e2e_pipeline.py --name y26mv2 --skip-inference
 
 # Track C: upper bound
 bash scripts/reproduce_upper_bound.sh
@@ -222,8 +218,9 @@ Untuk menambah algoritma baru:
 - **tree_id / tree_name**: identifier pohon, key di semua JSON
 - **split**: "train" / "val" / "test" — selalu baca dari `ground_truth/split_manifest.csv` kolom `new_split`
 - **Anotasi GT**: `ground_truth/annotations/{tree_id}.json` — struktur: `images`, `bunches`, `_confirmedLinks`, `summary`
-- **Prediksi inference**: `predictions/y26{n,s,m}_per_tree/{tree_id}.json`
+- **Prediksi inference aktif**: `predictions/y26mv2_per_tree/{tree_id}.json`
 - **Hasil evaluasi**: `results/{folder}/metrics.json` + `predictions.csv`
+- **Eksperimen lama**: semua yang bukan surface baseline aktif dipindah ke `archive/`
 - Gambar tidak dibundle di repo — hanya diperlukan saat retraining
 
 ---
