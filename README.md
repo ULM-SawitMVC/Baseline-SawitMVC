@@ -59,137 +59,122 @@ Three ML counters operate on this vector: SVM (RBF + GridSearchCV), Random Fores
 
 ### Track B — End-to-End Counting (y26mv2 + ML counter)
 
-#### Test set (141 trees)
+#### Baseline counters — Test set (141 trees, F0: 13-dim, train on 716 trees)
 
-**Accuracy (Acc±1)**:
+Accuracy and per-class breakdown:
 
-| Counter | Macro Acc±1 | Total ±1 Acc | Exact Profile | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
-|:-------:|------------:|-------------:|--------------:|---------:|---------:|---------:|---------:|
-| **LR** | **75.71%** | 48.94% | 0.71% | 96.45% | 79.43% | 55.32% | 71.63% |
-| SVM | 74.82% | 43.97% | 1.42% | 95.74% | 76.60% | 55.32% | 71.63% |
-| RF | 73.23% | 43.26% | 1.42% | 95.74% | 73.76% | 56.03% | 67.38% |
-| M01 | 70.57% | 34.75% | 2.84% | 90.78% | 74.47% | 51.06% | 65.96% |
+| Counter | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
+|:-------:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
+| **LR** | **75.71%** | 30.50% | 1.048 | 96.45% | 79.43% | 55.32% | 71.63% |
+| SVM | 74.82% | 29.08% | 1.043 | 95.74% | 76.60% | 55.32% | 71.63% |
+| RF | 73.23% | 26.95% | 1.110 | 95.74% | 73.76% | 56.03% | 67.38% |
+| M01 (heuristic) | 70.57% | 24.11% | 1.183 | 90.78% | 74.47% | 51.06% | 65.96% |
 
-**MAE**:
+Per-class bias (mean signed error, + = overcount):
 
-| Counter | Macro MAE | Total Count MAE | MAE B1 | MAE B2 | MAE B3 | MAE B4 |
-|:-------:|----------:|----------------:|-------:|-------:|-------:|-------:|
-| **LR** | **1.048** | **1.894** | 0.369 | 1.057 | 1.546 | 1.220 |
-| SVM | 1.043 | 2.057 | 0.383 | 1.035 | 1.560 | 1.191 |
-| RF | 1.110 | 2.071 | 0.383 | 1.156 | 1.617 | 1.284 |
-| M01 | 1.183 | 2.745 | 0.511 | 1.071 | 1.844 | 1.305 |
+| Counter | MAE B1 | MAE B2 | MAE B3 | MAE B4 | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+|:-------:|-------:|-------:|-------:|-------:|--------:|--------:|--------:|--------:|
+| LR | 0.369 | 1.057 | 1.546 | 1.220 | +0.014 | −0.064 | −0.142 | +0.057 |
+| SVM | 0.383 | 1.035 | 1.560 | 1.191 | +0.014 | −0.582 | −0.284 | −0.312 |
+| RF | 0.383 | 1.156 | 1.617 | 1.284 | +0.028 | −0.163 | −0.227 | +0.121 |
+| M01 | 0.511 | 1.071 | 1.844 | 1.305 | +0.255 | −0.418 | +0.411 | −0.908 |
 
-**Per-class Bias (mean error, + = overcount, − = undercount)**:
+#### Baseline counters — Val set (96 trees)
 
-| Counter | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
-|:-------:|--------:|--------:|--------:|--------:|
-| LR | +0.014 | −0.064 | −0.142 | +0.057 |
-| SVM | +0.014 | −0.582 | −0.284 | −0.312 |
-| RF | +0.028 | −0.163 | −0.227 | +0.121 |
-| M01 | +0.255 | −0.418 | +0.411 | −0.908 |
+| Counter | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
+|:-------:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
+| **LR** | **69.79%** | 33.33% | 1.172 | 92.71% | 68.75% | 51.04% | 66.67% |
+| SVM | 69.53% | 33.33% | 1.133 | 92.71% | 68.75% | 54.17% | 62.50% |
+| RF | 67.19% | 35.42% | 1.190 | 87.50% | 63.54% | 55.21% | 62.50% |
+| M01 | 66.67% | 29.17% | 1.375 | 85.42% | 68.75% | 45.83% | 66.67% |
 
-#### Val set (96 trees)
+#### Feature ablation experiments — Test set (141 trees)
 
-**Accuracy (Acc±1)**:
+80 configurations tested (`experiments/exp_counting_v3.py`): 8 feature sets × 5 models × 2 training strategies. All feature sets are supersets of F0. Training strategy "train" = 716 trees; "train+val" = 812 trees.
 
-| Counter | Macro Acc±1 | Total ±1 Acc | Exact Profile | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
-|:-------:|------------:|-------------:|--------------:|---------:|---------:|---------:|---------:|
-| **LR** | **69.79%** | 39.58% | 2.08% | 92.71% | 68.75% | 51.04% | 66.67% |
-| SVM | 69.53% | 41.67% | 1.04% | 92.71% | 68.75% | 54.17% | 62.50% |
-| RF | 67.19% | 45.83% | 1.04% | 87.50% | 63.54% | 55.21% | 62.50% |
-| M01 | 66.67% | 36.46% | 1.04% | 85.42% | 68.75% | 45.83% | 66.67% |
+**Feature set definitions:**
 
-**MAE**:
+| Tag | Dims | Added features (beyond F0 = 13-dim baseline) |
+|-----|-----:|----------------------------------------------|
+| F0 | 13 | *baseline*: naive\_sum, max\_per\_side, mean\_per\_side × 4 classes + n\_sides |
+| F0+conf | 33 | per-class: conf\_sum, conf\_mean, conf\_max, high\_conf≥0.5, vhigh\_conf≥0.6 |
+| F0+spatial | 21 | per-class: mean\_cy (vertical centroid), mean\_area (bbox size) |
+| F0+distrib | 33 | per-class: std\_per\_side, min\_per\_side, cv\_per\_side (std/mean), n\_sides\_detected, 1/(1+std) consistency |
+| F0+conf+spatial | 41 | F0 + conf + spatial |
+| F0+conf+distrib | 53 | F0 + conf + distrib |
+| F0+distrib+spatial | 37 | F0 + distrib + spatial |
+| F_all | 67 | all above + total\_naive, frac\_Bc (class proportions), b3/(b2+b3) ratio |
 
-| Counter | Macro MAE | Total Count MAE | MAE B1 | MAE B2 | MAE B3 | MAE B4 |
-|:-------:|----------:|----------------:|-------:|-------:|-------:|-------:|
-| **LR** | 1.172 | **2.104** | 0.531 | 1.198 | 1.667 | 1.292 |
-| SVM | **1.133** | 2.135 | 0.510 | 1.156 | 1.604 | 1.260 |
-| RF | 1.190 | 2.135 | 0.542 | 1.313 | 1.583 | 1.323 |
-| M01 | 1.375 | 3.146 | 0.688 | 1.260 | 2.292 | 1.260 |
+**Top 10 configurations by Macro Acc±1 (test, 141 trees):**
 
-**Per-class Bias (mean error, + = overcount, − = undercount)**:
+| Feature Set | Model | Strategy | Dims | Macro Acc±1 | Joint Acc±1 | Macro MAE | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+|-------------|-------|----------|-----:|------------:|------------:|----------:|--------:|--------:|--------:|--------:|
+| **F_all** | **Ridge** | train | 67 | **77.48%** | **32.62%** | **1.036** | +0.014 | −0.078 | −0.177 | +0.071 |
+| F0+spatial | ElasticNet | train | 21 | 76.77% | 31.21% | 1.039 | +0.014 | −0.064 | −0.156 | +0.035 |
+| F0+spatial | Ridge | train | 21 | 76.60% | 30.50% | 1.046 | +0.021 | −0.071 | −0.128 | +0.021 |
+| F0+spatial | ElasticNet | train+val | 21 | 76.60% | 31.21% | 1.051 | +0.007 | −0.035 | −0.149 | −0.014 |
+| F0 | ElasticNet | train | 13 | 76.42% | 29.79% | 1.043 | +0.007 | −0.057 | −0.135 | +0.000 |
+| F0 | ElasticNet | train+val | 13 | 76.42% | 30.50% | 1.034 | +0.007 | −0.014 | −0.113 | −0.043 |
+| F0 | Ridge | train+val | 13 | 76.42% | 30.50% | 1.037 | +0.021 | −0.021 | −0.106 | −0.057 |
+| F0 | LR | train+val | 13 | 76.42% | 29.79% | 1.044 | +0.007 | −0.028 | −0.163 | +0.007 |
+| F_all | Ridge | train+val | 67 | 76.42% | 29.08% | 1.044 | +0.007 | −0.085 | −0.156 | +0.043 |
+| F0 | Ridge | train | 13 | 76.06% | 28.37% | 1.053 | +0.028 | −0.035 | −0.128 | −0.007 |
 
-| Counter | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
-|:-------:|--------:|--------:|--------:|--------:|
-| LR | +0.073 | −0.177 | +0.083 | +0.208 |
-| SVM | +0.052 | −0.552 | −0.021 | −0.135 |
-| RF | +0.063 | −0.188 | +0.167 | +0.260 |
-| M01 | +0.417 | −0.344 | +0.854 | −0.698 |
+**Top 2 per model (best feature set × strategy per model):**
+
+| Model | Best Feature Set | Macro Acc±1 | Joint Acc±1 | Macro MAE |
+|-------|-----------------|------------:|------------:|----------:|
+| **Ridge** | F_all, train | **77.48%** | **32.62%** | **1.036** |
+| ElasticNet | F0+spatial, train | 76.77% | 31.21% | 1.039 |
+| LR | F0, train+val | 76.42% | 29.79% | 1.044 |
+| XGB | F0, train+val | 75.35% | 32.62% | 1.066 |
+| LGB | F0, train | 74.65% | 31.21% | 1.087 |
+
+**Observations:**
+- Linear models (LR, Ridge, ElasticNet) consistently outperform tree-based methods (XGB, LGB) — training set of 716 trees is too small for tree-based overfitting.
+- **Spatial features** (mean vertical centroid `mean_cy`, mean bbox area `mean_area` per class) provide the most consistent gain — both classes occupy different vertical zones on the tree.
+- **F_all + Ridge** achieves the highest test performance (+1.77 pp over LR baseline) but shows a larger train–test gap on val (70.57%), suggesting mild overfitting to the 716-tree training distribution. **F0+spatial + ElasticNet** (76.77%) is the most stable configuration across val/test.
+- Using train+val (812 trees) for training yields +0.71 pp on average but varies by model.
+
+---
 
 ### Summary Table (Table 4)
 
 Two Acc±1 variants: **Macro** = per-class average over B1–B4; **Joint** = fraction of trees where all 4 classes are simultaneously within ±1 (stricter). Bias = mean signed error (+ overcount, − undercount).
 
-| Baseline | Method | Set | Macro Acc±1 | Joint Acc±1 | Macro MAE | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
-|----------|--------|-----|------------:|------------:|----------:|--------:|--------:|--------:|--------:|
-| Naive Sum | GT annotations | 953 trees | 46.88% | 3.78% | 2.2867 | +1.131 | +1.793 | +4.863 | +1.360 |
-| Naive Sum | GT annotations | 141 test | 50.00% | 6.38% | 2.1418 | +0.936 | +1.702 | +4.709 | +1.220 |
-| Track A: Heuristic | M15 (divide by global factor) | 953 trees | 95.17% | 85.94% | 0.3909 | +0.168 | +0.152 | +0.342 | −0.026 |
-| Track A: Heuristic | M15 (divide by global factor) | 141 test | 95.39% | 85.11% | 0.3759 | +0.135 | +0.135 | +0.262 | −0.064 |
-| Track A: Heuristic | M01 (best complex) | 953 trees | 95.41% | 87.62% | 0.3746 | +0.128 | +0.193 | +0.188 | −0.098 |
-| Track A: Heuristic | M01 (best complex) | 141 test | 95.92% | 87.23% | 0.3404 | +0.106 | +0.149 | +0.099 | −0.099 |
-| Track B: E2E | y26mv2 + LR (baseline) | 141 test | 75.71% | 28.69% | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
-| Track B: E2E | y26mv2 + Ridge + F1† | 141 test | **76.60%** | 30.50% | 1.046 | +0.014 | −0.050 | −0.177 | +0.028 |
-| Track B: E2E | y26mv2 + LR + F2‡ | 141 test | 76.42% | **33.33%** | 1.046 | +0.014 | −0.085 | −0.135 | +0.106 |
-| Track C: GT upper bound | LR on GT features | 95 test | 97.37% | **90.53%** | **0.276** | −0.053 | +0.021 | +0.168 | +0.000 |
-
-† F1 = baseline 13 dims + confidence features (conf-weighted sum, mean conf, high-conf count ≥ 0.5, n\_sides\_detected per class) → 29 dims  
-‡ F2 = baseline 13 dims + structural features (per-side std, min\_per\_side, bbox area mean, detection density per class) → 29 dims
+| Track | Method | Features | Set | Macro Acc±1 | Joint Acc±1 | Macro MAE | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+|-------|--------|----------|-----|------------:|------------:|----------:|--------:|--------:|--------:|--------:|
+| Naive Sum | GT annotations | — | 953 trees | 46.88% | 3.78% | 2.287 | +1.131 | +1.793 | +4.863 | +1.360 |
+| Naive Sum | GT annotations | — | 141 test | 50.00% | 6.38% | 2.142 | +0.936 | +1.702 | +4.709 | +1.220 |
+| Track A | M15 (simple divisor) | GT det. | 953 trees | 95.17% | 85.94% | 0.391 | +0.168 | +0.152 | +0.342 | −0.026 |
+| Track A | M15 (simple divisor) | GT det. | 141 test | 95.39% | 85.11% | 0.376 | +0.135 | +0.135 | +0.262 | −0.064 |
+| Track A | M01 (best complex) | GT det. | 953 trees | 95.41% | 87.62% | 0.375 | +0.128 | +0.193 | +0.188 | −0.098 |
+| Track A | M01 (best complex) | GT det. | 141 test | 95.92% | 87.23% | 0.340 | +0.106 | +0.149 | +0.099 | −0.099 |
+| Track B | LR (baseline) | F0 (13-dim) | 141 test | 75.71% | 30.50% | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
+| Track B | SVM | F0 (13-dim) | 141 test | 74.82% | 29.08% | 1.043 | +0.014 | −0.582 | −0.284 | −0.312 |
+| Track B | RF | F0 (13-dim) | 141 test | 73.23% | 26.95% | 1.110 | +0.028 | −0.163 | −0.227 | +0.121 |
+| Track B | ElasticNet | F0 (13-dim) | 141 test | 76.42% | 29.79% | 1.043 | +0.007 | −0.057 | −0.135 | +0.000 |
+| Track B | ElasticNet | F0+spatial (21-dim) | 141 test | 76.77% | 31.21% | 1.039 | +0.014 | −0.064 | −0.156 | +0.035 |
+| Track B | **Ridge** | **F_all (67-dim)** | **141 test** | **77.48%** | **32.62%** | **1.036** | +0.014 | −0.078 | −0.177 | +0.071 |
+| Track C | LR on GT features | F0 (GT det.) | 95 test | 97.37% | 90.53% | 0.276 | −0.053 | +0.021 | +0.168 | +0.000 |
 
 Full heuristic ranking (29 methods): [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).  
-Full counting experiment results (20 configs): [`results/experiments/counting_v2_results.csv`](results/experiments/counting_v2_results.csv).
+Full ablation results (80 configs): [`results/experiments/counting_v3_results.csv`](results/experiments/counting_v3_results.csv).
 
-**Gap Track B → Track C: 20.77 pp** — this gap is detector error, not counter error. Improving recall on B3 and B4 is the highest-leverage target.
-
----
-
-## Counting Experiments
-
-20 configurations tested across 4 feature sets × 5 models (`experiments/exp_counting_v2.py`):
-
-**Feature sets:**
-
-| Tag | Dims | Description |
-|-----|-----:|-------------|
-| F0 | 13 | Baseline (naive\_sum, max\_per\_side, mean\_per\_side, n\_sides) |
-| F1 | 29 | F0 + confidence features (conf-weighted sum, mean conf, high-conf count ≥ 0.5, n\_sides\_detected) |
-| F2 | 29 | F0 + structural features (per-side std, min\_per\_side, bbox area mean, detection density) |
-| F3 | 45 | F0 + F1 + F2 combined |
-
-**Models tested:** Linear Regression, Ridge (RidgeCV), Gradient Boosting (GBR), XGBoost, LightGBM.
-
-**Top 2 per feature set (test Macro Acc±1):**
-
-| Feature Set | Model | Macro Acc±1 | Joint Acc±1 | Macro MAE |
-|-------------|-------|------------:|------------:|----------:|
-| **F1 (confidence)** | **Ridge** | **76.60%** | 30.50% | 1.046 |
-| F2 (structural) | LR | 76.42% | **33.33%** | 1.046 |
-| F0 (baseline) | Ridge | 76.06% | 28.37% | 1.053 |
-| F3 (all) | Ridge | 76.42% | 29.79% | 1.046 |
-
-**Top 2 per model (test Macro Acc±1):**
-
-| Model | Feature Set | Macro Acc±1 | Joint Acc±1 | Macro MAE |
-|-------|-------------|------------:|------------:|----------:|
-| Ridge | F1 | 76.60% | 30.50% | 1.046 |
-| LR | F2 | 76.42% | 33.33% | 1.046 |
-| LGB | F0 | 75.00% | 32.62% | 1.066 |
-| XGB | F1 | 74.47% | 27.66% | 1.048 |
-| GBR | F1 | 73.23% | 29.79% | 1.085 |
-
-**Key observations:** Linear models (LR, Ridge) consistently outperform tree-based methods (GBR, XGB, LGB) on this dataset. The small training set (716 trees) causes tree-based models to overfit. Feature engineering yields modest gains (+0.89 pp Macro Acc±1, +4.64 pp Joint Acc±1) — the primary bottleneck remains the detector.
+**Gap Track B → Track C: 19.89 pp** — detector error, not counter error. B3 recall (YOLO val: 65.6%) is the highest-leverage improvement target.
 
 ---
 
 ## Key Findings
 
-- **Ridge + confidence features (F1) is the best counter** — 76.60% Macro Acc±1 / 30.50% Joint Acc±1.
-- **LR + structural features (F2)** achieves the highest Joint Acc±1 (33.33%) — better calibration across all 4 classes simultaneously.
-- **B3 is the hardest class** (~51–56% Acc±1) — partially occluded, solid-black appearance blends with B2.
-- **B1 is the easiest** (>95% Acc±1) — large, red, visually distinctive.
-- All counters tend to **undercount B2 and B3** (negative bias).
-- The 20.77-point gap between Track B and Track C confirms the bottleneck is the detector, not the counting algorithm.
+- **Best counter: Ridge + F_all (67-dim)** — 77.48% Macro Acc±1 / 32.62% Joint Acc±1 on test, a +1.77 pp gain over the LR baseline. For stability across val/test, **ElasticNet + F0+spatial (21-dim)** is preferred (76.77% test, 71.09% val).
+- **Spatial features matter most** — mean vertical position (`mean_cy`) and mean bbox area per class provide consistent gains because each maturity class occupies a different vertical zone on the tree.
+- **Linear models dominate** — LR, Ridge, ElasticNet all outperform XGB and LGB. With 716 training trees, tree-based methods overfit. More data would likely flip this.
+- **B3 is the hardest class** (51–57% Acc±1) — dense, solid-black bunches blend with B2; YOLO recall on val is only 65.6%.
+- **B1 is the easiest** (>95% Acc±1) — large, red, visually distinct.
+- **SVM severely undercounts B2** (bias −0.582) — RBF kernel is not well-suited to this small, linearly-separable problem.
+- **All counters undercount B2 and B3** (negative bias) due to YOLO missed detections on harder classes.
+- The 19.89 pp gap between Track B and Track C confirms the bottleneck is the detector, not the counting algorithm.
 
 ---
 
