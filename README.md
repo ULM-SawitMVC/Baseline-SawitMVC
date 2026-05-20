@@ -117,79 +117,20 @@ Three ML counters operate on this vector: SVM (RBF + GridSearchCV), Random Fores
 | RF | +0.063 | −0.188 | +0.167 | +0.260 |
 | M01 | +0.417 | −0.344 | +0.854 | −0.698 |
 
-### Track A — Heuristic Counting on Ground Truth
+### Summary Table (Table 4)
 
-> Metrics computed directly from GT annotations (no detector noise). Two Acc±1 variants are reported: **Macro** = per-class average over B1–B4; **Joint** = fraction of trees where all 4 classes are simultaneously within ±1.
+Two Acc±1 variants: **Macro** = per-class average over B1–B4; **Joint** = fraction of trees where all 4 classes are simultaneously within ±1 (stricter). Bias = mean signed error (+ overcount, − undercount).
 
-#### Naive Sum Baseline (no deduplication)
-
-| Set | n | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
-|-----|--:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
-| Full | 953 | 46.88% | 3.78% | 2.2867 | 65.37% | 51.21% | 9.23% | 61.70% |
-| Test | 141 | 50.00% | 6.38% | 2.1418 | 70.92% | 51.77% | 11.35% | 65.96% |
-
-Per-class MAE:
-
-| Set | MAE B1 | MAE B2 | MAE B3 | MAE B4 |
-|-----|-------:|-------:|-------:|-------:|
-| Full | 1.1312 | 1.7933 | 4.8625 | 1.3599 |
-| Test | 0.9362 | 1.7021 | 4.7092 | 1.2199 |
-
-#### M15 — Divide by Global Factor (simple heuristic)
-
-One-step deduplication: divide each class's naive sum by a fixed per-class factor (median naive/GT ratio from training data). No selector, no weighting, no learned parameters.
-
-```
-count[c] = round(naive_sum[c] / BASE_FACTOR[c])
-BASE_FACTOR = {B1: 1.986, B2: 1.786, B3: 1.795, B4: 1.655}
-```
-
-| Set | n | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
-|-----|--:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
-| Full | 953 | 95.17% | 85.94% | 0.3909 | 97.59% | 95.59% | 89.40% | 98.11% |
-| Test | 141 | 95.39% | 85.11% | 0.3759 | 97.87% | 97.16% | 86.52% | 100.00% |
-
-Per-class MAE and bias:
-
-| Set | MAE B1 | MAE B2 | MAE B3 | MAE B4 | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
-|-----|-------:|-------:|-------:|-------:|--------:|--------:|--------:|--------:|
-| Full | 0.1889 | 0.3179 | 0.7597 | 0.2970 | +0.168 | +0.152 | +0.342 | −0.026 |
-| Test | 0.1631 | 0.2766 | 0.7872 | 0.2766 | +0.135 | +0.135 | +0.262 | −0.064 |
-
-#### M01 — Best Deterministic Heuristic (complex)
-
-Three-way selector (dense/B1-rich/default) + Gaussian visibility weighting + B2/B3 reallocation. Best performing heuristic.
-
-| Set | n | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
-|-----|--:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
-| Full | 953 | 95.41% | 87.62% | 0.3746 | 97.59% | 95.59% | 90.87% | 97.59% |
-| Test | 141 | **95.92%** | **87.23%** | **0.3404** | 97.87% | 97.16% | 89.36% | 99.29% |
-
-Per-class MAE and bias:
-
-| Set | MAE B1 | MAE B2 | MAE B3 | MAE B4 | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
-|-----|-------:|-------:|-------:|-------:|--------:|--------:|--------:|--------:|
-| Full | 0.1658 | 0.3337 | 0.7062 | 0.2928 | +0.128 | +0.193 | +0.188 | −0.098 |
-| Test | 0.1489 | 0.2766 | 0.6809 | 0.2553 | +0.128 | +0.128 | +0.121 | −0.043 |
+| Baseline | Method | Set | Macro Acc±1 | Joint Acc±1 | Macro MAE | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+|----------|--------|-----|------------:|------------:|----------:|--------:|--------:|--------:|--------:|
+| Naive Sum | GT annotations | 953 trees | 46.88% | 3.78% | 2.2867 | +1.131 | +1.793 | +4.863 | +1.360 |
+| Naive Sum | GT annotations | 141 test | 50.00% | 6.38% | 2.1418 | +0.936 | +1.702 | +4.709 | +1.220 |
+| Track A: Heuristic | M01 | 953 trees | 95.41% | 87.62% | 0.3746 | +0.128 | +0.193 | +0.188 | −0.098 |
+| Track A: Heuristic | M01 | 141 test | 95.92% | 87.23% | 0.3404 | +0.106 | +0.149 | +0.099 | −0.099 |
+| Track B: E2E | y26mv2 + LR | 141 test | **75.71%** | — | 1.048 | +0.014 | −0.064 | −0.142 | +0.057 |
+| Track C: GT upper bound | LR on GT features | 95 test | — | — | **0.276** | — | — | — | — |
 
 Full heuristic ranking (29 methods): [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
-
-### Track C — Upper Bound (ML counter on perfect GT features, 95 test trees)
-
-| Counter | Acc±1 | Macro MAE |
-|:-------:|------:|----------:|
-| LR | **97.37%** | 0.276 |
-| SVM | 96.58% | 0.300 |
-| RF | 95.79% | 0.361 |
-
-### Cross-Track Summary
-
-| Track | Best result | Acc±1 |
-|-------|-------------|------:|
-| A: heuristic on GT | M01 | 87.62% |
-| C: counter on GT features | LR | **97.37%** |
-| **B: y26mv2 + ML counter** | **LR** | **75.71%** |
-| Naive sum | — | 3.78% |
 
 **Gap Track B → Track C: 21.66 pp** — this gap is detector error, not counter error. Improving recall on B3 and B4 is the highest-leverage target.
 
