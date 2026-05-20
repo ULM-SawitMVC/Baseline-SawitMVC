@@ -3,9 +3,9 @@ Random Forest counting — train on 13-dim features from inference JSONs, evalua
 
 Usage:
     python pipeline/run_counting_rf.py
-    python pipeline/run_counting_rf.py --inference-dir predictions/y26m_per_tree/
-    python pipeline/run_counting_rf.py --inference-dir predictions/y26m_per_tree/ \
-        --out results/e2e_per_tree/y26m_rf/
+    python pipeline/run_counting_rf.py --inference-dir predictions/y26mv2_per_tree/
+    python pipeline/run_counting_rf.py --inference-dir predictions/y26mv2_per_tree/ \
+        --out results/e2e_per_tree/y26mv2_rf/
     # Save the fitted forest for deterministic re-evaluation:
     python pipeline/run_counting_rf.py --save-model models/counters/rf.pkl
     # Reuse a previously saved forest (skips training):
@@ -54,7 +54,7 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray, tree_ids: list[str])
 def main() -> None:
     p = argparse.ArgumentParser(description="RF counting on inference features")
     p.add_argument("--inference-dir", type=Path,
-                   default=ROOT / "predictions" / "y26s_per_tree",
+                   default=ROOT / "predictions" / "y26mv2_per_tree",
                    help="Folder of prediction JSONs (one per tree)")
     p.add_argument("--gt-dir", type=Path,
                    default=ROOT / "ground_truth" / "annotations",

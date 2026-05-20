@@ -14,8 +14,8 @@ in a single JSON with this structure:
     }
 
 Usage:
-    python pipeline/run_e2e_inference.py --name y26n --weights models/yolo/y26n.pt
-    python pipeline/run_e2e_inference.py --name y26n --weights models/yolo/y26n.pt \
+    python pipeline/run_e2e_inference.py --name y26mv2 --weights models/yolo/y26mv2.pt
+    python pipeline/run_e2e_inference.py --name y26mv2 --weights models/yolo/y26mv2.pt \
         --data ./SawitMVC-YOLO/
 """
 from __future__ import annotations

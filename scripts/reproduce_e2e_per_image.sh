@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Reproduce Track B' — per-image end-to-end for every detector x counter.
+# Reproduce Track B' — per-image end-to-end for y26mv2.
 # Uses cached per-image (or derives them from per-tree) YOLO predictions.
-# Writes 21 result folders under results/e2e_per_image/.
+# Writes result folders under results/e2e_per_image/.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-for detector in y26n y26s y26m; do
+for detector in y26mv2; do
     python pipeline/run_e2e_per_image.py --name "$detector" --skip-inference
 done

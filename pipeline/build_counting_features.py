@@ -2,7 +2,7 @@
 Feature extraction library — 13-dim per tree.
 
 Library: from pipeline.build_counting_features import load_dataset, extract_features
-CLI:     python pipeline/build_counting_features.py --inference-dir predictions/y26n_per_tree/
+CLI:     python pipeline/build_counting_features.py --inference-dir predictions/y26mv2_per_tree/
 
 Feature layout (13 dims): naive_sum_{B1..B4}, max_per_side_{B1..B4},
 mean_per_side_{B1..B4}, n_sides.
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     ROOT = Path(__file__).resolve().parent.parent
     p = argparse.ArgumentParser(description="Extract 13-dim counting features")
     p.add_argument("--inference-dir", type=Path,
-                   default=ROOT / "predictions" / "y26n_per_tree")
+                   default=ROOT / "predictions" / "y26mv2_per_tree")
     p.add_argument("--gt-dir", type=Path, default=ROOT / "ground_truth" / "annotations")
     args = p.parse_args()
     X, y, ids, splits = load_dataset(args.inference_dir, args.gt_dir)

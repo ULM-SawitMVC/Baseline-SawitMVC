@@ -24,7 +24,7 @@ EXPECTED_HEURISTICS = {
     "M04_blend_floor_clamped": (86.99, 0.3848),
     "M05_blend_vis_divide": (86.99, 0.3875),
 }
-EXPECTED_E2E_BEST = ("y26s_svm", 0.7079, 1.1474, 95)
+EXPECTED_E2E_BEST = ("y26mv2_lr", 0.7571, 1.0479, 141)
 
 
 def _close(a: float, b: float, tol: float = 5e-4) -> bool:
@@ -57,11 +57,11 @@ def check_e2e() -> list[str]:
     best: tuple[float, str, dict] | None = None
     errors: list[str] = []
 
-    for metrics_path in sorted(e2e_dir.glob("y26?_*/metrics.json")):
+    for metrics_path in sorted(e2e_dir.glob("y26mv2_*/metrics.json")):
         data = json.loads(metrics_path.read_text(encoding="utf-8"))
         test = data.get("test", {})
         n_trees = int(test.get("n_trees", 0))
-        if n_trees != 95:
+        if n_trees != 141:
             errors.append(f"{metrics_path.parent.name}: expected n_trees=95, found {n_trees}")
         acc = float(test.get("macro_acc_pm1", 0.0))
         if best is None or acc > best[0]:

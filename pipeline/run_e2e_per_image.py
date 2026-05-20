@@ -19,14 +19,14 @@ Full ML/heuristic counters (identical features to per-tree pipeline):
 
 Usage:
     # Skip inference: derive per-image from existing per-tree predictions (no GPU needed)
-    python pipeline/run_e2e_per_image.py --name y26n --skip-inference
+    python pipeline/run_e2e_per_image.py --name y26mv2 --skip-inference
 
     # Full run (requires GPU + images at SawitMVC-YOLO/)
-    python pipeline/run_e2e_per_image.py --name y26n --weights models/yolo/y26n.pt \\
+    python pipeline/run_e2e_per_image.py --name y26mv2 --weights models/yolo/y26mv2.pt \\
         --data SawitMVC-YOLO/
 
     # Run only specific counters
-    python pipeline/run_e2e_per_image.py --name y26n --skip-inference \\
+    python pipeline/run_e2e_per_image.py --name y26mv2 --skip-inference \\
         --counters max svm lr
 """
 from __future__ import annotations
@@ -414,7 +414,7 @@ Counters:
   rf    Random Forest (n=200, max_depth=10)
   lr    Linear Regression + StandardScaler (interpretable)
         """)
-    p.add_argument("--name", required=True, help="Experiment name, e.g. y26n or y26m")
+    p.add_argument("--name", required=True, help="Experiment name, e.g. y26mv2")
     p.add_argument("--weights", type=Path, default=None,
                    help="Path to YOLO .pt weights (default: models/yolo/{name}.pt; only required for inference)")
     p.add_argument("--data", type=Path, default=ROOT / "ground_truth",

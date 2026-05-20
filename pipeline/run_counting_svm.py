@@ -3,9 +3,9 @@ SVM counting — train on 13-dim features from inference JSONs, evaluate on test
 
 Usage:
     python pipeline/run_counting_svm.py
-    python pipeline/run_counting_svm.py --inference-dir predictions/y26m_per_tree/
-    python pipeline/run_counting_svm.py --inference-dir predictions/y26m_per_tree/ \
-        --out results/e2e_per_tree/y26m_svm/
+    python pipeline/run_counting_svm.py --inference-dir predictions/y26mv2_per_tree/
+    python pipeline/run_counting_svm.py --inference-dir predictions/y26mv2_per_tree/ \
+        --out results/e2e_per_tree/y26mv2_svm/
     # Save the fitted model so later evaluations skip training:
     python pipeline/run_counting_svm.py --save-model models/counters/svm.pkl
     # Reuse a previously saved model (no GridSearchCV):
@@ -58,7 +58,7 @@ def compute_metrics(y_true: np.ndarray, y_pred: np.ndarray, tree_ids: list[str])
 def main() -> None:
     p = argparse.ArgumentParser(description="SVM counting on inference features")
     p.add_argument("--inference-dir", type=Path,
-                   default=ROOT / "predictions" / "y26s_per_tree",
+                   default=ROOT / "predictions" / "y26mv2_per_tree",
                    help="Folder of prediction JSONs (one per tree)")
     p.add_argument("--gt-dir", type=Path,
                    default=ROOT / "ground_truth" / "annotations",
