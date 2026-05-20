@@ -75,9 +75,11 @@ the short version follows.
 | [`results/heuristics_953/per_tree.csv`](../results/heuristics_953/per_tree.csv) | One row per tree (n = 953) with predictions from every method. |
 | [`results/heuristics_953/totals.csv`](../results/heuristics_953/totals.csv) | Aggregate per-class counts per method. |
 | [`results/heuristics_953/mean_per_tree.csv`](../results/heuristics_953/mean_per_tree.csv) | Mean per-tree predictions per method. |
-| [`results/e2e_per_tree/`](../results/e2e_per_tree/) | 12 folders, one per detector × counter (Track B). |
-| [`results/e2e_per_image/`](../results/e2e_per_image/) | 21 folders covering simple aggregation and ML counters on per-image inference (Track B'). |
+| [`results/e2e_per_tree/`](../results/e2e_per_tree/) | Current Track B artifacts for `y26mv2` plus the four baseline counters. |
 | [`results/e2e_upper_bound/`](../results/e2e_upper_bound/) | 3 folders for SVM, RF, LR fitted on ground-truth-derived features (Track C). |
+
+Historical per-image and legacy-detector artefacts are archived under
+[`archive/`](../archive/).
 
 ## Ground-truth schema
 

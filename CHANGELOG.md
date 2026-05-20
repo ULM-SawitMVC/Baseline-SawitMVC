@@ -14,8 +14,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `ground_truth/annotations/`, 953 per-tree GT JSONs copied into the repository
   (no Hugging Face credentials needed to run Tracks A, B, B', or C).
 - `ground_truth/split_manifest.csv` and `ground_truth/data.yaml` bundled.
-- `ground_truth/README.md` documents the schema, splits (763/95/95), and class
-  taxonomy.
+- `ground_truth/README.md` documents the schema, canonical split manifest, and
+  class taxonomy.
 - `models/counters/{svm,rf,lr}.pkl`, saved scikit-learn estimators so
   reproduction skips GridSearchCV entirely.
 - `scripts/`, five orchestration shell scripts including

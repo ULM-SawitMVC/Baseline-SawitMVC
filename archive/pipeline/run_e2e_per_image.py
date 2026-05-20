@@ -36,9 +36,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "pipeline"))
-sys.path.insert(0, str(ROOT))
+ARCHIVE_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = ARCHIVE_ROOT.parent
+sys.path.insert(0, str(REPO_ROOT / "pipeline"))
+sys.path.insert(0, str(REPO_ROOT))
 
 CLASSES = ["B1", "B2", "B3", "B4"]
 CLASS_MAP = {0: "B1", 1: "B2", 2: "B3", 3: "B4"}
@@ -417,7 +418,7 @@ Counters:
     p.add_argument("--name", required=True, help="Experiment name, e.g. y26mv2")
     p.add_argument("--weights", type=Path, default=None,
                    help="Path to YOLO .pt weights (default: models/yolo/{name}.pt; only required for inference)")
-    p.add_argument("--data", type=Path, default=ROOT / "ground_truth",
+    p.add_argument("--data", type=Path, default=REPO_ROOT / "ground_truth",
                    help="Annotations + split root (default: ./ground_truth/). "
                         "For full pipeline, point this at ./SawitMVC-YOLO/ so the images/ subdir is available.")
     p.add_argument("--conf", type=float, default=0.25, help="Detection confidence threshold")
@@ -429,14 +430,14 @@ Counters:
                    help="Counters to run (default: all)")
     args = p.parse_args()
 
-    per_image_dir = ROOT / "predictions" / f"{args.name}_per_image"
-    per_tree_dir  = ROOT / "predictions" / f"{args.name}_per_tree"
+    per_image_dir = ARCHIVE_ROOT / "predictions" / f"{args.name}_per_image"
+    per_tree_dir  = REPO_ROOT / "predictions" / f"{args.name}_per_tree"
     gt_dir        = _resolve_gt_dir(args.data)
-    e2e_base      = ROOT / "results" / "e2e_per_image"
+    e2e_base      = ARCHIVE_ROOT / "results" / "e2e_per_image"
 
     # Step 1: Inference
     if not args.skip_inference:
-        weights = args.weights or (ROOT / "models" / "yolo" / f"{args.name}.pt")
+        weights = args.weights or (REPO_ROOT / "models" / "yolo" / f"{args.name}.pt")
         if not weights.exists():
             print(f"ERROR: weights {weights} not found.")
             raise SystemExit(1)

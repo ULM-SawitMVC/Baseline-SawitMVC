@@ -9,7 +9,7 @@ the heuristic benchmark and the end-to-end pipeline run from a fresh clone.
 | Path | Description |
 |------|-------------|
 | [`annotations/`](annotations/) | 953 per-tree JSON files (854 DAMIMAS + 99 LONSUM) with bounding boxes, class labels, and confirmed cross-view bunch links. |
-| [`split_manifest.csv`](split_manifest.csv) | Canonical train/val/test assignment for every tree. 763 train, 95 val, 95 test, stratified by `variety` × `dominant_class`. |
+| [`split_manifest.csv`](split_manifest.csv) | Canonical train/val/test assignment for every tree. 716 train, 96 val, 141 test, stratified by `variety` × `dominant_class`. |
 | [`data.yaml`](data.yaml) | YOLO dataset descriptor: class names (B1, B2, B3, B4) and image subdirectory layout. |
 
 The corresponding JPEG images are not included; they live on Hugging Face

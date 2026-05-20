@@ -201,7 +201,7 @@ results/             # Pre-computed evaluation + experiment CSVs
 models/yolo/         # y26mv2.pt + training log
 models/counters/     # svm.pkl, rf.pkl, lr.pkl
 scripts/             # reproduce_all.sh, reproduce_upper_bound.sh, ...
-archive/             # Old detector outputs (y26n, y26s, y26m)
+archive/             # Old experiments only; not part of the latest baseline
 ```
 
 ---
