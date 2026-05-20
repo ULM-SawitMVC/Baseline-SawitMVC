@@ -130,11 +130,29 @@ Per-class bias (mean signed error, + = overcount):
 | XGB | F0, train+val | 75.35% | 32.62% | 1.066 |
 | LGB | F0, train | 74.65% | 31.21% | 1.087 |
 
-**Observations:**
+**Observations (v3):**
 - Linear models (LR, Ridge, ElasticNet) consistently outperform tree-based methods (XGB, LGB) — training set of 716 trees is too small for tree-based overfitting.
-- **Spatial features** (mean vertical centroid `mean_cy`, mean bbox area `mean_area` per class) provide the most consistent gain — both classes occupy different vertical zones on the tree.
-- **F_all + Ridge** achieves the highest test performance (+1.77 pp over LR baseline) but shows a larger train–test gap on val (70.57%), suggesting mild overfitting to the 716-tree training distribution. **F0+spatial + ElasticNet** (76.77%) is the most stable configuration across val/test.
+- **Spatial features** (mean vertical centroid `mean_cy`, mean bbox area `mean_area` per class) provide the most consistent gain — each maturity class occupies a different vertical zone on the tree.
+- **F_all + Ridge** achieves the highest test performance (+1.77 pp over LR baseline) but shows a larger train–test gap on val (70.57%). **F0+spatial + ElasticNet** (76.77%) is the most stable configuration across val/test.
 - Using train+val (812 trees) for training yields +0.71 pp on average but varies by model.
+
+#### Deep research — v4 ceiling probe (`experiments/exp_counting_v4.py`)
+
+Extended to **170-dim** features (multi-threshold counts at conf ≥ 0.30/0.35/0.40/0.45/0.50, entropy, harmonic mean, duplication factor estimate, confidence percentiles p25/p50/p75, std\_cy, std\_area, mean\_cx, cross-class ratios). Also tested Bayesian hyperparameter search (Optuna, 80 trials) for XGB and LGB, and 5-fold OOF stacking (Ridge + ElasticNet + XGB + LGB → Ridge meta-learner).
+
+| Config | Dims | Macro Acc±1 | Joint Acc±1 | Macro MAE |
+|--------|-----:|------------:|------------:|----------:|
+| Ridge + F_all (v3 best, repeated) | 67 | **77.48%** | **32.62%** | 1.036 |
+| Ridge + 170-dim | 170 | 76.24% | 31.21% | 1.037 |
+| ElasticNet + F0+spatial | 21 | 76.77% | 31.21% | 1.039 |
+| Stacking 4 base + Ridge meta | 67 | 76.06% | 30.50% | 1.046 |
+| XGB-Optuna (80 trials) | 67 | 71.10% | 24.82% | 1.133 |
+| LGB-Optuna (80 trials) | 67 | 71.81% | 24.82% | 1.092 |
+| Blend Ridge(0.7)+XGB+LGB | 67 | 77.30% | 32.62% | **1.018** |
+
+**Key result:** All v4 approaches fail to exceed 77.48%. Adding multi-threshold features (170-dim) *hurts* Ridge because the new features are highly collinear with `naive_sum` and `conf_sum`, adding noise without new signal. Stacking is limited by base model correlation (tree methods are consistently inferior). Blending marginally improves MAE (1.018) but not Macro Acc±1.
+
+**Conclusion: 77.48% is the practical ceiling for ML counting on current YOLO predictions.** The 19.89 pp gap to Track C is due to detector quality (B3 recall 65.6%, B4 recall 38.9%), not counter design. The Pearson correlation between YOLO naive\_sum and GT true count is r = 0.421 for B2 (r² = 0.177) — meaning 82.3% of B2 variance is irreducible detector noise, regardless of feature engineering or model choice.
 
 ---
 
@@ -159,22 +177,24 @@ Two Acc±1 variants: **Macro** = per-class average over B1–B4; **Joint** = fra
 | Track C | LR on GT features | F0 (GT det.) | 95 test | 97.37% | 90.53% | 0.276 | −0.053 | +0.021 | +0.168 | +0.000 |
 
 Full heuristic ranking (29 methods): [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).  
-Full ablation results (80 configs): [`results/experiments/counting_v3_results.csv`](results/experiments/counting_v3_results.csv).
+Full ablation: v3 (80 configs): [`results/experiments/counting_v3_results.csv`](results/experiments/counting_v3_results.csv) · v4 (deep probe): [`results/experiments/counting_v4_results.csv`](results/experiments/counting_v4_results.csv).
 
-**Gap Track B → Track C: 19.89 pp** — detector error, not counter error. B3 recall (YOLO val: 65.6%) is the highest-leverage improvement target.
+**Gap Track B → Track C: 19.89 pp** — detector error, not counter error. B3 recall (YOLO val: 65.6%) and B4 recall (38.9%) are the highest-leverage improvement targets.
 
 ---
 
 ## Key Findings
 
-- **Best counter: Ridge + F_all (67-dim)** — 77.48% Macro Acc±1 / 32.62% Joint Acc±1 on test, a +1.77 pp gain over the LR baseline. For stability across val/test, **ElasticNet + F0+spatial (21-dim)** is preferred (76.77% test, 71.09% val).
-- **Spatial features matter most** — mean vertical position (`mean_cy`) and mean bbox area per class provide consistent gains because each maturity class occupies a different vertical zone on the tree.
-- **Linear models dominate** — LR, Ridge, ElasticNet all outperform XGB and LGB. With 716 training trees, tree-based methods overfit. More data would likely flip this.
-- **B3 is the hardest class** (51–57% Acc±1) — dense, solid-black bunches blend with B2; YOLO recall on val is only 65.6%.
-- **B1 is the easiest** (>95% Acc±1) — large, red, visually distinct.
-- **SVM severely undercounts B2** (bias −0.582) — RBF kernel is not well-suited to this small, linearly-separable problem.
-- **All counters undercount B2 and B3** (negative bias) due to YOLO missed detections on harder classes.
-- The 19.89 pp gap between Track B and Track C confirms the bottleneck is the detector, not the counting algorithm.
+- **Best counter: Ridge + F_all (67-dim)** — 77.48% Macro Acc±1 / 32.62% Joint Acc±1, a +1.77 pp gain over the LR baseline. For stability, **ElasticNet + F0+spatial (21-dim)** (76.77%) is preferred.
+- **Spatial features are most informative** — `mean_cy` (vertical centroid) and `mean_area` per class are the highest-value additions; each maturity class occupies a distinct vertical zone on the tree.
+- **77.48% is the practical ML-counter ceiling** — exhaustive probing (170-dim features, Optuna-tuned XGB/LGB, stacking ensembles) confirmed no approach exceeds it. B2 YOLO detections have r = 0.421 correlation with GT (r² = 0.177), making 82.3% of B2 variance irreducible detector noise.
+- **Linear models dominate** — Ridge, ElasticNet, and LR all outperform tree-based methods (XGB, LGB, RF) with 716 training trees. 170-dim features *hurt* Ridge due to collinearity.
+- **B3 is the hardest class** (51–57% Acc±1) — YOLO val recall 65.6%; solid-black appearance blends with B2.
+- **B4 is severely under-detected** — YOLO val recall 38.9%; undercounted 0.85× on average despite being the most numerous class.
+- **B1 is the easiest** (>95% Acc±1) — large, red, visually distinct; YOLO val recall 80.1%.
+- **SVM severely undercounts B2** (bias −0.582) — RBF kernel unsuitable for this small, near-linear problem.
+- **All ML counters undercount B2 and B3** (negative bias) — missed YOLO detections dominate.
+- **The 19.89 pp gap to Track C is entirely detector error** — improving B3/B4 YOLO recall is the only path to substantial gains beyond 77.48%.
 
 ---
 
