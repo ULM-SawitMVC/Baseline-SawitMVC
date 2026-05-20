@@ -135,19 +135,42 @@ Per-class MAE:
 | Full | 1.1312 | 1.7933 | 4.8625 | 1.3599 |
 | Test | 0.9362 | 1.7021 | 4.7092 | 1.2199 |
 
-#### M01 Heuristic (best deterministic deduplication)
+#### M15 — Divide by Global Factor (simple heuristic)
+
+One-step deduplication: divide each class's naive sum by a fixed per-class factor (median naive/GT ratio from training data). No selector, no weighting, no learned parameters.
+
+```
+count[c] = round(naive_sum[c] / BASE_FACTOR[c])
+BASE_FACTOR = {B1: 1.986, B2: 1.786, B3: 1.795, B4: 1.655}
+```
+
+| Set | n | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
+|-----|--:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
+| Full | 953 | 95.17% | 85.94% | 0.3909 | 97.59% | 95.59% | 89.40% | 98.11% |
+| Test | 141 | 95.39% | 85.11% | 0.3759 | 97.87% | 97.16% | 86.52% | 100.00% |
+
+Per-class MAE and bias:
+
+| Set | MAE B1 | MAE B2 | MAE B3 | MAE B4 | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+|-----|-------:|-------:|-------:|-------:|--------:|--------:|--------:|--------:|
+| Full | 0.1889 | 0.3179 | 0.7597 | 0.2970 | +0.168 | +0.152 | +0.342 | −0.026 |
+| Test | 0.1631 | 0.2766 | 0.7872 | 0.2766 | +0.135 | +0.135 | +0.262 | −0.064 |
+
+#### M01 — Best Deterministic Heuristic (complex)
+
+Three-way selector (dense/B1-rich/default) + Gaussian visibility weighting + B2/B3 reallocation. Best performing heuristic.
 
 | Set | n | Macro Acc±1 | Joint Acc±1 | Macro MAE | B1 Acc±1 | B2 Acc±1 | B3 Acc±1 | B4 Acc±1 |
 |-----|--:|------------:|------------:|----------:|---------:|---------:|---------:|---------:|
 | Full | 953 | 95.41% | 87.62% | 0.3746 | 97.59% | 95.59% | 90.87% | 97.59% |
 | Test | 141 | **95.92%** | **87.23%** | **0.3404** | 97.87% | 97.16% | 89.36% | 99.29% |
 
-Per-class MAE:
+Per-class MAE and bias:
 
-| Set | MAE B1 | MAE B2 | MAE B3 | MAE B4 |
-|-----|-------:|-------:|-------:|-------:|
-| Full | 0.1658 | 0.3337 | 0.7062 | 0.2928 |
-| Test | 0.1489 | 0.2766 | 0.6809 | 0.2553 |
+| Set | MAE B1 | MAE B2 | MAE B3 | MAE B4 | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+|-----|-------:|-------:|-------:|-------:|--------:|--------:|--------:|--------:|
+| Full | 0.1658 | 0.3337 | 0.7062 | 0.2928 | +0.128 | +0.193 | +0.188 | −0.098 |
+| Test | 0.1489 | 0.2766 | 0.6809 | 0.2553 | +0.128 | +0.128 | +0.121 | −0.043 |
 
 Full heuristic ranking (29 methods): [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
 
