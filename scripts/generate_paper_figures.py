@@ -1,4 +1,4 @@
-"""Generate publication-oriented figures for the SawitMVC-YOLO draft paper."""
+"""Generate publication-oriented figures for the paper draft."""
 
 from __future__ import annotations
 
@@ -102,7 +102,7 @@ def figure_end_to_end_gap() -> None:
 
     labels = [
         "Naive GT\nappearance sum",
-        "M01 GT\ncorrection",
+        "Visibility-adaptive\nGT divisor",
         "ElasticNet\nperfect detection",
         "YOLO + Ridge\nend-to-end",
     ]
