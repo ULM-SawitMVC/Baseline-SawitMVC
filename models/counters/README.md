@@ -34,9 +34,9 @@ python pipeline/run_counting_svm.py \
 
 The latest published baseline metrics in the repo are:
 
-- `y26mv2_lr`: 75.71% Macro Acc±1
-- `y26mv2_svm`: 74.82% Macro Acc±1
-- `y26mv2_rf`: 73.23% Macro Acc±1
+- `y26mv2_lr`: 75.71% Class ±1 Acc
+- `y26mv2_svm`: 74.82% Class ±1 Acc
+- `y26mv2_rf`: 73.23% Class ±1 Acc
 
 Counter-improvement experiments beyond these stored artifacts are tracked in
 [`results/experiments/`](../../results/experiments/).

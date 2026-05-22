@@ -1,4 +1,4 @@
-﻿# Benchmarks: Reproducible Evaluation
+# Benchmarks: Reproducible Evaluation
 
 This folder contains the two top-level scripts that drive every evaluation in
 the repository. All pre-computed numerical artifacts live one level up under
@@ -25,7 +25,7 @@ Expected output:
 ```
 SawitMVC Baseline - Benchmark Results (953 trees)
 ==================================================
-Rank  Algorithm                       Acc+/-1    MAE   Total MAE   Fail
+Rank  Algorithm                  Class ±1 Acc    MAE   Total MAE   Fail
 ----------------------------------------------------------------------
    1  M01_selector_b2b3                87.62%  0.3746     1.3305    118
    2  M02_selector_trifurc             87.62%  0.3757     1.3305    118
@@ -76,7 +76,7 @@ the short version follows.
 | [`results/heuristics_953/totals.csv`](../results/heuristics_953/totals.csv) | Aggregate per-class counts per method. |
 | [`results/heuristics_953/mean_per_tree.csv`](../results/heuristics_953/mean_per_tree.csv) | Mean per-tree predictions per method. |
 | [`results/e2e_per_tree/`](../results/e2e_per_tree/) | Current Track B artifacts for `y26mv2` plus the four baseline counters. |
-| [`results/e2e_upper_bound/`](../results/e2e_upper_bound/) | 3 folders for SVM, RF, LR fitted on ground-truth-derived features (Track C). |
+| [`results/e2e_upper_bound/`](../results/e2e_upper_bound/) | 5 folders for SVM, RF, LR, Ridge, and ElasticNet fitted on ground-truth-derived features (Track C). |
 
 Historical per-image and legacy-detector artefacts are archived under
 [`archive/`](../archive/).

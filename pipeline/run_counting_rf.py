@@ -118,11 +118,11 @@ def main() -> None:
     fi.to_csv(out_dir / "feature_importance.csv", index=False)
 
     print(f"\n=== {name} - RF (test, n={X_te.shape[0]}) ===")
-    print(f"  Macro Acc+/-1 : {m_te['macro_acc_pm1']*100:.2f}%")
+    print(f"  Class ±1 Acc : {m_te['macro_acc_pm1']*100:.2f}%")
     print(f"  Macro MAE     : {m_te['macro_class_mae']:.4f}")
     print(f"  Total MAE     : {m_te['total_count_mae']:.4f}")
     for c in CLASSES:
-        print(f"  {c}: Acc+/-1={m_te[f'acc_pm1_{c}']*100:.1f}%  MAE={m_te[f'MAE_{c}']:.3f}")
+        print(f"  {c}: Class ±1 Acc={m_te[f'acc_pm1_{c}']*100:.1f}%  MAE={m_te[f'MAE_{c}']:.3f}")
     print(f"\nTop-5 features:\n{fi.head(5).to_string(index=False)}")
     print(f"\nResults saved to {out_dir}")
 

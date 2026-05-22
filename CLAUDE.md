@@ -111,15 +111,15 @@ Research baseline untuk menghitung dan mengklasifikasi kematangan tandan buah se
 | B4 | Terkecil, hijau-hitam | Paling atas | Inventaris masa depan |
 
 ### Tiga track eksperimen
-- **Track A** — 5 heuristik deterministik langsung pada ground truth → best M01: **95.92% Macro / 87.23% Joint Acc±1** (141 test)
-- **Track B** — Counter ML pada fitur dari deteksi `y26mv2` → stored baseline LR+F0 13-dim: **75.71% Macro / 30.50% Joint**; best experiment Ridge+F_all 67-dim: **77.48% Macro / 32.62% Joint**
-- **Track C** — Upper bound: counter ML pada fitur dari ground truth → best SVM+F0: **97.87% Macro / 91.49% Joint Acc±1** (141 test)
+- **Track A** — 5 heuristik deterministik langsung pada ground truth → best M01: **95.92% Class ±1 Acc / 87.23% Tree ±1 Acc** (141 test)
+- **Track B** — Counter ML pada fitur dari deteksi `y26mv2` → stored baseline LR+F0 13-dim: **75.71% Class ±1 Acc / 30.50% Tree ±1 Acc**; best experiment Ridge+F_all 67-dim: **77.48% Class ±1 Acc / 32.62% Tree ±1 Acc**
+- **Track C** — Upper bound: counter ML pada fitur dari ground truth → best ElasticNet+F0: **98.05% Class ±1 Acc / 92.20% Tree ±1 Acc** (141 test)
 
-Gap Track B → Track C = **20.39 pp Macro** → sumber utama error adalah detektor (B3 recall 65.6%, B4 recall 38.9%), bukan counter.
+Gap Track B → Track C = **20.57 pp Class ±1 Acc** → sumber utama error adalah detektor (B3 recall 65.6%, B4 recall 38.9%), bukan counter.
 
 ### Metric utama
-- **Macro Acc±1**: rata-rata per-kelas dari fraksi pohon di mana `|pred − gt| ≤ 1`
-- **Joint Acc±1**: fraksi pohon di mana **semua 4 kelas** sekaligus dalam ±1 (lebih ketat)
+- **Class ±1 Acc**: rata-rata per-kelas dari fraksi pohon di mana `|pred − gt| ≤ 1`
+- **Tree ±1 Acc**: fraksi pohon di mana **semua 4 kelas** sekaligus dalam ±1 (lebih ketat)
 - **Macro MAE**: rata-rata per-kelas dari mean absolute error
 - Supporting: per-class bias (signed mean error, + = overcount)
 
@@ -149,7 +149,7 @@ archive/             # Old detectors (y26n, y26s, y26m) + old experiments; bukan
 
 | File | Peran |
 |------|-------|
-| `algorithms/M01_selector_b2b3.py` | Algoritma heuristik terbaik (95.92% Macro, 87.23% Joint) |
+| `algorithms/M01_selector_b2b3.py` | Algoritma heuristik terbaik (95.92% Class ±1 Acc, 87.23% Tree ±1 Acc) |
 | `algorithms/__init__.py` | Registry semua algoritma |
 | `pipeline/build_counting_features.py` | Ekstraksi fitur F0 13-dim per pohon |
 | `pipeline/run_e2e_pipeline.py` | End-to-end Track B (per-tree) |

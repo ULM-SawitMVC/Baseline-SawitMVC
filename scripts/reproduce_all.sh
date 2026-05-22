@@ -4,7 +4,7 @@
 # Sequence:
 #   1. Track A  - heuristic benchmark on all 953 trees.
 #   2. Track B  - current per-tree end-to-end baseline for y26mv2.
-#   3. Track C  - ground-truth upper bound (3 counters).
+#   3. Track C  - ground-truth upper bound (5 counters).
 #   4. Verify   - benchmarks/check_release_claims.py exits 0 when the headline
 #                 numbers match the README tables.
 set -euo pipefail

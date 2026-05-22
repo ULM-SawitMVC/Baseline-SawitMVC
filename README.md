@@ -8,9 +8,9 @@
 
 SawitMVC-YOLO is a multi-view dataset and baseline for counting oil palm fresh fruit bunches (FFB; Indonesian: TBS) at tree level. The dataset contains **953 oil palm trees**, **3,992 images**, and **9,823 unique bunches** collected from DAMIMAS and LONSUM plantations in Kabupaten Tanah Laut, South Kalimantan, Indonesia. Each tree is photographed from four or eight side views. This makes the task different from ordinary single-image detection, because one physical bunch can appear in several images of the same tree.
 
-The main task in this repository is therefore not only detecting bunches in images, but also estimating the final number of B1, B2, B3, and B4 bunches for each tree. The practical baseline follows a simple two-stage pipeline. First, YOLOv26-medium (`y26mv2`) detects bunches in every view. Second, all detections from the same tree are summarized into tree-level features and counted using Ridge regression. The best current end-to-end configuration is **Ridge regression with the 67-dimensional `F_all` feature set**, achieving **77.48% Macro Acc+/-1**, **32.62% Joint Acc+/-1**, and **1.036 Macro MAE** on the 141-tree test split.
+The main task in this repository is therefore not only detecting bunches in images, but also estimating the final number of B1, B2, B3, and B4 bunches for each tree. The practical baseline follows a simple two-stage pipeline. First, YOLOv26-medium (`y26mv2`) detects bunches in every view. Second, all detections from the same tree are summarized into tree-level features and counted using Ridge regression. The best current end-to-end configuration is **Ridge regression with the 67-dimensional `F_all` feature set**, achieving **77.48% Class ±1 Acc**, **32.62% Tree ±1 Acc**, and **1.036 Macro MAE** on the 141-tree test split.
 
-The most important finding is that the counting step can work very well when detections are correct. With ground-truth detections, the best machine-learning counter reaches **97.87% Macro Acc+/-1** and **91.49% Joint Acc+/-1**. The large gap between 97.87% and 77.48% shows that the main remaining limitation is detector quality, especially for B3 and B4 bunches. This repository provides the dataset split, detector weights, cached predictions, evaluation files, and reproduction scripts so future methods can be compared against the same baseline.
+The most important finding is that the counting step can work very well when detections are correct. With ground-truth detections, the best machine-learning counter reaches **98.05% Class ±1 Acc** and **92.20% Tree ±1 Acc**. The large gap between 98.05% and 77.48% shows that the main remaining limitation is detector quality, especially for B3 and B4 bunches. This repository provides the dataset split, detector weights, cached predictions, evaluation files, and reproduction scripts so future methods can be compared against the same baseline.
 
 **Keywords:** oil palm; fresh fruit bunch; multi-view counting; object detection; YOLO; duplicate observation; maturity grading; agricultural computer vision
 
@@ -19,10 +19,10 @@ The most important finding is that the counting step can work very well when det
 - **The latest official split is 75/10/15 at tree level:** 716 training trees, 96 validation trees, and 141 test trees.
 - **Naive multi-view counting is not valid:** adding all visible bunch appearances overcounts the true unique bunch total by about **1.83x**.
 - **The main practical baseline is one detector-plus-counter pipeline:** YOLOv26-medium (`y26mv2`) followed by Ridge regression on `F_all`.
-- **The best end-to-end result is 77.48% Macro Acc+/-1:** this means the predicted class count is within one bunch of the ground truth for most class-level tree counts.
+- **The best end-to-end result is 77.48% Class ±1 Acc:** this means the predicted class count is within one bunch of the ground truth for most class-level tree counts.
 - **Controlled comparison matters:** with the same `F0` features, ElasticNet is best at **76.42%**; with the same `F_all` features, Ridge is best at **77.48%**.
 - **More features do not help every model:** `F_all` improves Ridge and RF, but reduces LR, SVM, and ElasticNet on the same test split.
-- **Counting itself is not the main bottleneck:** when perfect detections are used, the counter reaches **97.87% Macro Acc+/-1**.
+- **Counting itself is not the main bottleneck:** when perfect detections are used, the counter reaches **98.05% Class ±1 Acc**.
 - **The strongest next research direction is better detection:** B4 has low validation recall, and B3 remains the hardest class in the final tree-level count.
 
 ## 1. Introduction
@@ -144,9 +144,9 @@ The important point is that `F_all` does not change the detector. It only gives 
 
 All main results use the official 716/96/141 tree split and are reported on the 141-tree test split. The main baseline is trained on the training trees and evaluated on the test trees. Cached YOLO detections are available in [`predictions/y26mv2_per_tree/`](predictions/y26mv2_per_tree/) so the reported results can be reproduced without rerunning detector inference.
 
-The main metric is **Macro Acc+/-1**. For each class, a prediction is counted as correct if it is within one bunch of the ground truth. For example, if the true B3 count is 6, then predictions of 5, 6, or 7 are treated as correct for B3. Macro Acc+/-1 averages this score over B1, B2, B3, and B4.
+The main metric is **Class ±1 Acc**. For each class, a prediction is counted as correct if it is within one bunch of the ground truth. For example, if the true B3 count is 6, then predictions of 5, 6, or 7 are treated as correct for B3. Class ±1 Acc averages this score over B1, B2, B3, and B4.
 
-**Joint Acc+/-1** is stricter. A tree is counted as correct only if all four class predictions are within one bunch at the same time. This metric is lower because one wrong class is enough to make the whole tree incorrect.
+**Tree ±1 Acc** is stricter. A tree is counted as correct only if all four class predictions are within one bunch at the same time. This metric is lower because one wrong class is enough to make the whole tree incorrect.
 
 **Macro MAE** is the average absolute counting error across the four classes. Lower Macro MAE means the predicted counts are numerically closer to the true counts.
 
@@ -183,13 +183,13 @@ The best hand-designed correction in the current release is stored as `M01`. It 
 
 **Table 3. Simple counting checks on ground-truth detections for 141 test trees.**
 
-| Method | Internal ID | Set | Macro Acc+/-1 | Joint Acc+/-1 | Macro MAE |
+| Method | Internal ID | Set | Class ±1 Acc | Tree ±1 Acc | Macro MAE |
 |--------|:-----------:|-----|--------------:|--------------:|----------:|
 | Add all appearances without correction | naive | 141 test | 50.00% | 6.38% | 2.142 |
 | Divide each class by one training-set constant | M15 | 141 test | 95.39% | 85.11% | 0.376 |
 | Visibility-pattern correction | M01 | 141 test | 95.92% | 87.23% | 0.340 |
 
-The message from this table is direct. Duplicate observation is a serious problem, but it can be corrected well when detections are correct. The naive method reaches only **50.00% Macro Acc+/-1**, while the four-constant correction reaches **95.39% Macro Acc+/-1**. The full ranking of 29 counting rules is available in [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
+The message from this table is direct. Duplicate observation is a serious problem, but it can be corrected well when detections are correct. The naive method reaches only **50.00% Class ±1 Acc**, while the four-constant correction reaches **95.39% Class ±1 Acc**. The full ranking of 29 counting rules is available in [`results/heuristics_953/accuracy_full.csv`](results/heuristics_953/accuracy_full.csv).
 
 ### 6.2 Machine-Learning Counting with Perfect Detections
 
@@ -197,12 +197,15 @@ The second result asks whether a learned counter can perform even better when th
 
 **Table 4. Machine-learning counting result when detections are perfect.**
 
-| Method | Features | Set | Macro Acc+/-1 | Joint Acc+/-1 | Macro MAE |
+| Method | Features | Set | Class ±1 Acc | Tree ±1 Acc | Macro MAE |
 |--------|----------|-----|--------------:|--------------:|----------:|
 | Linear Regression | F0, 13 dim | 141 test | 97.52% | 90.07% | 0.277 |
 | SVM | F0, 13 dim | 141 test | 97.87% | 91.49% | 0.266 |
+| Random Forest | F0, 13 dim | 141 test | 95.92% | 84.40% | 0.365 |
+| Ridge | F0, 13 dim | 141 test | 97.70% | 90.78% | 0.275 |
+| ElasticNet | F0, 13 dim | 141 test | 98.05% | 92.20% | 0.277 |
 
-The best result in this setting is **97.87% Macro Acc+/-1** with SVM on ground-truth-derived `F0` features. This shows that the tree-level counting problem is almost solved when the input detections are accurate. Therefore, the much lower end-to-end result should be interpreted mainly as a detector limitation, not as evidence that tree-level count regression is fundamentally failing.
+The best result in this setting is **98.05% Class ±1 Acc** with ElasticNet on ground-truth-derived `F0` features. This shows that the tree-level counting problem is almost solved when the input detections are accurate. Therefore, the much lower end-to-end result should be interpreted mainly as a detector limitation, not as evidence that tree-level count regression is fundamentally failing.
 
 ### 6.3 Controlled YOLO Counting: What Question Is Being Answered?
 
@@ -219,7 +222,7 @@ These are related, but they are not the same claim. The older `F0` table is a fa
 
 **Table 5. Main answers from the controlled YOLO counting matrix.**
 
-| Question | Controlled Setting | Answer | Macro Acc+/-1 | Practical Reading |
+| Question | Controlled Setting | Answer | Class ±1 Acc | Practical Reading |
 |----------|--------------------|--------|--------------:|-------------------|
 | If every model uses only `F0`, who is best? | 5 models, 13 dims, 716 train trees | ElasticNet | 76.42% | Compact baseline features are already strong. |
 | If every model uses `F_all`, who is best? | 5 models, 67 dims, 716 train trees | Ridge | 77.48% | Regularized linear regression uses the richer feature bank best. |
@@ -234,7 +237,7 @@ This table answers a narrow but important question: when the feature set is fixe
 
 **Table 6. Controlled `F0` model comparison, trained on 716 trees and tested on 141 trees. Bias is mean signed error.**
 
-| Counter | Macro Acc+/-1 | Joint Acc+/-1 | Macro MAE | B1 Acc+/-1 | B2 Acc+/-1 | B3 Acc+/-1 | B4 Acc+/-1 | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+| Counter | Class ±1 Acc | Tree ±1 Acc | Macro MAE | B1 ±1 Acc | B2 ±1 Acc | B3 ±1 Acc | B4 ±1 Acc | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | ElasticNet | 76.42% | 29.79% | 1.043 | 96.45% | 80.14% | 56.03% | 73.05% | +0.007 | -0.057 | -0.135 | +0.000 |
 | Ridge | 76.06% | 28.37% | 1.053 | 95.74% | 80.14% | 56.03% | 72.34% | +0.028 | -0.035 | -0.128 | -0.007 |
@@ -244,7 +247,7 @@ This table answers a narrow but important question: when the feature set is fixe
 
 **Point to take away:** under `F0`, the best model is **ElasticNet**, not LR. LR remains useful as a simple stored reference at **75.71%**, but the controlled matrix shows that ElasticNet reaches **76.42%** with the same 13 input features.
 
-The class-level pattern is also clear. B1 is easy for all models because the detector sees B1 more reliably and B1 counts are lower. B3 is the hardest class: every `F0` model is only around **55-56% B3 Acc+/-1**. This is why small improvements in B3 matter more than they look from the macro score alone.
+The class-level pattern is also clear. B1 is easy for all models because the detector sees B1 more reliably and B1 counts are lower. B3 is the hardest class: every `F0` model is only around **55-56% B3 ±1 Acc**. This is why small improvements in B3 matter more than they look from the class-level score alone.
 
 ### 6.5 If All Models Use `F_all`, Which Counter Is Best?
 
@@ -254,7 +257,7 @@ This table fixes the feature set to `F_all` and compares the same five counter f
 
 **Table 7. Controlled `F_all` model comparison, trained on 716 trees and tested on 141 trees.**
 
-| Counter | Macro Acc+/-1 | Joint Acc+/-1 | Macro MAE | B1 Acc+/-1 | B2 Acc+/-1 | B3 Acc+/-1 | B4 Acc+/-1 | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+| Counter | Class ±1 Acc | Tree ±1 Acc | Macro MAE | B1 ±1 Acc | B2 ±1 Acc | B3 ±1 Acc | B4 ±1 Acc | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | Ridge | 77.48% | 32.62% | 1.035 | 97.16% | 82.98% | 57.45% | 72.34% | +0.014 | -0.078 | -0.177 | +0.071 |
 | ElasticNet | 75.89% | 29.08% | 1.059 | 97.16% | 80.85% | 53.90% | 71.63% | +0.000 | -0.085 | -0.106 | +0.071 |
@@ -262,7 +265,7 @@ This table fixes the feature set to `F_all` and compares the same five counter f
 | SVM | 73.94% | 24.82% | 1.057 | 97.16% | 80.14% | 50.35% | 68.09% | -0.035 | -0.482 | -0.348 | -0.199 |
 | LR | 73.23% | 27.66% | 1.092 | 95.74% | 80.85% | 50.35% | 65.96% | +0.007 | -0.163 | -0.163 | +0.149 |
 
-**Point to take away:** under `F_all`, **Ridge is clearly best**. It reaches **77.48% Macro Acc+/-1**, **32.62% Joint Acc+/-1**, and **1.035 Macro MAE**. It also gives the strongest B2 and B3 accuracy in this table.
+**Point to take away:** under `F_all`, **Ridge is clearly best**. It reaches **77.48% Class ±1 Acc**, **32.62% Tree ±1 Acc**, and **1.035 Macro MAE**. It also gives the strongest B2 and B3 accuracy in this table.
 
 The reason Ridge works well here is practical rather than mysterious. `F_all` contains correlated features: count totals, means, confidence sums, class fractions, and distribution summaries often describe overlapping evidence. Ordinary LR has no penalty to stabilize those coefficients, while Ridge adds regularization. That regularization lets Ridge use the extra signals without letting individual noisy features dominate the fit.
 
@@ -270,9 +273,9 @@ The reason Ridge works well here is practical rather than mysterious. `F_all` co
 
 The fairest way to discuss feature impact is to compare the same model under `F0` and `F_all`. This is different from comparing "best `F0` model" against "best `F_all` model", because that changes two things at once. The table below holds the model fixed and changes only the feature set.
 
-**Table 8. Same-model change from `F0` to `F_all`. Positive Macro and Joint deltas are better; negative MAE delta is better.**
+**Table 8. Same-model change from `F0` to `F_all`. Positive Class ±1 Acc and Tree ±1 Acc deltas are better; negative MAE delta is better.**
 
-| Counter | F0 Macro | F_all Macro | Delta Macro | F0 Joint | F_all Joint | Delta Joint | F0 MAE | F_all MAE | Delta MAE |
+| Counter | F0 Class ±1 Acc | F_all Class ±1 Acc | Delta Class ±1 Acc | F0 Tree ±1 Acc | F_all Tree ±1 Acc | Delta Tree ±1 Acc | F0 MAE | F_all MAE | Delta MAE |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | LR | 75.71% | 73.23% | -2.48 pp | 30.50% | 27.66% | -2.84 pp | 1.048 | 1.092 | +0.044 |
 | SVM | 74.82% | 73.94% | -0.89 pp | 29.08% | 24.82% | -4.26 pp | 1.043 | 1.057 | +0.014 |
@@ -286,9 +289,9 @@ This matters for future work. If a new paper or experiment uses a different coun
 
 ### 6.7 Full `train_only` Controlled Matrix
 
-The table below shows the full `train_only` macro-accuracy matrix: 8 feature sets x 5 models. This is the main controlled comparison because it trains only on the official 716 training trees and evaluates on the 141 test trees.
+The table below shows the full `train_only` Class ±1 Acc matrix: 8 feature sets x 5 models. This is the main controlled comparison because it trains only on the official 716 training trees and evaluates on the 141 test trees.
 
-**Table 9. Full `train_only` controlled matrix, Macro Acc+/-1.**
+**Table 9. Full `train_only` controlled matrix, Class ±1 Acc.**
 
 | Feature Set | Dims | LR | SVM | RF | Ridge | ElasticNet |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -307,7 +310,7 @@ The confidence-only feature group does not produce a clean improvement. This is 
 
 **Table 10. Top 20 `train_only` configurations from all feature sets and models.**
 
-| Rank | Feature Set | Counter | Dims | Macro Acc+/-1 | Joint Acc+/-1 | Macro MAE | B2 Acc+/-1 | B3 Acc+/-1 | Bias B2 | Bias B3 |
+| Rank | Feature Set | Counter | Dims | Class ±1 Acc | Tree ±1 Acc | Macro MAE | B2 ±1 Acc | B3 ±1 Acc | Bias B2 | Bias B3 |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | 1 | F_all | Ridge | 67 | 77.48% | 32.62% | 1.035 | 82.98% | 57.45% | -0.078 | -0.177 |
 | 2 | F0+spatial | ElasticNet | 21 | 76.77% | 31.21% | 1.039 | 81.56% | 56.74% | -0.064 | -0.156 |
@@ -336,7 +339,7 @@ The confidence-only feature group does not produce a clean improvement. This is 
 
 The `train_val` strategy trains on 812 trees: the 716 training trees plus the 96 validation trees. It still evaluates on the same 141 test trees. This is useful as a secondary check because more training data can sometimes stabilize a model. It is not the cleanest model-selection comparison, because the validation split is no longer held out.
 
-**Table 11. `train_val` controlled matrix, Macro Acc+/-1.**
+**Table 11. `train_val` controlled matrix, Class ±1 Acc.**
 
 | Feature Set | Dims | LR | SVM | RF | Ridge | ElasticNet |
 | --- | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -359,7 +362,7 @@ The next question is whether the current result can be improved simply by using 
 
 **Table 12. Test of whether a more complex counter improves the current YOLO-based result.**
 
-| Approach | Macro Acc+/-1 |
+| Approach | Class ±1 Acc |
 |----------|--------------:|
 | Ridge + F_all 67 dim, main baseline | 77.48% |
 | ElasticNet + F0+spatial, best v4 run | 76.77% |
@@ -377,7 +380,7 @@ The table below gathers the main test-set results in one place. It should be rea
 
 **Table 13. Consolidated test-set results. Bias is mean signed error; positive values indicate overcounting.**
 
-| Setting | Method | Features | Set | Macro Acc+/-1 | Joint Acc+/-1 | Macro MAE | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
+| Setting | Method | Features | Set | Class ±1 Acc | Tree ±1 Acc | Macro MAE | Bias B1 | Bias B2 | Bias B3 | Bias B4 |
 |-------|--------|----------|-----|--------------:|--------------:|----------:|--------:|--------:|--------:|--------:|
 | Naive count check | Add all appearances | GT annotations | 141 test | 50.00% | 6.38% | 2.142 | +0.936 | +1.702 | +4.709 | +1.220 |
 | Simple correction check | Four training-set constants (M15) | GT detections | 141 test | 95.39% | 85.11% | 0.376 | +0.135 | +0.135 | +0.262 | -0.064 |
@@ -386,9 +389,9 @@ The table below gathers the main test-set results in one place. It should be rea
 | Controlled `F0` winner | ElasticNet | F0, 13 dim | 141 test | 76.42% | 29.79% | 1.043 | +0.007 | -0.057 | -0.135 | +0.000 |
 | Best compact-spatial alternative | ElasticNet | F0+spatial, 21 dim | 141 test | 76.77% | 31.21% | 1.039 | +0.014 | -0.064 | -0.156 | +0.035 |
 | Primary practical baseline | Ridge | F_all, 67 dim | 141 test | 77.48% | 32.62% | 1.036 | +0.014 | -0.078 | -0.177 | +0.071 |
-| Perfect-detection counter | SVM | F0 GT detections | 141 test | 97.87% | 91.49% | 0.266 | -0.043 | -0.021 | -0.092 | -0.043 |
+| Perfect-detection counter | ElasticNet | F0 GT detections | 141 test | 98.05% | 92.20% | 0.277 | -0.050 | +0.043 | -0.064 | -0.028 |
 
-The key comparison is the gap between **77.48%** and **97.87%** Macro Acc+/-1. The gap is **20.39 percentage points**. Since the 97.87% result uses perfect detections, this gap points mainly to detector error. The most important future improvement is therefore better detection and better use of multi-view evidence, especially for B3 and B4.
+The key comparison is the gap between **77.48%** and **98.05%** Class ±1 Acc. The gap is **20.57 percentage points**. Since the 98.05% result uses perfect detections, this gap points mainly to detector error. The most important future improvement is therefore better detection and better use of multi-view evidence, especially for B3 and B4.
 
 ## 7. Discussion
 
@@ -396,11 +399,11 @@ The results lead to five practical conclusions.
 
 First, multi-view duplicate observation is real and large. The dataset was collected from multiple sides to reduce missed bunches, but repeated visibility means direct summation is not a valid final counting method. The naive method counts visible appearances, not unique bunches.
 
-Second, duplicate observation can be handled when detections are reliable. The four-constant correction already reaches 95.39% Macro Acc+/-1 with ground-truth detections, and the best learned counter reaches 97.87%. This means the tree-level aggregation problem is manageable when the evidence is correct.
+Second, duplicate observation can be handled when detections are reliable. The four-constant correction already reaches 95.39% Class ±1 Acc with ground-truth detections, and the best learned counter reaches 98.05%. This means the tree-level aggregation problem is manageable when the evidence is correct.
 
 Third, the practical limitation is detector quality. The current YOLO detector is not equally strong across all maturity classes. B1 is detected most reliably, while B4 has the weakest recall and B3 remains difficult in the final count. This explains why the main baseline reaches 77.48% rather than approaching the perfect-detection result.
 
-Fourth, the controlled matrix shows that feature engineering and model choice cannot be interpreted separately. `F_all` is the best feature set only with Ridge in this experiment. With LR, SVM, and ElasticNet, `F_all` reduces Macro Acc+/-1 compared with `F0`. This means the added confidence, distribution, and spatial features carry useful information, but they also carry detector noise. A stable model can use the signal; a less suitable model can fit the noise.
+Fourth, the controlled matrix shows that feature engineering and model choice cannot be interpreted separately. `F_all` is the best feature set only with Ridge in this experiment. With LR, SVM, and ElasticNet, `F_all` reduces Class ±1 Acc compared with `F0`. This means the added confidence, distribution, and spatial features carry useful information, but they also carry detector noise. A stable model can use the signal; a less suitable model can fit the noise.
 
 Fifth, the best practical recommendations are straightforward:
 
@@ -421,9 +424,9 @@ The reference list in this README is intentionally incomplete. Verified peer-rev
 
 ## 9. Conclusion
 
-SawitMVC-YOLO provides a reproducible benchmark for oil palm bunch counting from multi-view tree images. The main baseline is intentionally simple: YOLOv26-medium detects bunches in each image, tree-level features summarize the detections, and Ridge regression predicts the final B1-B4 counts. This baseline reaches **77.48% Macro Acc+/-1** on the 141-tree test split.
+SawitMVC-YOLO provides a reproducible benchmark for oil palm bunch counting from multi-view tree images. The main baseline is intentionally simple: YOLOv26-medium detects bunches in each image, tree-level features summarize the detections, and Ridge regression predicts the final B1-B4 counts. This baseline reaches **77.48% Class ±1 Acc** on the 141-tree test split.
 
-The strongest finding is that counting can be much more accurate when detections are correct. With ground-truth detections, the counter reaches **97.87% Macro Acc+/-1**. The difference between these results shows that the next major gain should come from better detection and stronger multi-view evidence handling, especially for B3 and B4.
+The strongest finding is that counting can be much more accurate when detections are correct. With ground-truth detections, the counter reaches **98.05% Class ±1 Acc**. The difference between these results shows that the next major gain should come from better detection and stronger multi-view evidence handling, especially for B3 and B4.
 
 ## 10. Reproducibility
 

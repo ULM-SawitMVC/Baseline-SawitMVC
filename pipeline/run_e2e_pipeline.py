@@ -210,7 +210,7 @@ def step_m01(name: str, infer_dir: Path, gt_dir: Path, data_dir: Path, out_dir: 
     m_val  = _compute_metrics(rows, "val")
     (out_dir / "metrics.json").write_text(json.dumps({"test": m_test, "val": m_val}, indent=2))
     pd.DataFrame(rows).to_csv(out_dir / "predictions.csv", index=False)
-    print(f"M01: Acc+/-1={m_test.get('macro_acc_pm1',0)*100:.2f}%  MAE={m_test.get('macro_class_mae',0):.4f} -> {out_dir}")
+    print(f"M01: Class ±1 Acc={m_test.get('macro_acc_pm1',0)*100:.2f}%  MAE={m_test.get('macro_class_mae',0):.4f} -> {out_dir}")
 
 
 # ---------------------------------------------------------------------------
@@ -287,7 +287,7 @@ def step_ml(name: str, counter: str, infer_dir: Path, gt_dir: Path, data_dir: Pa
     if counter == "rf":
         fi = pd.DataFrame({"feature": FEATURE_NAMES, "importance": rf.feature_importances_}).sort_values("importance", ascending=False)
         fi.to_csv(out_dir / "feature_importance.csv", index=False)
-    print(f"{counter.upper()}: Acc+/-1={m_te['macro_acc_pm1']*100:.2f}%  MAE={m_te['macro_class_mae']:.4f} -> {out_dir}")
+    print(f"{counter.upper()}: Class ±1 Acc={m_te['macro_acc_pm1']*100:.2f}%  MAE={m_te['macro_class_mae']:.4f} -> {out_dir}")
 
 
 # ---------------------------------------------------------------------------

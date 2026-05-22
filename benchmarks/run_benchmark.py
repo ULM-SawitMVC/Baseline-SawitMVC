@@ -149,7 +149,7 @@ def print_table(results: list[dict], n_trees: int) -> None:
     header = f"\nSawitMVC Baseline - Benchmark Results ({n_trees} trees)"
     print(header)
     print("=" * len(header))
-    print(f"{'Rank':<5} {'Algorithm':<30} {'Acc+/-1':>8}  {'MAE':>6}  {'Total MAE':>10}  {'Fail':>5}")
+    print(f"{'Rank':<5} {'Algorithm':<30} {'Class ±1 Acc':>12}  {'MAE':>6}  {'Total MAE':>10}  {'Fail':>5}")
     print("-" * 70)
     for r in results:
         print(

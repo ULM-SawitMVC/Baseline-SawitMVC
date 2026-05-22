@@ -29,7 +29,7 @@ EXPECTED_E2E_BEST = ("y26mv2_lr", 0.7571, 1.0479, 141)
 EXPECTED_V3_BEST = ("F_all", "Ridge", "train_only", 67, 0.7748, 0.3262, 1.0355)
 EXPECTED_V4_TOP = ("ElasticNet + F0+spatial (train)", 0.7677, 0.3121, 1.0390)
 EXPECTED_V4_CEILING = 0.7748
-EXPECTED_TRACK_C_BEST = ("gt_svm", 0.9787, 0.9149, 0.2660, 141)
+EXPECTED_TRACK_C_BEST = ("gt_elasticnet", 0.9805, 0.9220, 0.2766, 141)
 
 
 def _close(a: float, b: float, tol: float = 5e-4) -> bool:
@@ -51,8 +51,8 @@ def check_heuristics() -> list[str]:
         mae = float(row["MAE"])
         if not _close(acc, exp_acc, 0.005) or not _close(mae, exp_mae):
             errors.append(
-                f"{method}: expected Acc+/-1={exp_acc}, MAE={exp_mae}; "
-                f"found Acc+/-1={acc}, MAE={mae}"
+                f"{method}: expected Class ±1 Acc={exp_acc}, MAE={exp_mae}; "
+                f"found Class ±1 Acc={acc}, MAE={mae}"
             )
     return errors
 
@@ -83,8 +83,8 @@ def check_e2e() -> list[str]:
     if name != exp_name or not _close(acc, exp_acc) or not _close(mae, exp_mae) or n_trees != exp_n:
         errors.append(
             "Unexpected E2E best: "
-            f"{name} Acc+/-1={acc:.4f}, MAE={mae:.4f}, n={n_trees}; "
-            f"expected {exp_name} Acc+/-1={exp_acc:.4f}, MAE={exp_mae:.4f}, n={exp_n}"
+            f"{name} Class ±1 Acc={acc:.4f}, MAE={mae:.4f}, n={n_trees}; "
+            f"expected {exp_name} Class ±1 Acc={exp_acc:.4f}, MAE={exp_mae:.4f}, n={exp_n}"
         )
     return errors
 
@@ -112,7 +112,7 @@ def check_v3_experiments() -> list[str]:
         errors.append(
             "Unexpected v3 best: "
             f"{best['features']} + {best['model']} ({best['strategy']}, {best['n_dim']} dim) "
-            f"Acc+/-1={float(best['macro']):.4f}, Joint={float(best['joint']):.4f}, "
+            f"Class ±1 Acc={float(best['macro']):.4f}, Tree ±1 Acc={float(best['joint']):.4f}, "
             f"MAE={float(best['mae']):.4f}"
         )
     return errors
@@ -137,14 +137,14 @@ def check_v4_experiments() -> list[str]:
     ):
         errors.append(
             "Unexpected v4 top row: "
-            f"{best['config']} Acc+/-1={float(best['macro_acc']):.4f}, "
-            f"Joint={float(best['joint_acc']):.4f}, MAE={float(best['macro_mae']):.4f}"
+            f"{best['config']} Class ±1 Acc={float(best['macro_acc']):.4f}, "
+            f"Tree ±1 Acc={float(best['joint_acc']):.4f}, MAE={float(best['macro_mae']):.4f}"
         )
 
     if float(best["macro_acc"]) >= EXPECTED_V4_CEILING:
         errors.append(
             "Unexpected v4 ceiling break: "
-            f"best v4 Acc+/-1={float(best['macro_acc']):.4f} should stay below {EXPECTED_V4_CEILING:.4f}"
+            f"best v4 Class ±1 Acc={float(best['macro_acc']):.4f} should stay below {EXPECTED_V4_CEILING:.4f}"
         )
     return errors
 
@@ -193,8 +193,8 @@ def check_track_c() -> list[str]:
     ):
         errors.append(
             "Unexpected Track C best: "
-            f"{name} Acc+/-1={acc:.4f}, Joint={joint:.4f}, MAE={mae:.4f}, n={n_trees}; "
-            f"expected {exp_name} Acc+/-1={exp_acc:.4f}, Joint={exp_joint:.4f}, "
+            f"{name} Class ±1 Acc={acc:.4f}, Tree ±1 Acc={joint:.4f}, MAE={mae:.4f}, n={n_trees}; "
+            f"expected {exp_name} Class ±1 Acc={exp_acc:.4f}, Tree ±1 Acc={exp_joint:.4f}, "
             f"MAE={exp_mae:.4f}, n={exp_n}"
         )
     return errors

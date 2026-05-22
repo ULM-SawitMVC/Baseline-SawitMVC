@@ -15,6 +15,7 @@ split at [`ground_truth/split_manifest.csv`](../ground_truth/split_manifest.csv)
 | [`run_counting_svm.py`](run_counting_svm.py) | SVM counter on 13-dim features. |
 | [`run_counting_rf.py`](run_counting_rf.py) | Random Forest counter on 13-dim features. |
 | [`run_counting_lr.py`](run_counting_lr.py) | Linear regression counter on 13-dim features. |
+| [`run_counting_regularized.py`](run_counting_regularized.py) | Ridge and ElasticNet counters on 13-dim features. |
 
 ## Quick start
 
@@ -54,6 +55,8 @@ This writes:
 - `results/e2e_upper_bound/gt_svm/`
 - `results/e2e_upper_bound/gt_rf/`
 - `results/e2e_upper_bound/gt_lr/`
+- `results/e2e_upper_bound/gt_ridge/`
+- `results/e2e_upper_bound/gt_elasticnet/`
 
 ## Archived pipeline variants
 

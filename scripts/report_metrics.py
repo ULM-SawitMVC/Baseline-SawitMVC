@@ -38,8 +38,8 @@ for counter in counters:
     print(f"  {'total_count_mae':<28} {m['total_count_mae']:>10.4f}")
     print(f"  {'exact_profile_acc':<28} {m['exact_profile_acc']*100:>9.2f}%")
     print(f"  {'total_pm1_acc':<28} {m['total_pm1_acc']*100:>9.2f}%")
-    print(f"  {'macro_acc_pm1 (Acc+/-1)':<28} {m['macro_acc_pm1']*100:>9.2f}%")
-    print(f"\n  Per-class Acc+/-1:")
+    print(f"  {'macro_acc_pm1 (Class ±1 Acc)':<28} {m['macro_acc_pm1']*100:>9.2f}%")
+    print(f"\n  Per-class Class ±1 Acc:")
     for c in CLASSES:
         print(f"    {'acc_pm1_'+c:<26} {m[f'acc_pm1_{c}']*100:>8.2f}%")
     print(f"\n  Per-class Bias (mean error):")
