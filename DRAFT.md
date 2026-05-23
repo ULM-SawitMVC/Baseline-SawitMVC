@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Black Bunch Census (BBC) supports oil palm harvest planning by estimating, for every tree, how many fresh fruit bunches (FFB) sit in each operational maturity class. Image-based BBC is difficult because a single tree is observed from multiple side views: additional views reduce occlusion, but the same physical bunch can appear in several images and inflate naive counts. Despite an active literature on agricultural detection and counting, no benchmark to date has separated detector error from tree-level counter error for this task. This paper benchmarks multi-view tree-level FFB counting for B1, B2, B3, and B4 under two carefully isolated detection conditions. In the *GT detection setting*, counters receive ground-truth boxes and classes, removing detector quality as a source of error. In the *fixed-detector setting*, counters receive cached YOLOv26-medium outputs, measuring the deployed detector-plus-counter pipeline. The benchmark uses 953 trees, 3,992 side-view images, four maturity classes, 4–8 views per tree, and a fixed 716/96/141 train/validation/test split. Under GT detection, ElasticNet reaches 98.05% Class ±1 Acc and 92.20% Tree ±1 Acc. Under the fixed detector, the best Ridge + F<sub>all</sub> pipeline reaches 77.48% Class ±1 Acc and 32.62% Tree ±1 Acc. Feature ablation closes only ≈1.4 pp Class ±1 Acc over the F0 baseline, and changing the counter family does not recover the gap either. The conclusion is direct: tree-level counting is near ceiling when detections are accurate, and the remaining 20.57 pp gap is a detector-quality bottleneck, not a counter limitation.
+Black Bunch Census (BBC) supports oil palm harvest planning by estimating, for every tree, how many fresh fruit bunches (FFB) sit in each operational maturity class. Image-based BBC is difficult because a single tree is observed from multiple side views: additional views reduce occlusion, but the same physical bunch can appear in several images and inflate naive counts. Despite an active literature on agricultural detection and counting, no benchmark to date has separated detector error from tree-level counter error for this task. This paper benchmarks multi-view tree-level FFB counting for B1, B2, B3, and B4 under two carefully isolated detection conditions. In the *GT detection setting*, counters receive ground-truth boxes and classes, removing detector quality as a source of error. In the *fixed-detector setting*, counters receive cached YOLOv26-medium outputs, measuring the deployed detector-plus-counter pipeline. The benchmark uses 953 trees, 3,992 side-view images, four maturity classes, 4 to 8 views per tree, and a fixed 716/96/141 train/validation/test split. Under GT detection, ElasticNet reaches 98.05% Class ±1 Acc and 92.20% Tree ±1 Acc. Under the fixed detector, the best Ridge + F<sub>all</sub> pipeline reaches 77.48% Class ±1 Acc and 32.62% Tree ±1 Acc. Feature ablation closes only ≈1.4 pp Class ±1 Acc over the F0 baseline, and changing the counter family does not recover the gap either. The conclusion is direct: tree-level counting is near ceiling when detections are accurate, and the remaining 20.57 pp gap is a detector-quality bottleneck, not a counter limitation.
 
 ## Index Terms
 
@@ -16,7 +16,7 @@ Tree-level counting is geometrically harder than image-level detection [12]. Bun
 
 ![Cross-view duplicate visibility of one B3 bunch](figures/paper/fig01_cross_view_linking.png)
 
-**Fig. 1.** A single physical B3 bunch on tree `DAMIMAS_A21B_0847` is visible across sides 1–3. If every per-image detection is counted, three appearances are added for one bunch. Tree-level counting must therefore aggregate evidence across views rather than sum it.
+**Fig. 1.** A single physical B3 bunch on tree `DAMIMAS_A21B_0847` is visible across sides 1, 2, and 3. If every per-image detection is counted, three appearances are added for one bunch. Tree-level counting must therefore aggregate evidence across views rather than sum it.
 
 Three lines of prior work bear on this problem. Oil palm FFB detection and ripeness classification have been studied with both two-stage and YOLO-style detectors [8], [9], [10], [22]; these works show that detectors can reach usable mAP on FFB but also document recurring weaknesses on partially occluded or maturity-ambiguous bunches.
 
@@ -34,7 +34,7 @@ What is missing is a benchmark that determines, for tree-level multi-view BBC co
 
 ### A. Dataset and Task Definition
 
-The benchmark uses the SawitMVC-YOLO multi-view dataset: 953 oil palm trees, 3,992 side-view images, four maturity classes B1–B4, and 4–8 side views per tree. The fixed split contains 716 training trees, 96 validation trees, and 141 test trees. Dataset construction, annotation protocol, and per-class composition are documented in the companion dataset release.
+The benchmark uses the SawitMVC-YOLO multi-view dataset: 953 oil palm trees, 3,992 side-view images, four maturity classes (B1, B2, B3, and B4), and 4 to 8 side views per tree. The fixed split contains 716 training trees, 96 validation trees, and 141 test trees. Dataset construction, annotation protocol, and per-class composition are documented in the companion dataset release.
 
 For tree $i$, the ground-truth target is the count vector
 
@@ -147,7 +147,7 @@ Table 1 reports counting results when the counter receives GT detections. Naive 
 
 Table 2 holds the feature bank at F0 and compares the five counter families when they receive cached YOLOv26-medium outputs. The best F0 result, ElasticNet at 76.42% Class ±1 Acc, is more than 20 percentage points below the ElasticNet result of the GT detection setting under the same feature bank. All five counters fall within a 3.2 percentage-point window on Class ±1 Acc, reinforcing that the counter family is not what changed between the two settings; only the detector did.
 
-Per-class accuracies reveal where the loss concentrates: B1 stays above 95% across all five counters, B2 sits between 73.76% and 80.14%, and B3 collapses to 55–56%. B4 is intermediate, between 67% and 73%. This per-class profile mirrors the per-class detector performance in Table 4, where B3 has moderate recall and B4 has the lowest recall.
+Per-class accuracies reveal where the loss concentrates: B1 stays above 95% across all five counters, B2 sits between 73.76% and 80.14%, and B3 collapses to between 55% and 56%. B4 is intermediate, between 67% and 73%. This per-class profile mirrors the per-class detector performance in Table 4, where B3 has moderate recall and B4 has the lowest recall.
 
 **Table 2. Fixed-detector counting with F0 features on the 141-tree test split. Per-class columns report Class ±1 Acc.**
 
@@ -193,11 +193,11 @@ Three observations follow from Fig. 3. First, the absolute gap is large: 20.57 p
 | GT detection | ElasticNet | 98.05% | 92.20% | −0.050 | +0.043 | −0.064 | −0.028 |
 | Fixed-detector | Ridge + F<sub>all</sub> | 77.48% | 32.62% | +0.014 | −0.078 | −0.177 | +0.071 |
 
-Read together, Tables 1–3 and 5 with Fig. 3 support a single interpretation. Multi-view duplicate visibility is real and large, but it is well handled by learned tree-level aggregation when detector evidence is accurate (Section III-A). Once a fixed real-world detector replaces ground-truth boxes, counter performance collapses (Section III-B), and richer features or different counter families recover only a small fraction of the loss (Section III-C). The per-class structure of the gap and of the bias (Section III-D and Fig. 3) is consistent with a detector-quality bottleneck rather than a counter limitation. Future work should therefore prioritize improving detector recall on B3 and B4, calibrating detection confidence for counting use, and using explicit cross-view association or geometry-aware aggregation rather than expanding the tree-level feature bank further.
+Read together, Tables 1, 2, 3, and 5 with Fig. 3 support a single interpretation. Multi-view duplicate visibility is real and large, but it is well handled by learned tree-level aggregation when detector evidence is accurate (Section III-A). Once a fixed real-world detector replaces ground-truth boxes, counter performance collapses (Section III-B), and richer features or different counter families recover only a small fraction of the loss (Section III-C). The per-class structure of the gap and of the bias (Section III-D and Fig. 3) is consistent with a detector-quality bottleneck rather than a counter limitation. Future work should therefore prioritize improving detector recall on B3 and B4, calibrating detection confidence for counting use, and using explicit cross-view association or geometry-aware aggregation rather than expanding the tree-level feature bank further.
 
 ## IV. Conclusion
 
-This paper benchmarks multi-view tree-level oil palm FFB counting under a fixed detector by evaluating the same counters in a GT detection setting and a fixed-detector setting. Under GT detection, ElasticNet reaches 98.05% Class ±1 Acc and 92.20% Tree ±1 Acc on the 141-tree test split, showing that the tree-level counter is near ceiling when detections are accurate. Under the fixed YOLOv26-medium detector, the best Ridge + F<sub>all</sub> pipeline reaches 77.48% Class ±1 Acc and 32.62% Tree ±1 Acc, and an eight-bank feature ablation closes only ≈1.4 percentage points of the gap. The remaining 20.57 percentage-point Class ±1 Acc gap is therefore a detector-quality bottleneck, not a counter limitation. The path to better BBC-style B1–B4 counting on this dataset runs primarily through better detection, especially on B3 and B4, and through multi-view evidence handling that is explicitly designed around detector uncertainty.
+This paper benchmarks multi-view tree-level oil palm FFB counting under a fixed detector by evaluating the same counters in a GT detection setting and a fixed-detector setting. Under GT detection, ElasticNet reaches 98.05% Class ±1 Acc and 92.20% Tree ±1 Acc on the 141-tree test split, showing that the tree-level counter is near ceiling when detections are accurate. Under the fixed YOLOv26-medium detector, the best Ridge + F<sub>all</sub> pipeline reaches 77.48% Class ±1 Acc and 32.62% Tree ±1 Acc, and an eight-bank feature ablation closes only ≈1.4 percentage points of the gap. The remaining 20.57 percentage-point Class ±1 Acc gap is therefore a detector-quality bottleneck, not a counter limitation. The path to better BBC-style B1 to B4 counting on this dataset runs primarily through better detection, especially on B3 and B4, and through multi-view evidence handling that is explicitly designed around detector uncertainty.
 
 ## Acknowledgment
 
@@ -211,50 +211,50 @@ Data: https://huggingface.co/datasets/ULM-DS-Lab/SawitMVC-YOLO
 
 ## References
 
-[1] A. Koirala, K. B. Walsh, Z. Wang, and C. McCarthy, "Deep learning: method overview and review of use for fruit detection and yield estimation," *Computers and Electronics in Agriculture*, vol. 162, pp. 219–234, Jul. 2019, doi: 10.1016/j.compag.2019.04.017.
+[1] A. Koirala, K. B. Walsh, Z. Wang, and C. McCarthy, "Deep learning: method overview and review of use for fruit detection and yield estimation," *Computers and Electronics in Agriculture*, vol. 162, pp. 219-234, Jul. 2019, doi: 10.1016/j.compag.2019.04.017.
 
-[2] A. Kamilaris and F. X. Prenafeta-Boldú, "Deep learning in agriculture: A survey," *Computers and Electronics in Agriculture*, vol. 147, pp. 70–90, Apr. 2018, doi: 10.1016/j.compag.2018.02.016.
+[2] A. Kamilaris and F. X. Prenafeta-Boldú, "Deep learning in agriculture: A survey," *Computers and Electronics in Agriculture*, vol. 147, pp. 70-90, Apr. 2018, doi: 10.1016/j.compag.2018.02.016.
 
-[3] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi, "You Only Look Once: Unified, real-time object detection," in *Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)*, 2016, pp. 779–788, doi: 10.1109/CVPR.2016.91.
+[3] J. Redmon, S. Divvala, R. Girshick, and A. Farhadi, "You Only Look Once: Unified, real-time object detection," in *Proc. IEEE Conf. Computer Vision and Pattern Recognition (CVPR)*, 2016, pp. 779-788, doi: 10.1109/CVPR.2016.91.
 
 [4] A. Bochkovskiy, C.-Y. Wang, and H.-Y. M. Liao, "YOLOv4: Optimal speed and accuracy of object detection," arXiv:2004.10934, 2020.
 
-[5] Y. Song, C. A. Glasbey, G. W. Horgan, G. Polder, and G. W. A. M. van der Heijden, "Automatic fruit recognition and counting from multiple images," *Biosystems Engineering*, vol. 118, pp. 203–215, Feb. 2014, doi: 10.1016/j.biosystemseng.2013.12.008.
+[5] Y. Song, C. A. Glasbey, G. W. Horgan, G. Polder, and G. W. A. M. van der Heijden, "Automatic fruit recognition and counting from multiple images," *Biosystems Engineering*, vol. 118, pp. 203-215, Feb. 2014, doi: 10.1016/j.biosystemseng.2013.12.008.
 
 [6] M. Stein, S. Bargoti, and J. Underwood, "Image based mango fruit detection, localisation and yield estimation using multiple view geometry," *Sensors*, vol. 16, no. 11, Art. no. 1915, Nov. 2016, doi: 10.3390/s16111915.
 
 [7] I. Sa, Z. Ge, F. Dayoub, B. Upcroft, T. Perez, and C. McCool, "DeepFruits: A fruit detection system using deep neural networks," *Sensors*, vol. 16, no. 8, Art. no. 1222, Aug. 2016, doi: 10.3390/s16081222.
 
-[8] N. A. Prasetyo, Pranowo, and A. J. Santoso, "Automatic detection and calculation of palm oil fresh fruit bunches using Faster R-CNN," *International Journal of Applied Science and Engineering*, vol. 17, no. 2, pp. 121–134, 2020, doi: 10.6703/IJASE.202005_17(2).121.
+[8] N. A. Prasetyo, Pranowo, and A. J. Santoso, "Automatic detection and calculation of palm oil fresh fruit bunches using Faster R-CNN," *International Journal of Applied Science and Engineering*, vol. 17, no. 2, pp. 121-134, 2020, doi: 10.6703/IJASE.202005_17(2).121.
 
-[9] J. W. Lai, H. R. Ramli, L. I. Ismail, and W. Z. W. Hasan, "Real-time detection of ripe oil palm fresh fruit bunch based on YOLOv4," *IEEE Access*, vol. 10, pp. 95763–95770, 2022, doi: 10.1109/ACCESS.2022.3204762.
+[9] J. W. Lai, H. R. Ramli, L. I. Ismail, and W. Z. W. Hasan, "Real-time detection of ripe oil palm fresh fruit bunch based on YOLOv4," *IEEE Access*, vol. 10, pp. 95763-95770, 2022, doi: 10.1109/ACCESS.2022.3204762.
 
-[10] M. Y. M. A. Mansour, K. D. Dambul, and K. Y. Choo, "Object detection algorithms for ripeness classification of oil palm fresh fruit bunch," *International Journal of Technology*, vol. 13, no. 6, pp. 1326–1335, 2022, doi: 10.14716/ijtech.v13i6.5932.
+[10] M. Y. M. A. Mansour, K. D. Dambul, and K. Y. Choo, "Object detection algorithms for ripeness classification of oil palm fresh fruit bunch," *International Journal of Technology*, vol. 13, no. 6, pp. 1326-1335, 2022, doi: 10.14716/ijtech.v13i6.5932.
 
 [11] M. Kerstan and T. Fairhurst, "Use of OMP for accurate crop forecasts," Agrisoft Systems and Tropical Crop Consultants Limited. Available: https://www.agrisoft-systems.com/wp-content/uploads/Papers/CropForecastsWithOMPBBC.pdf
 
-[12] V. Lempitsky and A. Zisserman, "Learning to count objects in images," in *Proc. Advances in Neural Information Processing Systems (NeurIPS)*, 2010, pp. 1324–1332.
+[12] V. Lempitsky and A. Zisserman, "Learning to count objects in images," in *Proc. Advances in Neural Information Processing Systems (NeurIPS)*, 2010, pp. 1324-1332.
 
 [13] M. Rahnemoonfar and C. Sheppard, "Deep count: Fruit counting based on deep simulated learning," *Sensors*, vol. 17, no. 4, Art. no. 905, Apr. 2017, doi: 10.3390/s17040905.
 
-[14] N. Häni, P. Roy, and V. Isler, "A comparative study of fruit detection and counting methods for yield mapping in apple orchards," *Journal of Field Robotics*, vol. 37, no. 2, pp. 263–282, Mar. 2020, doi: 10.1002/rob.21902.
+[14] N. Häni, P. Roy, and V. Isler, "A comparative study of fruit detection and counting methods for yield mapping in apple orchards," *Journal of Field Robotics*, vol. 37, no. 2, pp. 263-282, Mar. 2020, doi: 10.1002/rob.21902.
 
-[15] S. W. Chen et al., "Counting apples and oranges with deep learning: A data-driven approach," *IEEE Robotics and Automation Letters*, vol. 2, no. 2, pp. 781–788, Apr. 2017, doi: 10.1109/LRA.2017.2651944.
+[15] S. W. Chen et al., "Counting apples and oranges with deep learning: A data-driven approach," *IEEE Robotics and Automation Letters*, vol. 2, no. 2, pp. 781-788, Apr. 2017, doi: 10.1109/LRA.2017.2651944.
 
-[16] S. Bargoti and J. Underwood, "Deep fruit detection in orchards," in *Proc. IEEE International Conference on Robotics and Automation (ICRA)*, 2017, pp. 3626–3633, doi: 10.1109/ICRA.2017.7989417.
+[16] S. Bargoti and J. Underwood, "Deep fruit detection in orchards," in *Proc. IEEE International Conference on Robotics and Automation (ICRA)*, 2017, pp. 3626-3633, doi: 10.1109/ICRA.2017.7989417.
 
-[17] C.-Y. Wang, A. Bochkovskiy, and H.-Y. M. Liao, "YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors," in *Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*, 2023, pp. 7464–7475, doi: 10.1109/CVPR52729.2023.00721.
+[17] C.-Y. Wang, A. Bochkovskiy, and H.-Y. M. Liao, "YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors," in *Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*, 2023, pp. 7464-7475, doi: 10.1109/CVPR52729.2023.00721.
 
 [18] G. Jocher, A. Chaurasia, and J. Qiu, "Ultralytics YOLO," 2023. [Online]. Available: https://github.com/ultralytics/ultralytics
 
-[19] T.-Y. Lin et al., "Microsoft COCO: Common objects in context," in *Proc. European Conference on Computer Vision (ECCV)*, 2014, pp. 740–755, doi: 10.1007/978-3-319-10602-1_48.
+[19] T.-Y. Lin et al., "Microsoft COCO: Common objects in context," in *Proc. European Conference on Computer Vision (ECCV)*, 2014, pp. 740-755, doi: 10.1007/978-3-319-10602-1_48.
 
-[20] H. Zou and T. Hastie, "Regularization and variable selection via the elastic net," *Journal of the Royal Statistical Society B*, vol. 67, no. 2, pp. 301–320, 2005, doi: 10.1111/j.1467-9868.2005.00503.x.
+[20] H. Zou and T. Hastie, "Regularization and variable selection via the elastic net," *Journal of the Royal Statistical Society B*, vol. 67, no. 2, pp. 301-320, 2005, doi: 10.1111/j.1467-9868.2005.00503.x.
 
-[21] L. Breiman, "Random forests," *Machine Learning*, vol. 45, no. 1, pp. 5–32, 2001, doi: 10.1023/A:1010933404324.
+[21] L. Breiman, "Random forests," *Machine Learning*, vol. 45, no. 1, pp. 5-32, 2001, doi: 10.1023/A:1010933404324.
 
-[22] M. H. Junos, A. S. M. Khairuddin, S. Thannirmalai, and M. Dahari, "Automatic detection of oil palm fruits from UAV images using an improved YOLO model," *The Visual Computer*, vol. 38, no. 7, pp. 2341–2355, 2022, doi: 10.1007/s00371-021-02116-3.
+[22] M. H. Junos, A. S. M. Khairuddin, S. Thannirmalai, and M. Dahari, "Automatic detection of oil palm fruits from UAV images using an improved YOLO model," *The Visual Computer*, vol. 38, no. 7, pp. 2341-2355, 2022, doi: 10.1007/s00371-021-02116-3.
 
-[23] A. E. Hoerl and R. W. Kennard, "Ridge regression: Biased estimation for nonorthogonal problems," *Technometrics*, vol. 12, no. 1, pp. 55–67, 1970, doi: 10.1080/00401706.1970.10488634.
+[23] A. E. Hoerl and R. W. Kennard, "Ridge regression: Biased estimation for nonorthogonal problems," *Technometrics*, vol. 12, no. 1, pp. 55-67, 1970, doi: 10.1080/00401706.1970.10488634.
 
-[24] C. Cortes and V. Vapnik, "Support-vector networks," *Machine Learning*, vol. 20, no. 3, pp. 273–297, 1995, doi: 10.1007/BF00994018.
+[24] C. Cortes and V. Vapnik, "Support-vector networks," *Machine Learning*, vol. 20, no. 3, pp. 273-297, 1995, doi: 10.1007/BF00994018.
