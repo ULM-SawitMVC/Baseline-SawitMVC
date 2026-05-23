@@ -1,14 +1,43 @@
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
 .DS_Store
+.idea/
+.vscode/
 .env
+.env.*
 .venv/
+venv/
+env/
 .cache/
 *.egg-info/
 dist/
 build/
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+~$*
+
+# Large/generated experiment artifacts.
+runs/
+wandb/
+mlruns/
+checkpoints/
+weights/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.pkl
+*.joblib
 
 # External Hugging Face mirror (images live here when downloaded; annotations
 # are bundled at ground_truth/annotations/ so the repo is self-sufficient).
 SawitMVC-YOLO/
+images/
