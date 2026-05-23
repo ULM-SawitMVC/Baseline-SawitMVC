@@ -74,7 +74,7 @@ In the **GT detection setting**, the feature extractor reads ground-truth boundi
 
 The detector is strongest on B1 and weakest on B4. The per-class weakness on B4 and the moderate recall on B3 visible in Table 4 are revisited in Section III-D, where the per-class structure of the fixed-detector gap mirrors this profile.
 
-### C. Counter Features and Models
+### C. Feature Vectors
 
 For each tree, detections from all views are aggregated into a fixed-length feature vector. The 13-dimensional baseline F0 contains, for each class $c$, the total count $s_c$, the per-side maximum $m_c$, and the per-side mean $\mu_c$, plus the number of available views $n_{\text{views}}$:
 
@@ -94,9 +94,11 @@ $$
 F_{\text{all}} = F0 \cup \text{conf} \cup \text{spatial} \cup \text{distrib} \cup \text{composition}.
 $$
 
-Eight feature banks are evaluated: F0, F0+conf, F0+spatial, F0+distrib, F0+conf+spatial, F0+conf+distrib, F0+distrib+spatial, and F<sub>all</sub>. Five regression models are evaluated in both detection conditions: Linear Regression, Ridge [23], ElasticNet [20], SVM [24], and Random Forest [21]. Each counter maps a tree feature vector $\mathbf{x}_i$ to the count vector $\hat{\mathbf{y}}_i = f_{\theta}(\mathbf{x}_i)$.
+Eight feature banks are evaluated: F0, F0+conf, F0+spatial, F0+distrib, F0+conf+spatial, F0+conf+distrib, F0+distrib+spatial, and F<sub>all</sub>.
 
-### D. Evaluation Metrics
+### D. Counter Models and Evaluation Metrics
+
+Five regression models are evaluated in both detection conditions: Linear Regression, Ridge [23], ElasticNet [20], SVM [24], and Random Forest [21]. Each counter maps a tree feature vector $\mathbf{x}_i$ to the count vector $\hat{\mathbf{y}}_i = f_{\theta}(\mathbf{x}_i)$.
 
 All counter models are trained on the 716-tree training split and evaluated on the fixed 141-tree test split. Class-level $\pm 1$ correctness for tree $i$ and class $c$ is
 
