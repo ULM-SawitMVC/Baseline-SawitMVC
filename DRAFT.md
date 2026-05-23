@@ -14,8 +14,9 @@ Oil palm harvest planning depends on knowing not only how many fresh fruit bunch
 
 Computer vision can reduce manual effort, but tree-level counting is not the same as image-level detection. A detector estimates visible bunch appearances in one image. BBC-style planning needs the number of unique physical bunches on a tree, separated by class. Multi-view imaging helps because a bunch hidden from one side may be visible from another, yet it also creates duplicate visibility. A naive sum over all side-view detections therefore counts appearances rather than bunch identities. Fig. 1 illustrates one B3 bunch visible in three adjacent views.
 
-**Fig. 1.** Cross-view duplicate visibility of one B3 bunch in sides 1-3 of `DAMIMAS_A21B_0847`.  
-Recommended file: `figures/paper/fig01_cross_view_linking.png`.
+![Cross-view duplicate visibility of one B3 bunch](figures/paper/fig01_cross_view_linking.png)
+
+**Fig. 1.** Cross-view duplicate visibility of one B3 bunch in sides 1-3 of `DAMIMAS_A21B_0847`.
 
 Prior agricultural vision work has studied fruit detection and yield estimation with deep learning [1], [2], [7], including YOLO-style single-stage detectors [3], [4]. Multi-view fruit counting has also been studied as a way to reduce occlusion while avoiding double counting [5], [6]. Oil palm FFB detection and ripeness classification studies show the relevance of detectors in this crop, while also showing field challenges from visibility, maturity ambiguity, and class imbalance [8], [9], [10].
 
@@ -59,8 +60,9 @@ This is biased upward when one physical bunch is visible from multiple sides. In
 
 Fig. 2 summarizes the two detection conditions used in the benchmark. The GT detection setting supplies ground-truth boxes and classes to the counter. It measures how much error remains when detector output quality is removed as a source of failure. The fixed-detector setting supplies cached YOLOv26-medium outputs. It measures the full fixed detector-plus-counter pipeline while keeping the detector constant across counter models and feature banks.
 
-**Fig. 2.** Two benchmark conditions: GT detection setting and fixed-detector setting.  
-Recommended file: `figures/paper/fig02_detection_conditions.png`.
+![GT detection and fixed-detector pipeline diagram](figures/paper/fig02_detection_conditions.png)
+
+**Fig. 2.** Two benchmark conditions: GT detection setting and fixed-detector setting.
 
 The detector is strongest on B1 and weakest on B4. Table I reports validation detection performance for the fixed YOLOv26-medium detector.
 
@@ -177,8 +179,9 @@ Table IV holds the counter family fixed to Ridge and changes only the feature ba
 
 Fig. 3 shows the per-class accuracy gap and fixed-detector bias. The largest accuracy loss is on B3, while the fixed detector also undercounts B2 and B3 on average. These errors are consistent with a detector-quality bottleneck: missed detections and class confusions reach the counter before any aggregation model can correct them.
 
-**Fig. 3.** Per-class GT-vs-fixed-detector Class +/-1 Acc and fixed-detector bias.  
-Recommended file: `figures/paper/fig03_gap_bias.png`.
+![Per-class GT-vs-fixed-detector accuracy gap and fixed-detector bias](figures/paper/fig03_gap_bias.png)
+
+**Fig. 3.** Per-class GT-vs-fixed-detector Class +/-1 Acc and fixed-detector bias.
 
 Table V gives the central comparison. The GT detection setting is near ceiling with small signed biases. The fixed-detector pipeline has much lower Tree +/-1 Acc, despite using the strongest evaluated fixed-detector feature bank. The 20.57 percentage-point Class +/-1 Acc gap identifies detector output quality as the main remaining error source.
 
