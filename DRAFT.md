@@ -60,19 +60,19 @@ The benchmark isolates detector error from counter error by evaluating the same 
 
 **Fig. 2.** Two detection conditions used in the benchmark. *Top:* the GT detection setting supplies ground-truth boxes and classes to the tree-level feature extractor, so detector output quality is removed as an error source. *Bottom:* the fixed-detector setting supplies cached YOLOv26-medium outputs, so detector misses and class confusions enter the pipeline before counting.
 
-In the **GT detection setting**, the feature extractor reads ground-truth bounding boxes and classes directly from the annotation files. Counters trained on these features upper-bound how well a tree-level aggregator can perform when detections are accurate. In the **fixed-detector setting**, the feature extractor reads cached YOLOv26-medium [18] predictions. A single detector checkpoint is used for all counter and feature configurations so that any observed differences are attributable to the counter or features, not to detector retraining.
+In the *GT detection setting*, the feature extractor reads ground-truth bounding boxes and classes directly from the annotation files. Counters trained on these features upper-bound how well a tree-level aggregator can perform when detections are accurate. In the *fixed-detector setting*, the feature extractor reads cached YOLOv26-medium [18] predictions. A single detector checkpoint is used for all counter and feature configurations so that any observed differences are attributable to the counter or features, not to detector retraining.
 
-**Table 5. YOLOv26-medium validation detection performance, reported under the COCO mAP50 convention [19].**
+**Table 1. YOLOv26-medium validation detection performance, reported under the COCO mAP50 convention [19].**
 
 | Class | mAP50 | Recall |
 |:---:|---:|---:|
-| B1 | 0.746 | 0.801 |
+| B1 | **0.746** | **0.801** |
 | B2 | 0.425 | 0.433 |
 | B3 | 0.550 | 0.656 |
 | B4 | 0.363 | 0.389 |
 | Overall | 0.521 | 0.570 |
 
-The detector is strongest on B1 and weakest on B4. The per-class weakness on B4 and the moderate recall on B3 visible in Table 5 are revisited in Section III-D, where the per-class structure of the fixed-detector gap mirrors this profile.
+The detector is strongest on B1 and weakest on B4. The per-class weakness on B4 and the moderate recall on B3 visible in Table 1 are revisited in Section III-D, where the per-class structure of the fixed-detector gap mirrors this profile.
 
 ### C. Feature Vectors
 
@@ -132,50 +132,50 @@ The results are arranged to follow the argument: the ceiling first (Section III-
 
 Table 1 reports counting results when the counter receives GT detections. Naive appearance summation fails on the test set, confirming that duplicate visibility cannot be ignored. Both heuristic divisor rules quickly recover to above 95% Class ±1 Acc, and learned counters push this to 98.05% with ElasticNet. The four best machine-learning counters (ElasticNet, SVM, Ridge, LR) sit within 0.5 percentage points of each other on Class ±1 Acc and within 2.2 points on Tree ±1 Acc; Random Forest is the only counter that underperforms in this setting. The counter formulation, then, is not the limiting factor: when detector evidence is accurate, simple regularized linear models suffice to recover the BBC count.
 
-**Table 1. Counting under the GT detection setting on the 141-tree test split.**
+**Table 2. Counting under the GT detection setting on the 141-tree test split.**
 
 | Method | Type | Class ±1 Acc | Tree ±1 Acc | Macro MAE |
 |---|---|---:|---:|---:|
 | Naive sum | Heuristic | 50.00% | 6.38% | 2.142 |
 | Global divisor | Heuristic | 95.39% | 85.11% | 0.376 |
 | Visibility-adaptive divisor | Heuristic | 95.92% | 87.23% | 0.340 |
-| ElasticNet | ML | 98.05% | 92.20% | 0.277 |
-| SVM | ML | 97.87% | 91.49% | 0.266 |
+| ElasticNet | ML | **98.05%** | **92.20%** | 0.277 |
+| SVM | ML | 97.87% | 91.49% | **0.266** |
 | Ridge | ML | 97.70% | 90.78% | 0.275 |
 | Linear Regression | ML | 97.52% | 90.07% | 0.277 |
 | Random Forest | ML | 95.92% | 84.40% | 0.365 |
 
 ### B. Fixed-Detector Setting
 
-Table 2 holds the feature bank at F0 and compares the five counter families when they receive cached YOLOv26-medium outputs. The best F0 result, ElasticNet at 76.42% Class ±1 Acc, is more than 20 percentage points below the ElasticNet result of the GT detection setting under the same feature bank. All five counters fall within a 3.2 percentage-point window on Class ±1 Acc, reinforcing that the counter family is not what changed between the two settings; only the detector did.
+Table 3 holds the feature bank at F0 and compares the five counter families when they receive cached YOLOv26-medium outputs. The best F0 result, ElasticNet at 76.42% Class ±1 Acc, is more than 20 percentage points below the ElasticNet result of the GT detection setting under the same feature bank. All five counters fall within a 3.2 percentage-point window on Class ±1 Acc, reinforcing that the counter family is not what changed between the two settings; only the detector did.
 
-Per-class accuracies, listed in Table 3, reveal where the loss concentrates: B1 stays above 95% across all five counters, B2 sits between 73.76% and 80.14%, and B3 collapses to between 55% and 56%. B4 is intermediate, between 67% and 73%. This per-class profile mirrors the per-class detector performance in Table 5, where B3 has moderate recall and B4 has the lowest recall.
+Per-class accuracies, listed in Table 4, reveal where the loss concentrates: B1 stays above 95% across all five counters, B2 sits between 73.76% and 80.14%, and B3 collapses to between 55% and 56%. B4 is intermediate, between 67% and 73%. This per-class profile mirrors the per-class detector performance in Table 1, where B3 has moderate recall and B4 has the lowest recall.
 
-**Table 2. Fixed-detector counting with F0 features on the 141-tree test split.**
+**Table 3. Fixed-detector counting with F0 features on the 141-tree test split.**
 
 | Counter | Class ±1 Acc | Tree ±1 Acc | Macro MAE |
 |---|---:|---:|---:|
-| ElasticNet | 76.42% | 29.79% | 1.043 |
+| ElasticNet | **76.42%** | 29.79% | **1.043** |
 | Ridge | 76.06% | 28.37% | 1.053 |
-| Linear Regression | 75.71% | 30.50% | 1.048 |
-| SVM | 74.82% | 29.08% | 1.043 |
+| Linear Regression | 75.71% | **30.50%** | 1.048 |
+| SVM | 74.82% | 29.08% | **1.043** |
 | Random Forest | 73.23% | 26.95% | 1.110 |
 
-**Table 3. Per-class Class ±1 Acc of fixed-detector counters with F0 features on the 141-tree test split.**
+**Table 4. Per-class Class ±1 Acc of fixed-detector counters with F0 features on the 141-tree test split.**
 
 | Counter | B1 | B2 | B3 | B4 |
 |---|---:|---:|---:|---:|
-| ElasticNet | 96.45% | 80.14% | 56.03% | 73.05% |
-| Ridge | 95.74% | 80.14% | 56.03% | 72.34% |
-| Linear Regression | 96.45% | 79.43% | 55.32% | 71.63% |
+| ElasticNet | **96.45%** | **80.14%** | **56.03%** | **73.05%** |
+| Ridge | 95.74% | **80.14%** | **56.03%** | 72.34% |
+| Linear Regression | **96.45%** | 79.43% | 55.32% | 71.63% |
 | SVM | 95.74% | 76.60% | 55.32% | 71.63% |
-| Random Forest | 95.74% | 73.76% | 56.03% | 67.38% |
+| Random Forest | 95.74% | 73.76% | **56.03%** | 67.38% |
 
 ### C. Feature Ablation
 
-Table 4 holds the counter family fixed at Ridge (the strongest counter under the richest feature bank) and varies only the feature configuration. Spatial features alone bring 0.54 percentage points over F0, confidence and side-distribution alone do not help, and the full F<sub>all</sub> bank reaches 77.48% Class ±1 Acc and 32.62% Tree ±1 Acc. The headline absolute gain from F0 to F<sub>all</sub> is **+1.42 percentage points** in Class ±1 Acc and **+4.25 percentage points** in Tree ±1 Acc. This is the largest improvement that any feature ablation produces in the fixed-detector setting, and it is small relative to the 20.57 percentage points lost between the two settings. Feature engineering, therefore, can only marginally compensate for what the detector did not supply.
+Table 5 holds the counter family fixed at Ridge (the strongest counter under the richest feature bank) and varies only the feature configuration. Spatial features alone bring 0.54 percentage points over F0, confidence and side-distribution alone do not help, and the full F<sub>all</sub> bank reaches 77.48% Class ±1 Acc and 32.62% Tree ±1 Acc. The headline absolute gain from F0 to F<sub>all</sub> is **+1.42 percentage points** in Class ±1 Acc and **+4.25 percentage points** in Tree ±1 Acc. This is the largest improvement that any feature ablation produces in the fixed-detector setting, and it is small relative to the 20.57 percentage points lost between the two settings. Feature engineering, therefore, can only marginally compensate for what the detector did not supply.
 
-**Table 4. Ridge feature ablation in the fixed-detector setting.**
+**Table 5. Ridge feature ablation in the fixed-detector setting.**
 
 | Features | Dim | Class ±1 Acc | Tree ±1 Acc | Macro MAE |
 |---|---:|---:|---:|---:|
@@ -186,7 +186,7 @@ Table 4 holds the counter family fixed at Ridge (the strongest counter under the
 | F0 + confidence + spatial | 41 | 76.24% | 29.08% | 1.059 |
 | F0 + confidence + side-distribution | 53 | 76.42% | 29.79% | 1.060 |
 | F0 + side-distribution + spatial | 41 | 75.71% | 30.50% | 1.048 |
-| F<sub>all</sub> | 67 | 77.48% | 32.62% | 1.035 |
+| F<sub>all</sub> | 67 | **77.48%** | **32.62%** | **1.035** |
 
 ### D. GT vs Fixed-Detector Gap
 
@@ -196,7 +196,7 @@ Fig. 3 visualises the central comparison. The top panel shows per-class Class ±
 
 **Fig. 3.** *Top:* Per-class Class ±1 Acc for the best counter in each detection condition (ElasticNet under GT; Ridge + F<sub>all</sub> under the fixed detector). Counting is near ceiling under GT detection but drops sharply under the fixed detector. *Bottom:* Per-class signed bias of Ridge + F<sub>all</sub> in the fixed-detector setting. Negative values indicate systematic under-counting; the under-count is concentrated on B2 and especially B3.
 
-Three observations follow from Fig. 3. First, the absolute gap is large: 20.57 percentage points in Class ±1 Acc and 59.58 percentage points in Tree ±1 Acc, summarised in Table 6. Second, the gap is per-class structured: B1 loses only ≈2.8 pp between the two conditions, B2 loses ≈16.3 pp, B3 loses 36.2 pp, and B4 loses ≈27.0 pp. This per-class profile aligns with the per-class detector performance in Table 5: the classes the detector struggles to recall (B3, B4) are also the classes where the fixed-detector counter falls furthest below the GT ceiling. Third, the bias is directional. The fixed-detector Ridge + F<sub>all</sub> pipeline under-counts B2 by 0.078 and B3 by 0.177 bunches per tree on average. Because plantation-level yield estimates aggregate per-tree predictions across blocks, a systematic per-class undercount in B2 and B3 propagates into a systematic underestimate of the next-cycle harvest pipeline.
+Three observations follow from Fig. 3. First, the absolute gap is large: 20.57 percentage points in Class ±1 Acc and 59.58 percentage points in Tree ±1 Acc, summarised in Table 6. Second, the gap is per-class structured: B1 loses only ≈2.8 pp between the two conditions, B2 loses ≈16.3 pp, B3 loses 36.2 pp, and B4 loses ≈27.0 pp. This per-class profile aligns with the per-class detector performance in Table 1: the classes the detector struggles to recall (B3, B4) are also the classes where the fixed-detector counter falls furthest below the GT ceiling. Third, the bias is directional. The fixed-detector Ridge + F<sub>all</sub> pipeline under-counts B2 by 0.078 and B3 by 0.177 bunches per tree on average. Because plantation-level yield estimates aggregate per-tree predictions across blocks, a systematic per-class undercount in B2 and B3 propagates into a systematic underestimate of the next-cycle harvest pipeline.
 
 **Table 6. Consolidated test-set summary.**
 
@@ -205,7 +205,11 @@ Three observations follow from Fig. 3. First, the absolute gap is large: 20.57 p
 | GT detection | ElasticNet | 98.05% | 92.20% | −0.050 | +0.043 | −0.064 | −0.028 |
 | Fixed-detector | Ridge + F<sub>all</sub> | 77.48% | 32.62% | +0.014 | −0.078 | −0.177 | +0.071 |
 
-Read together, Tables 1, 2, 3, 4, and 6 with Fig. 3 support a single interpretation. Multi-view duplicate visibility is real and large, but it is well handled by learned tree-level aggregation when detector evidence is accurate (Section III-A). Once a fixed real-world detector replaces ground-truth boxes, counter performance collapses (Section III-B), and richer features or different counter families recover only a small fraction of the loss (Section III-C). The per-class structure of the gap and of the bias (Section III-D and Fig. 3) is consistent with a detector-quality bottleneck rather than a counter limitation. Future work should therefore prioritize improving detector recall on B3 and B4, calibrating detection confidence for counting use, and using explicit cross-view association or geometry-aware aggregation rather than expanding the tree-level feature bank further.
+Read together, Tables 1 through 6 with Fig. 3 support a single interpretation. Multi-view duplicate visibility is real and large, but it is well handled by learned tree-level aggregation when detector evidence is accurate (Section III-A). Once a fixed real-world detector replaces ground-truth boxes, counter performance collapses (Section III-B), and richer features or different counter families recover only a small fraction of the loss (Section III-C). The per-class structure of the gap and of the bias (Section III-D and Fig. 3) is consistent with a detector-quality bottleneck rather than a counter limitation.
+
+Several limitations bound the scope of these findings. The benchmark uses a single dataset of 953 trees from two plantations in South Kalimantan, so absolute numbers may shift on other regions, varieties, or acquisition protocols. Only one detector checkpoint (YOLOv26-medium) is evaluated, and a different detector family could change the per-class error profile even if the headline gap remains. The tree-level counters treat each tree independently and ignore plantation-scale spatial or temporal regularities that operational forecasts sometimes exploit. Finally, the four-class B1 through B4 taxonomy admits visual ambiguity at the B2/B3 and B3/B4 boundaries, which places a soft cap on what any detector-plus-counter pipeline can ultimately achieve.
+
+Future work should therefore prioritize improving detector recall on B3 and B4, calibrating detection confidence for counting use, and using explicit cross-view association or geometry-aware aggregation rather than expanding the tree-level feature bank further.
 
 ## IV. Conclusion
 
