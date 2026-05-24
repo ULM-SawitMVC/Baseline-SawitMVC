@@ -1,10 +1,10 @@
 # Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector
 
-Muhammad Zainal Muttaqin, Fatma Indriani, Setyo Wahyu Saputro, Alia Rahmi, Triando Hamonangan Saragih, Rahmat Budianoor, Hartoni, Dwi Kartini, and Naufal Said
+Muhammad Zainal Muttaqin¹, Fatma Indriani¹, Setyo Wahyu Saputro¹, Alia Rahmi¹, Triando Hamonangan Saragih¹, Rahmat Budianoor¹, Hartoni², Dwi Kartini¹, and Naufal Said³
 
-Department of Computer Science, Faculty of Mathematics and Natural Sciences, Lambung Mangkurat University, Banjarbaru, Indonesia  
-Department of Agro-Industrial Technology, Faculty of Agriculture, Lambung Mangkurat University, Banjarmasin, Indonesia  
-Department of Agribusiness, Faculty of Agriculture, Lambung Mangkurat University, Banjarmasin, Indonesia  
+¹ Department of Computer Science, Faculty of Mathematics and Natural Sciences, Lambung Mangkurat University, Banjarbaru, Indonesia  
+² Department of Agro-Industrial Technology, Faculty of Agriculture, Lambung Mangkurat University, Banjarmasin, Indonesia  
+³ Department of Agribusiness, Faculty of Agriculture, Lambung Mangkurat University, Banjarmasin, Indonesia  
 Corresponding author: Fatma Indriani, f.indriani@ulm.ac.id
 
 ## Abstract
