@@ -211,7 +211,7 @@ def figure_cross_view_linking() -> None:
 def figure_detection_conditions() -> None:
     """Column-aligned two-row pipeline. Both rows share the downstream
     'features -> counter -> output' columns; only the detection-input zone
-    differs (GT oracle box vs. images + YOLO sub-stages)."""
+    differs (GT detection input vs. images + YOLO sub-stages)."""
     fig, ax = plt.subplots(figsize=(7.9, 2.95))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
@@ -272,7 +272,7 @@ def figure_detection_conditions() -> None:
 
     def gt_detect(y, color):
         draw_stage(x_detect, y, detect_w, row_h,
-                   "GT boxes & classes\n(oracle annotations)", color)
+                   "GT boxes & classes", color)
 
     def fixed_detect(y, color):
         sub_gap = 0.018
