@@ -8,7 +8,7 @@
 
 SawitMVC-YOLO is a multi-view dataset and baseline for counting oil palm fresh fruit bunches (FFB; Indonesian: TBS) at tree level. The dataset contains **953 oil palm trees**, **3,992 images**, and **9,823 unique bunches** collected from DAMIMAS and LONSUM plantations in Kabupaten Tanah Laut, South Kalimantan, Indonesia. Each tree is photographed from four or eight side views. This makes the task different from ordinary single-image detection, because one physical bunch can appear in several images of the same tree.
 
-The main task in this repository is therefore not only detecting bunches in images, but also estimating the final number of B1, B2, B3, and B4 bunches for each tree. The practical baseline follows a simple two-stage pipeline. First, YOLOv26-medium (`y26mv2`) detects bunches in every view. Second, all detections from the same tree are summarized into tree-level features and counted using Ridge regression. The best current end-to-end configuration is **Ridge regression with the 67-dimensional `F_all` feature set**, achieving **77.48% Class ±1 Acc**, **32.62% Tree ±1 Acc**, and **1.036 Macro MAE** on the 141-tree test split.
+The main task in this repository is therefore not only detecting bunches in images, but also estimating the final number of B1, B2, B3, and B4 bunches for each tree. The practical baseline follows a simple two-stage pipeline. First, YOLO26m (`y26mv2`) detects bunches in every view. Second, all detections from the same tree are summarized into tree-level features and counted using Ridge regression. The best current end-to-end configuration is **Ridge regression with the 67-dimensional `F_all` feature set**, achieving **77.48% Class ±1 Acc**, **32.62% Tree ±1 Acc**, and **1.036 Macro MAE** on the 141-tree test split.
 
 The most important finding is that the counting step can work very well when detections are correct. With ground-truth detections, the best machine-learning counter reaches **98.05% Class ±1 Acc** and **92.20% Tree ±1 Acc**. The large gap between 98.05% and 77.48% shows that the main remaining limitation is detector quality, especially for B3 and B4 bunches. This repository provides the dataset split, detector weights, cached predictions, evaluation files, and reproduction scripts so future methods can be compared against the same baseline.
 
@@ -18,7 +18,7 @@ The most important finding is that the counting step can work very well when det
 
 - **The latest official split is 75/10/15 at tree level:** 716 training trees, 96 validation trees, and 141 test trees.
 - **Naive multi-view counting is not valid:** adding all visible bunch appearances overcounts the true unique bunch total by about **1.83x**.
-- **The main practical baseline is one detector-plus-counter pipeline:** YOLOv26-medium (`y26mv2`) followed by Ridge regression on `F_all`.
+- **The main practical baseline is one detector-plus-counter pipeline:** YOLO26m (`y26mv2`) followed by Ridge regression on `F_all`.
 - **The best end-to-end result is 77.48% Class ±1 Acc:** this means the predicted class count is within one bunch of the ground truth for most class-level tree counts.
 - **Controlled comparison matters:** with the same `F0` features, ElasticNet is best at **76.42%**; with the same `F_all` features, Ridge is best at **77.48%**.
 - **More features do not help every model:** `F_all` improves Ridge and RF, but reduces LR, SVM, and ElasticNet on the same test split.
@@ -35,7 +35,7 @@ This repository contributes:
 
 1. A multi-view oil palm bunch dataset with 953 trees, 3,992 images, and 9,823 unique bunches.
 2. A latest official 75/10/15 split with 716 train, 96 validation, and 141 test trees.
-3. A practical baseline that uses YOLOv26-medium detections and a tree-level Ridge regression counter.
+3. A practical baseline that uses YOLO26m detections and a tree-level Ridge regression counter.
 4. A clear comparison between naive counting, counting with perfect detections, and counting with real YOLO detections.
 5. Reproduction scripts, cached predictions, released weights, and result files for transparent comparison.
 
@@ -97,9 +97,9 @@ In SawitMVC-YOLO, naive summation overcounts the unique bunch total by approxima
 
 ### 4.1 YOLO Detector
 
-The detector is **YOLOv26-medium** with weights identified as `y26mv2`. It was trained on the official training split for 60 epochs using batch size 32, image size 640, patience 60, and seed 42. The released weights are stored at [`models/yolo/y26mv2.pt`](models/yolo/y26mv2.pt).
+The detector is **YOLO26m** with weights identified as `y26mv2`. It was trained on the official training split for 60 epochs using batch size 32, image size 640, patience 60, and seed 42. The released weights are stored at [`models/yolo/y26mv2.pt`](models/yolo/y26mv2.pt).
 
-**Table 2. Validation detection performance of YOLOv26-medium (`y26mv2`).**
+**Table 2. Validation detection performance of YOLO26m (`y26mv2`).**
 
 | Class | Instances | Precision | Recall | mAP50 | mAP50-95 |
 |:-----:|----------:|----------:|-------:|------:|---------:|
@@ -155,7 +155,7 @@ The main metric is **Class ±1 Acc**. For each class, a prediction is counted as
 The repository reports one main practical baseline and several supporting checks. The main practical baseline is:
 
 ```text
-YOLOv26-medium detections -> F_all tree-level features -> Ridge regression -> B1-B4 tree counts
+YOLO26m detections -> F_all tree-level features -> Ridge regression -> B1-B4 tree counts
 ```
 
 The supporting checks are included to explain the result, not to present many competing baselines. The first check uses ground-truth detections to show how severe duplicate observation is. The second check also uses ground-truth detections to show how accurate counting can become when detector mistakes are removed. The controlled YOLO-based comparison then asks a fairer model-selection question: if the model is fixed, what happens when the feature set changes from `F0` to `F_all`?
@@ -424,7 +424,7 @@ The reference list in this README is intentionally incomplete. Verified peer-rev
 
 ## 9. Conclusion
 
-SawitMVC-YOLO provides a reproducible benchmark for oil palm bunch counting from multi-view tree images. The main baseline is intentionally simple: YOLOv26-medium detects bunches in each image, tree-level features summarize the detections, and Ridge regression predicts the final B1-B4 counts. This baseline reaches **77.48% Class ±1 Acc** on the 141-tree test split.
+SawitMVC-YOLO provides a reproducible benchmark for oil palm bunch counting from multi-view tree images. The main baseline is intentionally simple: YOLO26m detects bunches in each image, tree-level features summarize the detections, and Ridge regression predicts the final B1-B4 counts. This baseline reaches **77.48% Class ±1 Acc** on the 141-tree test split.
 
 The strongest finding is that counting can be much more accurate when detections are correct. With ground-truth detections, the counter reaches **98.05% Class ±1 Acc**. The difference between these results shows that the next major gain should come from better detection and stronger multi-view evidence handling, especially for B3 and B4.
 

@@ -13,7 +13,7 @@ The active detector is:
 
 | File | Role |
 |------|------|
-| [`yolo/y26mv2.pt`](yolo/y26mv2.pt) | Canonical YOLOv26-medium weight used by the latest baseline. |
+| [`yolo/y26mv2.pt`](yolo/y26mv2.pt) | Canonical YOLO26m weight used by the latest baseline. |
 | [`yolo/y26me60p60b32s42v2.pt`](yolo/y26me60p60b32s42v2.pt) | Original source weight before it is copied to `y26mv2.pt` in the reproduction flow. |
 | [`yolo/train_logs/y26m_e60_p60_b32_s42_v2.txt`](yolo/train_logs/y26m_e60_p60_b32_s42_v2.txt) | Training log for the published `y26mv2` run. |
 

@@ -9,7 +9,7 @@ YOLO inference.
 
 | Folder | Detector | Files | Description |
 |--------|----------|------:|-------------|
-| [`y26mv2_per_tree/`](y26mv2_per_tree/) | YOLOv26 medium (`y26mv2`) | 953 | One JSON per tree; camera sides grouped under `images.side_*`. |
+| [`y26mv2_per_tree/`](y26mv2_per_tree/) | YOLO26m (`y26mv2`) | 953 | One JSON per tree; camera sides grouped under `images.side_*`. |
 
 ## Per-tree JSON schema
 

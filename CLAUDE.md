@@ -91,7 +91,7 @@ Research baseline untuk menghitung dan mengklasifikasi kematangan tandan buah se
 ## Tech stack
 
 - **Python** ≥ 3.10
-- **YOLOv26** (Ultralytics) — detektor objek; baseline aktif: `y26mv2` (medium)
+- **YOLO26m** (Ultralytics) — detektor objek; baseline aktif: `y26mv2`
 - **scikit-learn** — Ridge (RidgeCV), ElasticNet (MultiTaskElasticNetCV), LR, SVM, RF
 - **XGBoost / LightGBM** — dipakai di eksperimen ablasi (v3/v4), bukan stored baseline
 - **Optuna** — Bayesian HPO di exp_counting_v4.py (60–80 trials)

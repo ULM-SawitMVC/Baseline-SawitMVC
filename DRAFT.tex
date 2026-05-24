@@ -37,7 +37,7 @@ paper benchmarks multi-view tree-level FFB counting for B1, B2, B3, and B4
 under two carefully isolated detection conditions. In the \textit{GT detection
 setting}, counters receive ground-truth boxes and classes, removing detector
 quality as a source of error. In the \textit{fixed-detector setting}, counters
-receive cached YOLOv26-medium outputs, measuring the deployed
+receive cached YOLO26m outputs, measuring the deployed
 detector-plus-counter pipeline. The benchmark uses 953 trees, 3,992 side-view
 images, four maturity classes, 4 to 8 views per tree, and a fixed 716/96/141
 train/validation/test split. Under GT detection, ElasticNet reaches 98.05\%
@@ -120,7 +120,7 @@ are:
 \begin{enumerate}
   \item \textbf{A systematic benchmark of tree-level bunch counting under two
     detection conditions.} Counter models are evaluated under GT detections
-    (upper bound on counter performance) and under cached YOLOv26-medium
+    (upper bound on counter performance) and under cached YOLO26m
     outputs (deployed pipeline), with the same dataset split and the same
     evaluation metrics.
   \item \textbf{A feature ablation under realistic detector outputs.} Eight
@@ -177,7 +177,7 @@ Fig.~\ref{fig:conditions}.
   GT detection setting supplies ground-truth boxes and classes to the
   tree-level feature extractor, so detector output quality is removed as an
   error source. \textit{Bottom:} the fixed-detector setting supplies cached
-  YOLOv26-medium outputs, so detector misses and class confusions enter the
+  YOLO26m outputs, so detector misses and class confusions enter the
   pipeline before counting.}
   \label{fig:conditions}
 \end{figure}
@@ -186,7 +186,7 @@ In the \textit{GT detection setting}, the feature extractor reads ground-truth
 bounding boxes and classes directly from the annotation files. Counters trained
 on these features upper-bound how well a tree-level aggregator can perform when
 detections are accurate. In the \textit{fixed-detector setting}, the feature
-extractor reads cached YOLOv26-medium~\cite{ref18} predictions. A single
+extractor reads cached YOLO26m~\cite{ref18} predictions. A single
 detector checkpoint is used for all counter and feature configurations so that
 any observed differences are attributable to the counter or features, not to
 detector retraining.
@@ -195,7 +195,7 @@ detector retraining.
   \centering
   \footnotesize
   \setlength{\tabcolsep}{4pt}
-  \caption{YOLOv26-medium validation detection performance, reported under the
+  \caption{YOLO26m validation detection performance, reported under the
     COCO mAP50 convention~\cite{ref19}.}
   \label{tab:yolo}
   \begin{tabular}{@{}lrr@{}}
@@ -345,7 +345,7 @@ models suffice to recover the BBC count.
 \label{sec:fixed}
 
 Table~\ref{tab:fixed} holds the feature bank at F0 and compares the five
-counter families when they receive cached YOLOv26-medium outputs. The best F0
+counter families when they receive cached YOLO26m outputs. The best F0
 result, ElasticNet at 76.42\% Class $\pm$1 Acc, is more than 20 percentage
 points below the ElasticNet result of the GT detection setting under the same
 feature bank. All five counters fall within a 3.2 percentage-point window on
@@ -501,7 +501,7 @@ detector-quality bottleneck rather than a counter limitation.
 Several limitations bound the scope of these findings. The benchmark uses a
 single dataset of 953 trees from two plantations in South Kalimantan, so
 absolute numbers may shift on other regions, varieties, or acquisition
-protocols. Only one detector checkpoint (YOLOv26-medium) is evaluated, and a
+protocols. Only one detector checkpoint (YOLO26m) is evaluated, and a
 different detector family could change the per-class error profile even if the
 headline gap remains. The tree-level counters treat each tree independently and
 ignore plantation-scale spatial or temporal regularities that operational
@@ -523,7 +523,7 @@ fixed detector by evaluating the same counters in a GT detection setting and a
 fixed-detector setting. Under GT detection, ElasticNet reaches 98.05\% Class
 $\pm$1 Acc and 92.20\% Tree $\pm$1 Acc on the 141-tree test split, showing
 that the tree-level counter is near ceiling when detections are accurate. Under
-the fixed YOLOv26-medium detector, the best Ridge + $F_{\text{all}}$ pipeline
+the fixed YOLO26m detector, the best Ridge + $F_{\text{all}}$ pipeline
 reaches 77.48\% Class $\pm$1 Acc and 32.62\% Tree $\pm$1 Acc, and an
 eight-bank feature ablation closes only $\approx$1.4 percentage points of the
 gap. The remaining 20.57 percentage-point Class $\pm$1 Acc gap is therefore a
@@ -660,9 +660,10 @@ Recognition (CVPR)}, 2023, pp.~7464--7475,
 doi: \url{10.1109/CVPR52729.2023.00721}.
 
 \bibitem{ref18}
-G.~Jocher, A.~Chaurasia, and J.~Qiu,
-``Ultralytics YOLO,'' 2023. [Online]. Available:
-\url{https://github.com/ultralytics/ultralytics}
+G.~Jocher and J.~Qiu,
+``Ultralytics YOLO26,'' version 26.0.0, 2026. [Software].
+Available: \url{https://github.com/ultralytics/ultralytics}. License:
+AGPL-3.0.
 
 \bibitem{ref19}
 T.-Y.~Lin et al.,

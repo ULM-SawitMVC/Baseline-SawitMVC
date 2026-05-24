@@ -281,7 +281,7 @@ def figure_detection_conditions() -> None:
         x2 = x_detect + sub_w + sub_gap
         draw_stage(x1, y, sub_w, row_h, "Multi-view\nimages", color, fontsize=8.8)
         draw_arrow(x1 + sub_w, y, x2)
-        draw_stage(x2, y, sub_w, row_h, "YOLOv26\noutputs", color, fontsize=8.8)
+        draw_stage(x2, y, sub_w, row_h, "YOLO26m\noutputs", color, fontsize=8.8)
 
     draw_row(0.72, "GT detection\nsetting",
              GT_COLOR, "#eef6f1", gt_detect)
