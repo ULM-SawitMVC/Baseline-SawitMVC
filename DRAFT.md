@@ -10,7 +10,7 @@ Oil palm, fresh fruit bunch, black bunch census, multi-view counting, object det
 
 ## I. Introduction
 
-Oil palm harvest planning is driven by Black Bunch Census (BBC), a field practice in which counters estimate, for every tree, how many bunches belong to each operational maturity class: typically B1 (ripe, harvest now), B2 (imminent), B3 (next cycle), and B4 (future inventory) [12]. The decision-relevant signal is therefore not the total number of bunches on a tree, but the four-dimensional count vector across maturity classes. Image-based BBC must reproduce this per-class disaggregation rather than collapse it into a single total.
+Oil palm harvest planning is driven by Black Bunch Census (BBC), a field practice in which counters estimate, for every tree, how many bunches belong to each operational maturity class: typically B1 (ripe, harvest now), B2 (imminent), B3 (next cycle), and B4 (future inventory) [11]. The decision-relevant signal is therefore not the total number of bunches on a tree, but the four-dimensional count vector across maturity classes. Image-based BBC must reproduce this per-class disaggregation rather than collapse it into a single total.
 
 Tree-level counting is geometrically harder than image-level detection [1]. Bunches surround the full circumference of an oil palm, so a single image misses bunches because of occlusion, viewing angle, or overlapping fronds. Multi-view acquisition reduces missed bunches by photographing a tree from four or eight side views, but the same physical bunch then appears in several of those images. Fig. 1 illustrates the effect: one B3 bunch is visible, and would be detected, in three adjacent side views of tree `DAMIMAS_A21B_0847`. A naive sum over per-image detections therefore counts appearances, not bunch identities, and is biased upward by roughly a factor of two on this dataset.
 
@@ -18,11 +18,11 @@ Tree-level counting is geometrically harder than image-level detection [1]. Bunc
 
 **Fig. 1.** A single physical B3 bunch on tree `DAMIMAS_A21B_0847` is visible across sides 1, 2, and 3. If every per-image detection is counted, three appearances are added for one bunch. Tree-level counting must therefore aggregate evidence across views rather than sum it.
 
-Prior work frames the problem from three directions. Oil palm FFB detection and ripeness classification have been studied with both two-stage and YOLO-style detectors [9], [10], [11], [13]; these works report usable mAP on FFB but also document recurring weaknesses on partially occluded or maturity-ambiguous bunches.
+Prior work frames the problem from three directions. Oil palm FFB detection and ripeness classification have been studied with both two-stage and YOLO-style detectors [8], [9], [10], [12]; these works report usable mAP on FFB but also document recurring weaknesses on partially occluded or maturity-ambiguous bunches.
 
-Multi-view fruit aggregation has been used in fruit recognition and yield estimation, including methods that explicitly fuse evidence across views to avoid double counting [5], [6], [2]. Recent plant-phenotyping work has also treated sparse or calibrated viewpoints as an association problem, either by solving multi-view triangulation without known correspondences [3] or by contrasting few-view counting with denser 3D reconstruction [4]. Comparative studies on apple orchards have further refined these pipelines [8], [7]. These methods, however, are evaluated mainly on smaller tree-fruit crops with simpler geometry than oil palm, and they do not isolate detector quality from counter quality.
+Multi-view fruit aggregation has been used in fruit recognition and yield estimation, including methods that explicitly fuse evidence across views to avoid double counting [2], [5], [6]. Recent plant-phenotyping work has also treated sparse or calibrated viewpoints as an association problem, either by solving multi-view triangulation without known correspondences [3] or by contrasting few-view counting with denser 3D reconstruction [4]. Comparative studies on apple orchards have further refined these pipelines [6], [7]. These methods, however, are evaluated mainly on smaller tree-fruit crops with simpler geometry than oil palm, and they do not isolate detector quality from counter quality.
 
-Regression-based counting and yield estimation in agricultural vision are well established [1], [8], [7], and YOLO-style single-stage detectors are now standard front-ends for such pipelines [14], [15]. In this line of work, a regressor maps aggregate detection statistics to a target count. The regressor is usually tested only on the detector outputs at hand, so detector quality and counter quality remain coupled.
+Regression-based counting and yield estimation in agricultural vision are well established [1], [6], [7], and YOLO-style single-stage detectors are now standard front-ends for such pipelines [13], [14]. In this line of work, a regressor maps aggregate detection statistics to a target count. The regressor is usually tested only on the detector outputs at hand, so detector quality and counter quality remain coupled.
 
 What is missing is a benchmark that determines, for tree-level multi-view BBC counting, whether the limiting factor lies in the detector or in the tree-level counter. Existing reports usually fix one component and tune the other, which conflates two error sources. This benchmark tests that gap on SawitMVC-YOLO by evaluating the same counters under GT detections and cached YOLO26m outputs, ablating eight feature banks under realistic detector outputs, and measuring how much of the 20.57 percentage-point Class ±1 Acc gap can be recovered by feature richness or counter choice.
 
@@ -56,9 +56,9 @@ The benchmark isolates detector error from counter error by evaluating the same 
 
 **Fig. 2.** Two detection conditions used in the benchmark. *Top:* the GT detection setting supplies ground-truth boxes and classes to the tree-level feature extractor, so detector output quality is removed as an error source. *Bottom:* the fixed-detector setting supplies cached YOLO26m outputs, so detector misses and class confusions enter the pipeline before counting.
 
-In the *GT detection setting*, the feature extractor reads ground-truth bounding boxes and classes directly from the annotation files. Counters trained on these features upper-bound how well a tree-level counter can perform when detections are accurate. In the *fixed-detector setting*, the feature extractor reads cached YOLO26m [15] predictions from the released `y26mv2` checkpoint. The detector was trained on the official 716-tree training split for 60 epochs (batch size 32, image size 640, patience 60, seed 42). Inference uses the repository default confidence threshold of 0.25 and the standard Ultralytics post-processing settings. A single detector checkpoint is used for all counter and feature configurations, so any observed differences come from the counter or feature representation rather than detector retraining.
+In the *GT detection setting*, the feature extractor reads ground-truth bounding boxes and classes directly from the annotation files. Counters trained on these features upper-bound how well a tree-level counter can perform when detections are accurate. In the *fixed-detector setting*, the feature extractor reads cached YOLO26m [14] predictions from the released `y26mv2` checkpoint. The detector was trained on the official 716-tree training split for 60 epochs (batch size 32, image size 640, patience 60, seed 42). Inference uses the repository default confidence threshold of 0.25 and the standard Ultralytics post-processing settings. A single detector checkpoint is used for all counter and feature configurations, so any observed differences come from the counter or feature representation rather than detector retraining.
 
-**Table 1. YOLO26m validation detection performance, reported under the COCO mAP50 convention [16].**
+**Table 1. YOLO26m validation detection performance, reported under the COCO mAP50 convention [15].**
 
 | Class | mAP50 | Recall |
 |:---:|---:|---:|
@@ -90,7 +90,7 @@ Eight feature banks are evaluated: F0, F0+conf, F0+spatial, F0+distrib, F0+conf+
 
 ### D. Counter Models and Evaluation Metrics
 
-Five regression models are evaluated in both detection conditions: Linear Regression, Ridge [19], ElasticNet [17], SVM [20], and Random Forest [18]. Each counter maps a tree feature vector $\mathbf{x}_i$ to the count vector $\hat{\mathbf{y}}_i = f_{\theta}(\mathbf{x}_i)$.
+Five regression models are evaluated in both detection conditions: Linear Regression, Ridge [18], ElasticNet [16], SVM [19], and Random Forest [17]. Each counter maps a tree feature vector $\mathbf{x}_i$ to the count vector $\hat{\mathbf{y}}_i = f_{\theta}(\mathbf{x}_i)$.
 
 All counter models are trained on the 716-tree training split and evaluated on the fixed 141-tree test split. Class-level $\pm 1$ correctness for tree $i$ and class $c$ is
 
@@ -231,34 +231,32 @@ Data: https://huggingface.co/datasets/ULM-DS-Lab/SawitMVC-YOLO
 
 [4] H. Freeman, E. Schneider, C. H. Kim, M. Lee, and G. Kantor, "3D reconstruction-based seed counting of sorghum panicles for agricultural inspection," in *Proc. IEEE International Conference on Robotics and Automation (ICRA)*, 2023, pp. 9594-9600, doi: 10.1109/ICRA48891.2023.10161400.
 
-[5] Y. Song, C. A. Glasbey, G. W. Horgan, G. Polder, and G. W. A. M. van der Heijden, "Automatic fruit recognition and counting from multiple images," *Biosystems Engineering*, vol. 118, pp. 203-215, Feb. 2014, doi: 10.1016/j.biosystemseng.2013.12.008.
+[5] M. Stein, S. Bargoti, and J. Underwood, "Image based mango fruit detection, localisation and yield estimation using multiple view geometry," *Sensors*, vol. 16, no. 11, Art. no. 1915, Nov. 2016, doi: 10.3390/s16111915.
 
-[6] M. Stein, S. Bargoti, and J. Underwood, "Image based mango fruit detection, localisation and yield estimation using multiple view geometry," *Sensors*, vol. 16, no. 11, Art. no. 1915, Nov. 2016, doi: 10.3390/s16111915.
+[6] P. Roy, A. Kislay, P. A. Plonski, J. Luby, and V. Isler, "Vision-based preharvest yield mapping for apple orchards," *Computers and Electronics in Agriculture*, vol. 164, Art. no. 104897, Sep. 2019, doi: 10.1016/j.compag.2019.104897.
 
-[7] P. Roy, A. Kislay, P. A. Plonski, J. Luby, and V. Isler, "Vision-based preharvest yield mapping for apple orchards," *Computers and Electronics in Agriculture*, vol. 164, Art. no. 104897, Sep. 2019, doi: 10.1016/j.compag.2019.104897.
+[7] N. Häni, P. Roy, and V. Isler, "A comparative study of fruit detection and counting methods for yield mapping in apple orchards," *Journal of Field Robotics*, vol. 37, no. 2, pp. 263-282, Mar. 2020, doi: 10.1002/rob.21902.
 
-[8] N. Häni, P. Roy, and V. Isler, "A comparative study of fruit detection and counting methods for yield mapping in apple orchards," *Journal of Field Robotics*, vol. 37, no. 2, pp. 263-282, Mar. 2020, doi: 10.1002/rob.21902.
+[8] N. A. Prasetyo, Pranowo, and A. J. Santoso, "Automatic detection and calculation of palm oil fresh fruit bunches using Faster R-CNN," *International Journal of Applied Science and Engineering*, vol. 17, no. 2, pp. 121-134, 2020, doi: 10.6703/IJASE.202005_17(2).121. [Online]. Available: https://gigvvy.com/journals/ijase/articles/ijase-202005-17-2-121
 
-[9] N. A. Prasetyo, Pranowo, and A. J. Santoso, "Automatic detection and calculation of palm oil fresh fruit bunches using Faster R-CNN," *International Journal of Applied Science and Engineering*, vol. 17, no. 2, pp. 121-134, 2020, doi: 10.6703/IJASE.202005_17(2).121. [Online]. Available: https://gigvvy.com/journals/ijase/articles/ijase-202005-17-2-121
+[9] J. W. Lai, H. R. Ramli, L. I. Ismail, and W. Z. W. Hasan, "Real-time detection of ripe oil palm fresh fruit bunch based on YOLOv4," *IEEE Access*, vol. 10, pp. 95763-95770, 2022, doi: 10.1109/ACCESS.2022.3204762.
 
-[10] J. W. Lai, H. R. Ramli, L. I. Ismail, and W. Z. W. Hasan, "Real-time detection of ripe oil palm fresh fruit bunch based on YOLOv4," *IEEE Access*, vol. 10, pp. 95763-95770, 2022, doi: 10.1109/ACCESS.2022.3204762.
+[10] M. Y. M. A. Mansour, K. D. Dambul, and K. Y. Choo, "Object detection algorithms for ripeness classification of oil palm fresh fruit bunch," *International Journal of Technology*, vol. 13, no. 6, pp. 1326-1335, 2022, doi: 10.14716/ijtech.v13i6.5932.
 
-[11] M. Y. M. A. Mansour, K. D. Dambul, and K. Y. Choo, "Object detection algorithms for ripeness classification of oil palm fresh fruit bunch," *International Journal of Technology*, vol. 13, no. 6, pp. 1326-1335, 2022, doi: 10.14716/ijtech.v13i6.5932.
+[11] M. Kerstan and T. Fairhurst, "Use of OMP for accurate crop forecasts," Agrisoft Systems and Tropical Crop Consultants Limited. Available: https://www.agrisoft-systems.com/wp-content/uploads/Papers/CropForecastsWithOMPBBC.pdf
 
-[12] M. Kerstan and T. Fairhurst, "Use of OMP for accurate crop forecasts," Agrisoft Systems and Tropical Crop Consultants Limited. Available: https://www.agrisoft-systems.com/wp-content/uploads/Papers/CropForecastsWithOMPBBC.pdf
+[12] M. H. Junos, A. S. M. Khairuddin, S. Thannirmalai, and M. Dahari, "Automatic detection of oil palm fruits from UAV images using an improved YOLO model," *The Visual Computer*, vol. 38, no. 7, pp. 2341-2355, 2022, doi: 10.1007/s00371-021-02116-3.
 
-[13] M. H. Junos, A. S. M. Khairuddin, S. Thannirmalai, and M. Dahari, "Automatic detection of oil palm fruits from UAV images using an improved YOLO model," *The Visual Computer*, vol. 38, no. 7, pp. 2341-2355, 2022, doi: 10.1007/s00371-021-02116-3.
+[13] C.-Y. Wang, A. Bochkovskiy, and H.-Y. M. Liao, "YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors," in *Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*, 2023, pp. 7464-7475, doi: 10.1109/CVPR52729.2023.00721.
 
-[14] C.-Y. Wang, A. Bochkovskiy, and H.-Y. M. Liao, "YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors," in *Proc. IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*, 2023, pp. 7464-7475, doi: 10.1109/CVPR52729.2023.00721.
+[14] G. Jocher and J. Qiu, "Ultralytics YOLO26," version 26.0.0, 2026. [Software]. Available: https://github.com/ultralytics/ultralytics. License: AGPL-3.0.
 
-[15] G. Jocher and J. Qiu, "Ultralytics YOLO26," version 26.0.0, 2026. [Software]. Available: https://github.com/ultralytics/ultralytics. License: AGPL-3.0.
+[15] T.-Y. Lin et al., "Microsoft COCO: Common objects in context," in *Proc. European Conference on Computer Vision (ECCV)*, 2014, pp. 740-755, doi: 10.1007/978-3-319-10602-1_48.
 
-[16] T.-Y. Lin et al., "Microsoft COCO: Common objects in context," in *Proc. European Conference on Computer Vision (ECCV)*, 2014, pp. 740-755, doi: 10.1007/978-3-319-10602-1_48.
+[16] H. Zou and T. Hastie, "Regularization and variable selection via the elastic net," *Journal of the Royal Statistical Society B*, vol. 67, no. 2, pp. 301-320, 2005, doi: 10.1111/j.1467-9868.2005.00503.x.
 
-[17] H. Zou and T. Hastie, "Regularization and variable selection via the elastic net," *Journal of the Royal Statistical Society B*, vol. 67, no. 2, pp. 301-320, 2005, doi: 10.1111/j.1467-9868.2005.00503.x.
+[17] L. Breiman, "Random forests," *Machine Learning*, vol. 45, no. 1, pp. 5-32, 2001, doi: 10.1023/A:1010933404324.
 
-[18] L. Breiman, "Random forests," *Machine Learning*, vol. 45, no. 1, pp. 5-32, 2001, doi: 10.1023/A:1010933404324.
+[18] A. E. Hoerl and R. W. Kennard, "Ridge regression: Biased estimation for nonorthogonal problems," *Technometrics*, vol. 12, no. 1, pp. 55-67, 1970, doi: 10.1080/00401706.1970.10488634.
 
-[19] A. E. Hoerl and R. W. Kennard, "Ridge regression: Biased estimation for nonorthogonal problems," *Technometrics*, vol. 12, no. 1, pp. 55-67, 1970, doi: 10.1080/00401706.1970.10488634.
-
-[20] C. Cortes and V. Vapnik, "Support-vector networks," *Machine Learning*, vol. 20, no. 3, pp. 273-297, 1995, doi: 10.1007/BF00994018.
+[19] C. Cortes and V. Vapnik, "Support-vector networks," *Machine Learning*, vol. 20, no. 3, pp. 273-297, 1995, doi: 10.1007/BF00994018.
