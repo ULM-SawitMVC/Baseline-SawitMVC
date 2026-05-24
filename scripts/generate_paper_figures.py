@@ -16,14 +16,18 @@ MPL_CACHE.mkdir(parents=True, exist_ok=True)
 os.environ.setdefault("MPLCONFIGDIR", str(MPL_CACHE))
 
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, PathPatch, Rectangle
+from matplotlib.path import Path as MplPath
 
 
-GT_COLOR = "#2f6b4f"
-FIXED_COLOR = "#3a4f9c"
-ACCENT_RED = "#b21e35"
-INK = "#1f1f1f"
-MUTED = "#6b6b6b"
+# Unified palette aligned with Fig. 2 TikZ design.
+GT_COLOR = "#1d4ed8"       # blue-700
+GT_TINT = "#dbeafe"        # blue-100
+FIXED_COLOR = "#b45309"    # amber-700
+FIXED_TINT = "#ffedd5"     # amber-100
+ACCENT_RED = "#b91c1c"     # red-700, slightly less neon than the old crimson
+INK = "#0f172a"            # slate-950
+MUTED = "#475569"          # slate-600
 
 
 def save(fig: plt.Figure, name: str) -> None:
@@ -105,14 +109,13 @@ def figure_cross_view_linking() -> None:
         2: [292, 503, 485, 682],
         3: [537, 435, 683, 600],
     }
-    ribbon_color = "#3a4f9c"
 
-    fig = plt.figure(figsize=(7.4, 3.55))
+    fig = plt.figure(figsize=(7.4, 3.95))
     grid = fig.add_gridspec(
         2, 3,
-        height_ratios=[0.13, 1.0],
+        height_ratios=[0.12, 1.0],
         width_ratios=[1, 1, 1],
-        hspace=0.04,
+        hspace=0.06,
         wspace=0.05,
     )
 
@@ -123,9 +126,9 @@ def figure_cross_view_linking() -> None:
         ax_ribbon.set_ylim(0, 1)
         ax_ribbon.axis("off")
         ribbon = FancyBboxPatch(
-            (0.04, 0.18), 0.92, 0.64,
+            (0.04, 0.20), 0.92, 0.60,
             boxstyle="round,pad=0.02,rounding_size=0.10",
-            linewidth=0, facecolor=ribbon_color,
+            linewidth=0, facecolor=GT_COLOR,
         )
         ax_ribbon.add_patch(ribbon)
         ax_ribbon.text(
@@ -148,12 +151,12 @@ def figure_cross_view_linking() -> None:
         ax.set_xticks([])
         ax.set_yticks([])
         for spine in ax.spines.values():
-            spine.set_edgecolor("#d6d6d6")
+            spine.set_edgecolor("#cbd5e1")
             spine.set_linewidth(0.8)
         crop_axes.append(ax)
 
     # Reserve space at the bottom for the connector + caption, then draw overlays.
-    fig.subplots_adjust(bottom=0.18, top=0.97, left=0.025, right=0.975)
+    fig.subplots_adjust(bottom=0.22, top=0.97, left=0.025, right=0.975)
     fig.canvas.draw()
 
     line_ax = fig.add_axes([0, 0, 1, 1], frameon=False)
@@ -171,36 +174,46 @@ def figure_cross_view_linking() -> None:
         cy = bbox.y0
         anchors.append((cx, cy))
 
-    # Connector band Y position — well below the crop bottoms but above the caption.
-    connector_y = anchors[0][1] - 0.07
-    caption_y = connector_y - 0.05
+    # Smooth bezier arcs converge to a single hub anchor below the centre crop.
+    hub_x = anchors[1][0]
+    hub_y = anchors[0][1] - 0.085
 
-    # Vertical stems from each crop bottom down to the connector line.
     for x, y in anchors:
-        line_ax.plot(
-            [x, x], [y - 0.005, connector_y],
-            color=ACCENT_RED, linewidth=1.4, linestyle=(0, (2.5, 2.5)),
-            solid_capstyle="round",
+        start = (x, y - 0.002)
+        end = (hub_x, hub_y)
+        # Control point: pulled vertically downward from the start, then biased
+        # horizontally toward the hub. Produces a gentle S-free curve.
+        ctrl = (x, (y + hub_y) / 2 - 0.015)
+        path = MplPath(
+            [start, ctrl, end],
+            [MplPath.MOVETO, MplPath.CURVE3, MplPath.CURVE3],
         )
+        line_ax.add_patch(PathPatch(
+            path, edgecolor=ACCENT_RED, facecolor="none",
+            linewidth=1.4, capstyle="round", joinstyle="round",
+        ))
+        # Small filled dot at each crop anchor.
         line_ax.plot(
-            x, connector_y, marker="o",
-            markersize=5, markerfacecolor=ACCENT_RED, markeredgecolor="white", markeredgewidth=1.0,
+            x, y - 0.002, marker="o", markersize=4.0,
+            markerfacecolor=ACCENT_RED, markeredgecolor="white", markeredgewidth=0.9,
         )
 
-    # Horizontal line connecting the three stems.
+    # Hub marker — slightly larger filled diamond at the convergence point.
     line_ax.plot(
-        [anchors[0][0], anchors[-1][0]],
-        [connector_y, connector_y],
-        color=ACCENT_RED, linewidth=1.6, linestyle="-",
-        solid_capstyle="round",
+        hub_x, hub_y, marker="D", markersize=7.5,
+        markerfacecolor=ACCENT_RED, markeredgecolor="white", markeredgewidth=1.2,
     )
 
-    cap_x = (anchors[0][0] + anchors[-1][0]) / 2
+    # Caption pill, anchored directly below the hub.
+    caption_text = "same physical B3 bunch — three appearances, one tree-level count"
     line_ax.text(
-        cap_x, caption_y,
-        "same physical B3 bunch — three appearances, one tree-level count",
+        hub_x, hub_y - 0.045, caption_text,
         ha="center", va="top",
-        fontsize=9.4, color=ACCENT_RED, fontweight="bold",
+        fontsize=9.3, color=ACCENT_RED, fontweight="bold",
+        bbox=dict(
+            boxstyle="round,pad=0.45,rounding_size=0.30",
+            facecolor="white", edgecolor=ACCENT_RED, linewidth=0.9,
+        ),
     )
 
     fig.savefig(OUT / "fig01_cross_view_linking.png", dpi=320, facecolor="white")
@@ -329,23 +342,27 @@ def figure_gap_bias() -> None:
     gt_bars = ax1.bar(
         [v - width / 2 for v in x], gt_acc, width,
         label="GT detection (ElasticNet)", color=GT_COLOR, edgecolor=GT_COLOR,
+        linewidth=0,
     )
     fixed_bars = ax1.bar(
         [v + width / 2 for v in x], fixed_acc, width,
         label="Fixed-detector (Ridge + F$_{\\mathrm{all}}$)", color=FIXED_COLOR, edgecolor=FIXED_COLOR,
+        linewidth=0,
     )
 
     ax1.set_title(
         "Counting is near ceiling under GT detection, but drops under the fixed detector",
-        loc="left", pad=24, fontweight="bold",
+        loc="left", pad=26, fontweight="bold", color=INK,
     )
-    ax1.set_ylabel("Class $\\pm$1 Acc (%)")
+    ax1.set_ylabel("Class $\\pm$1 Acc (%)", color=INK)
     ax1.set_xticks(x)
-    ax1.set_xticklabels(classes)
+    ax1.set_xticklabels(classes, fontweight="bold")
+    ax1.tick_params(axis="x", colors=INK)
+    ax1.tick_params(axis="y", colors=MUTED)
     ax1.set_xlim(-0.62, 3.62)
-    ax1.set_ylim(0, 128)
+    ax1.set_ylim(0, 130)
     ax1.set_yticks([0, 20, 40, 60, 80, 100])
-    ax1.axhline(100, color="#999999", linestyle=(0, (1.5, 2)), linewidth=0.8)
+    ax1.axhline(100, color=MUTED, linestyle=(0, (1.5, 2)), linewidth=0.8, alpha=0.55)
     ax1.annotate(
         "100% ceiling",
         xy=(3.62, 100), xycoords=("data", "data"),
@@ -354,18 +371,20 @@ def figure_gap_bias() -> None:
         fontsize=8.0, color=MUTED, fontstyle="italic",
         annotation_clip=False,
     )
-    ax1.grid(axis="y", alpha=0.20, linewidth=0.6)
+    ax1.grid(axis="y", alpha=0.18, linewidth=0.6, color=MUTED)
+    ax1.set_axisbelow(True)
 
     ax1.legend(
         frameon=False, loc="lower left",
-        bbox_to_anchor=(0.0, 1.01), ncol=2, handlelength=1.6, columnspacing=1.2,
+        bbox_to_anchor=(0.0, 1.02), ncol=2, handlelength=1.6, columnspacing=1.4,
+        labelcolor=INK,
     )
 
     for bars in (gt_bars, fixed_bars):
         for bar in bars:
             v = bar.get_height()
             ax1.text(
-                bar.get_x() + bar.get_width() / 2, v + 1.4,
+                bar.get_x() + bar.get_width() / 2, v + 1.6,
                 f"{v:.1f}",
                 ha="center", va="bottom",
                 fontsize=8.6, color=INK,
@@ -373,38 +392,42 @@ def figure_gap_bias() -> None:
 
     # Per-class GT - Fixed drop row, set above the bars so it never collides
     # with neighbouring bar value labels.
-    gap_y = 118
+    gap_y = 120
     ax1.text(-0.58, gap_y, "drop:", ha="left", va="center",
-             fontsize=8.4, color="#555", fontstyle="italic")
+             fontsize=8.4, color=MUTED, fontstyle="italic")
     for i, gap in enumerate(gaps):
         is_max = i == max_gap_idx
-        color = ACCENT_RED if is_max else "#666666"
+        color = ACCENT_RED if is_max else MUTED
         weight = "bold" if is_max else "normal"
         size = 9.4 if is_max else 8.6
-        face = "#fdecef" if is_max else "white"
-        edge = ACCENT_RED if is_max else "#cccccc"
+        face = "#fee2e2" if is_max else "white"
+        edge = ACCENT_RED if is_max else "#cbd5e1"
         ax1.text(
             i, gap_y, f"−{gap:.1f} pp",
             ha="center", va="center",
             fontsize=size, color=color, fontweight=weight,
-            bbox=dict(boxstyle="round,pad=0.30", facecolor=face, edgecolor=edge, linewidth=0.7),
+            bbox=dict(boxstyle="round,pad=0.32", facecolor=face, edgecolor=edge, linewidth=0.8),
         )
 
     # ---- Bottom panel: per-class signed bias ----
     bar_w = 0.52
-    colors = [GT_COLOR if v >= 0 else ACCENT_RED for v in fixed_bias]
-    ax2.bar(x, fixed_bias, color=colors, width=bar_w, edgecolor=colors)
+    POS_COLOR = "#0f766e"  # teal-700: distinguishes overcount from undercount.
+    colors = [POS_COLOR if v >= 0 else ACCENT_RED for v in fixed_bias]
+    ax2.bar(x, fixed_bias, color=colors, width=bar_w, edgecolor=colors, linewidth=0)
     ax2.set_title(
         "Fixed-detector under-counts B2 and especially B3",
-        loc="left", pad=8, fontweight="bold",
+        loc="left", pad=8, fontweight="bold", color=INK,
     )
     ax2.axhline(0, color=INK, linewidth=1.0)
-    ax2.set_ylabel("Mean signed error (bunches)")
-    ax2.set_ylim(-0.24, 0.13)
+    ax2.set_ylabel("Mean signed error (bunches)", color=INK)
+    ax2.set_ylim(-0.26, 0.14)
     ax2.set_xlim(-0.62, 3.62)
     ax2.set_xticks(x)
-    ax2.set_xticklabels(classes)
-    ax2.grid(axis="y", alpha=0.20, linewidth=0.6)
+    ax2.set_xticklabels(classes, fontweight="bold")
+    ax2.tick_params(axis="x", colors=INK)
+    ax2.tick_params(axis="y", colors=MUTED)
+    ax2.grid(axis="y", alpha=0.18, linewidth=0.6, color=MUTED)
+    ax2.set_axisbelow(True)
 
     for i, value in enumerate(fixed_bias):
         va = "bottom" if value >= 0 else "top"
@@ -415,7 +438,7 @@ def figure_gap_bias() -> None:
         )
 
     ax2.text(
-        3.55, -0.215, "negative = undercount",
+        3.55, -0.235, "negative = undercount",
         ha="right", va="center", fontsize=8.4, color=MUTED, fontstyle="italic",
     )
 
@@ -425,7 +448,10 @@ def figure_gap_bias() -> None:
 def main() -> None:
     set_style()
     figure_cross_view_linking()
-    figure_detection_conditions()
+    # Fig. 2 is produced by the standalone TikZ source `fig2_preview.tex`
+    # (compiled with tectonic to figures/paper/fig02_detection_conditions.pdf).
+    # The matplotlib version is kept only as a fallback and is not invoked
+    # here to avoid overwriting the higher-quality TikZ output.
     figure_gap_bias()
     print(f"Generated figures in {OUT}")
 
