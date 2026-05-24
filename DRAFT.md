@@ -1,5 +1,12 @@
 # Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector
 
+Muhammad Zainal Muttaqin, Fatma Indriani, Setyo Wahyu Saputro, Alia Rahmi, Triando Hamonangan Saragih, Rahmat Budianoor, Hartoni, Dwi Kartini, and Naufal Said
+
+Department of Computer Science, Faculty of Mathematics and Natural Sciences, Lambung Mangkurat University, Banjarbaru, Indonesia  
+Department of Agro-Industrial Technology, Faculty of Agriculture, Lambung Mangkurat University, Banjarmasin, Indonesia  
+Department of Agribusiness, Faculty of Agriculture, Lambung Mangkurat University, Banjarmasin, Indonesia  
+Corresponding author: Fatma Indriani, f.indriani@ulm.ac.id
+
 ## Abstract
 
 Tree-level yield forecasting often requires a count of objects in several readiness classes rather than a single total. Multi-view imaging helps recover objects hidden by occlusion, but it also creates duplicate observations of the same physical object across views. A deployed system must therefore solve two linked problems: detecting objects in individual images and aggregating those detections into one count vector per tree. This paper benchmarks that interaction on 953 oil palm trees and 3,992 side-view images under two controlled detection conditions. When the counting model receives annotated detections, it reaches 98.05% accuracy at the class level and 92.20% at the whole-tree level. When the same counting task uses outputs from a fixed object detector, those accuracies drop to 77.48% and 32.62%. The 20.57 percentage-point class-level gap remains after testing multiple counting models and feature sets, indicating that detector quality is the limiting factor in this fixed-detector pipeline rather than tree-level count aggregation.
@@ -30,7 +37,7 @@ What is missing is a benchmark that determines, for tree-level multi-view BBC co
 
 ### A. Dataset and Task Definition
 
-The benchmark uses the SawitMVC multi-view dataset: 953 oil palm trees, 3,992 side-view images, four maturity classes (B1, B2, B3, and B4), and 4 to 8 side views per tree. The fixed split contains 716 training trees, 96 validation trees, and 141 test trees. Dataset construction, annotation protocol, and per-class composition are documented in the companion dataset release.
+The benchmark uses the SawitMVC multi-view dataset: 953 oil palm trees, 3,992 side-view images, four maturity classes (B1, B2, B3, and B4), and 4 to 8 side views per tree. The fixed split contains 716 training trees, 96 validation trees, and 141 test trees. Dataset construction, annotation protocol, and per-class composition are documented in the Zenodo dataset release (doi: 10.5281/zenodo.20336323).
 
 For tree $i$, the ground-truth target is the count vector
 
@@ -213,13 +220,13 @@ This paper benchmarks multi-view tree-level oil palm FFB counting by evaluating 
 
 ## Acknowledgment
 
-To be completed with institutional, funding, plantation-access, and data-collection acknowledgments before submission.
+This research was funded by the Badan Pengelola Dana Perkebunan (BPDP), Indonesia, under contract number PRJ-36/BPDP/2026, through Universitas Lambung Mangkurat (ULM), Banjarmasin, Indonesia. The authors thank the field data collection teams and annotators whose work produced the bounding box and cross-view identity labels. The authors also thank the plantation staff for supervising annotation and the plantation management for facilitating field access.
 
 ## Code and Data Availability
 
 Code: https://github.com/ULM-SawitMVC/Baseline-SawitMVC
 
-Data: SawitMVC dataset release.
+Data: SawitMVC is available on Zenodo at https://zenodo.org/records/20336323, doi: 10.5281/zenodo.20336323.
 
 ## References
 

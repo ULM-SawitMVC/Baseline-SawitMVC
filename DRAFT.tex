@@ -19,8 +19,17 @@
 \title{Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector}
 
 \author{
-  \IEEEauthorblockN{Author Names}
-  \IEEEauthorblockA{Institution\\City, Country\\email@example.com}
+  \IEEEauthorblockN{Muhammad Zainal Muttaqin, Fatma Indriani, Setyo Wahyu Saputro,
+  Alia Rahmi,\\
+  Triando Hamonangan Saragih, Rahmat Budianoor, Hartoni, Dwi Kartini,
+  and Naufal Said}
+  \IEEEauthorblockA{Department of Computer Science, Faculty of Mathematics and Natural Sciences\\
+  Lambung Mangkurat University, Banjarbaru, Indonesia\\
+  Department of Agro-Industrial Technology, Faculty of Agriculture\\
+  Lambung Mangkurat University, Banjarmasin, Indonesia\\
+  Department of Agribusiness, Faculty of Agriculture\\
+  Lambung Mangkurat University, Banjarmasin, Indonesia\\
+  Corresponding author: Fatma Indriani, f.indriani@ulm.ac.id}
 }
 
 \maketitle
@@ -126,8 +135,8 @@ The benchmark uses the SawitMVC multi-view dataset: 953 oil palm trees,
 3,992 side-view images, four maturity classes (B1, B2, B3, and B4), and 4 to
 8 side views per tree. The fixed split contains 716 training trees, 96
 validation trees, and 141 test trees. Dataset construction, annotation
-protocol, and per-class composition are documented in the companion dataset
-release.
+protocol, and per-class composition are documented in the Zenodo dataset
+release (doi: \url{10.5281/zenodo.20336323}).
 
 For tree $i$, the ground-truth target is the count vector
 \begin{equation}
@@ -508,8 +517,13 @@ for B3 and B4, rather than the choice among the tested tree-level counters.
 \section*{Acknowledgment}
 % ---------------------------------------------------------------------------
 
-To be completed with institutional, funding, plantation-access, and
-data-collection acknowledgments before submission.
+This research was funded by the Badan Pengelola Dana Perkebunan (BPDP),
+Indonesia, under contract number PRJ-36/BPDP/2026, through Universitas Lambung
+Mangkurat (ULM), Banjarmasin, Indonesia. The authors thank the field data
+collection teams and annotators whose work produced the bounding box and
+cross-view identity labels. The authors also thank the plantation staff for
+supervising annotation and the plantation management for facilitating field
+access.
 
 % ---------------------------------------------------------------------------
 \section*{Code and Data Availability}
@@ -517,7 +531,9 @@ data-collection acknowledgments before submission.
 
 Code: \url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}
 
-Data: SawitMVC dataset release.
+Data: SawitMVC is available on Zenodo at
+\url{https://zenodo.org/records/20336323}, doi:
+\url{10.5281/zenodo.20336323}.
 
 % ---------------------------------------------------------------------------
 \begin{thebibliography}{20}
