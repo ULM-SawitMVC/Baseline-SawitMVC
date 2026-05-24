@@ -208,109 +208,100 @@ def figure_cross_view_linking() -> None:
     plt.close(fig)
 
 
-def draw_pipeline_row(
-    ax: plt.Axes,
-    y_center: float,
-    height: float,
-    label: str,
-    steps: list[str],
-    color: str,
-    tint: str,
-) -> None:
-    """Right-edge aligned pipeline row with a tinted background band."""
-    # Background band
-    band = FancyBboxPatch(
-        (0.005, y_center - height / 2 - 0.04),
-        0.99, height + 0.08,
-        boxstyle="round,pad=0.0,rounding_size=0.018",
-        linewidth=0.8, edgecolor=color, facecolor=tint,
-    )
-    ax.add_patch(band)
-
-    # Row label
-    ax.text(
-        0.025, y_center, label,
-        ha="left", va="center",
-        fontsize=10, fontweight="bold", color=color,
-    )
-
-    # Stage layout: right-edge aligned. Last stage is the output block.
-    label_left_pad = 0.16
-    stage_w = 0.135
-    stage_gap = 0.018
-    # Right edge at x=0.985; build from the right.
-    right_edge = 0.985
-    n = len(steps)
-    xs = []
-    for i in range(n - 1, -1, -1):
-        x_right = right_edge - (n - 1 - i) * (stage_w + stage_gap)
-        xs.append(x_right - stage_w)
-    xs = list(reversed(xs))
-
-    # Make sure first box does not collide with the row label.
-    if xs[0] < label_left_pad + 0.02:
-        shift = (label_left_pad + 0.02) - xs[0]
-        xs = [x + shift for x in xs]
-
-    for i, (x, text) in enumerate(zip(xs, steps)):
-        is_output = i == n - 1
-        face = color if is_output else "white"
-        edge = color
-        text_color = "white" if is_output else INK
-        weight = "bold" if is_output else "normal"
-        box = FancyBboxPatch(
-            (x, y_center - height / 2),
-            stage_w, height,
-            boxstyle="round,pad=0.012,rounding_size=0.022",
-            linewidth=1.2, edgecolor=edge, facecolor=face,
-        )
-        ax.add_patch(box)
-        ax.text(
-            x + stage_w / 2, y_center, text,
-            ha="center", va="center",
-            fontsize=9.0, color=text_color, fontweight=weight,
-        )
-
-    for i in range(n - 1):
-        x_from = xs[i] + stage_w + 0.001
-        x_to = xs[i + 1] - 0.001
-        ax.add_patch(FancyArrowPatch(
-            (x_from, y_center), (x_to, y_center),
-            arrowstyle="-|>", mutation_scale=12,
-            lw=1.2, color="#3a3a3a",
-        ))
-
-
 def figure_detection_conditions() -> None:
-    fig, ax = plt.subplots(figsize=(7.6, 2.5))
+    """Column-aligned two-row pipeline. Both rows share the downstream
+    'features -> counter -> output' columns; only the detection-input zone
+    differs (GT oracle box vs. images + YOLO sub-stages)."""
+    fig, ax = plt.subplots(figsize=(7.9, 2.95))
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     ax.axis("off")
 
-    draw_pipeline_row(
-        ax,
-        y_center=0.74,
-        height=0.18,
-        label="GT detection\nsetting",
-        steps=["GT\nannotations", "Tree-level\nfeatures", "Counter", "[B1, B2,\nB3, B4]"],
-        color=GT_COLOR,
-        tint="#eef6f1",
-    )
-    draw_pipeline_row(
-        ax,
-        y_center=0.26,
-        height=0.18,
-        label="Fixed-detector\nsetting",
-        steps=["Multi-view\nimages", "YOLOv26\noutputs", "Tree-level\nfeatures", "Counter", "[B1, B2,\nB3, B4]"],
-        color=FIXED_COLOR,
-        tint="#eef0f9",
-    )
+    label_left = 0.015
+    label_w = 0.195
+    detect_w = 0.275
+    stage_w = 0.128
+    gap = 0.022
+    row_h = 0.28
+    band_pad = 0.05
 
-    # Vertical guide aligning the two output boxes
-    ax.plot(
-        [0.86, 0.86], [0.05, 0.95],
-        linestyle=(0, (2, 3)), color="#bbbbbb", linewidth=0.8,
-    )
+    x_detect = label_left + label_w
+    x_feat = x_detect + detect_w + gap
+    x_cnt = x_feat + stage_w + gap
+    x_out = x_cnt + stage_w + gap
+    band_right = x_out + stage_w + 0.01
+
+    def draw_stage(x, y, w, h, text, edge, *, fill="white", text_color=INK, weight="normal", fontsize=9.0):
+        box = FancyBboxPatch(
+            (x, y - h / 2), w, h,
+            boxstyle="round,pad=0.012,rounding_size=0.022",
+            linewidth=1.2, edgecolor=edge, facecolor=fill,
+        )
+        ax.add_patch(box)
+        ax.text(x + w / 2, y, text,
+                ha="center", va="center",
+                fontsize=fontsize, color=text_color, fontweight=weight)
+
+    def draw_arrow(x_from, y, x_to):
+        ax.add_patch(FancyArrowPatch(
+            (x_from + 0.002, y), (x_to - 0.002, y),
+            arrowstyle="-|>", mutation_scale=12,
+            lw=1.2, color="#3a3a3a",
+        ))
+
+    def draw_row(y, label, color, tint, detect_render):
+        band = FancyBboxPatch(
+            (label_left - 0.005, y - row_h / 2 - band_pad),
+            band_right - (label_left - 0.005),
+            row_h + 2 * band_pad,
+            boxstyle="round,pad=0,rounding_size=0.018",
+            linewidth=0.8, edgecolor=color, facecolor=tint,
+        )
+        ax.add_patch(band)
+        ax.text(label_left + 0.008, y, label,
+                ha="left", va="center",
+                fontsize=10, fontweight="bold", color=color)
+        detect_render(y, color)
+        draw_arrow(x_detect + detect_w, y, x_feat)
+        draw_stage(x_feat, y, stage_w, row_h, "Tree-level\nfeatures", color)
+        draw_arrow(x_feat + stage_w, y, x_cnt)
+        draw_stage(x_cnt, y, stage_w, row_h, "Counter", color)
+        draw_arrow(x_cnt + stage_w, y, x_out)
+        draw_stage(x_out, y, stage_w, row_h, "[B1, B2,\nB3, B4]", color,
+                   fill=color, text_color="white", weight="bold")
+
+    def gt_detect(y, color):
+        draw_stage(x_detect, y, detect_w, row_h,
+                   "GT boxes & classes\n(oracle annotations)", color)
+
+    def fixed_detect(y, color):
+        sub_gap = 0.018
+        sub_w = (detect_w - sub_gap) / 2
+        x1 = x_detect
+        x2 = x_detect + sub_w + sub_gap
+        draw_stage(x1, y, sub_w, row_h, "Multi-view\nimages", color, fontsize=8.8)
+        draw_arrow(x1 + sub_w, y, x2)
+        draw_stage(x2, y, sub_w, row_h, "YOLOv26\noutputs", color, fontsize=8.8)
+
+    draw_row(0.72, "GT detection\nsetting",
+             GT_COLOR, "#eef6f1", gt_detect)
+    draw_row(0.24, "Fixed-detector\nsetting",
+             FIXED_COLOR, "#eef0f9", fixed_detect)
+
+    # Subtle shared-downstream marker spanning the three rightmost columns.
+    shared_left = x_feat - 0.005
+    shared_right = x_out + stage_w + 0.005
+    bracket_y = 0.985
+    ax.plot([shared_left, shared_right], [bracket_y, bracket_y],
+            color="#9a9a9a", linewidth=0.8)
+    ax.plot([shared_left, shared_left], [bracket_y - 0.012, bracket_y],
+            color="#9a9a9a", linewidth=0.8)
+    ax.plot([shared_right, shared_right], [bracket_y - 0.012, bracket_y],
+            color="#9a9a9a", linewidth=0.8)
+    ax.text((shared_left + shared_right) / 2, bracket_y + 0.018,
+            "identical downstream pipeline",
+            ha="center", va="bottom",
+            fontsize=8.4, color=MUTED, fontstyle="italic")
 
     save(fig, "fig02_detection_conditions")
 
@@ -323,11 +314,13 @@ def figure_gap_bias() -> None:
     fixed_acc = [97.16, 82.98, 57.45, 72.34]
     # Fixed-detector best: Ridge + F_all, per-class signed bias
     fixed_bias = [0.014, -0.078, -0.177, 0.071]
+    gaps = [gt - fx for gt, fx in zip(gt_acc, fixed_acc)]
+    max_gap_idx = gaps.index(max(gaps))
 
     fig, (ax1, ax2) = plt.subplots(
         2, 1,
-        figsize=(7.2, 5.2),
-        gridspec_kw={"height_ratios": [1.18, 1.0], "hspace": 0.42},
+        figsize=(7.4, 5.7),
+        gridspec_kw={"height_ratios": [1.30, 0.95], "hspace": 0.50},
     )
 
     # ---- Top panel: per-class accuracy gap ----
@@ -343,19 +336,26 @@ def figure_gap_bias() -> None:
     )
 
     ax1.set_title(
-        "Counting is near ceiling under GT detection, but drops under fixed-detector outputs",
-        loc="left", pad=22, fontweight="bold",
+        "Counting is near ceiling under GT detection, but drops under the fixed detector",
+        loc="left", pad=24, fontweight="bold",
     )
     ax1.set_ylabel("Class $\\pm$1 Acc (%)")
     ax1.set_xticks(x)
     ax1.set_xticklabels(classes)
-    ax1.set_ylim(0, 108)
+    ax1.set_xlim(-0.62, 3.62)
+    ax1.set_ylim(0, 128)
     ax1.set_yticks([0, 20, 40, 60, 80, 100])
     ax1.axhline(100, color="#999999", linestyle=(0, (1.5, 2)), linewidth=0.8)
-    ax1.text(3.55, 101.5, "ceiling", ha="right", va="bottom", fontsize=8.4, color=MUTED)
+    ax1.annotate(
+        "100% ceiling",
+        xy=(3.62, 100), xycoords=("data", "data"),
+        xytext=(6, 0), textcoords="offset points",
+        ha="left", va="center",
+        fontsize=8.0, color=MUTED, fontstyle="italic",
+        annotation_clip=False,
+    )
     ax1.grid(axis="y", alpha=0.20, linewidth=0.6)
 
-    # Legend above plot, single row
     ax1.legend(
         frameon=False, loc="lower left",
         bbox_to_anchor=(0.0, 1.01), ncol=2, handlelength=1.6, columnspacing=1.2,
@@ -371,31 +371,37 @@ def figure_gap_bias() -> None:
                 fontsize=8.6, color=INK,
             )
 
-    # Annotate the largest gap (B3) with a clean bracket and label
-    gap_b3 = gt_acc[2] - fixed_acc[2]
-    bracket_x = 2 + 0.34  # just right of B3 group
-    top_y = gt_acc[2]
-    bot_y = fixed_acc[2]
-    ax1.plot([bracket_x, bracket_x], [bot_y, top_y], color=ACCENT_RED, linewidth=1.2)
-    ax1.plot([bracket_x - 0.04, bracket_x], [top_y, top_y], color=ACCENT_RED, linewidth=1.2)
-    ax1.plot([bracket_x - 0.04, bracket_x], [bot_y, bot_y], color=ACCENT_RED, linewidth=1.2)
-    ax1.text(
-        bracket_x + 0.05, (top_y + bot_y) / 2,
-        f"$-${gap_b3:.1f} pp",
-        fontsize=9.2, color=ACCENT_RED, fontweight="bold",
-        ha="left", va="center",
-    )
+    # Per-class GT - Fixed drop row, set above the bars so it never collides
+    # with neighbouring bar value labels.
+    gap_y = 118
+    ax1.text(-0.58, gap_y, "drop:", ha="left", va="center",
+             fontsize=8.4, color="#555", fontstyle="italic")
+    for i, gap in enumerate(gaps):
+        is_max = i == max_gap_idx
+        color = ACCENT_RED if is_max else "#666666"
+        weight = "bold" if is_max else "normal"
+        size = 9.4 if is_max else 8.6
+        face = "#fdecef" if is_max else "white"
+        edge = ACCENT_RED if is_max else "#cccccc"
+        ax1.text(
+            i, gap_y, f"−{gap:.1f} pp",
+            ha="center", va="center",
+            fontsize=size, color=color, fontweight=weight,
+            bbox=dict(boxstyle="round,pad=0.30", facecolor=face, edgecolor=edge, linewidth=0.7),
+        )
 
     # ---- Bottom panel: per-class signed bias ----
+    bar_w = 0.52
     colors = [GT_COLOR if v >= 0 else ACCENT_RED for v in fixed_bias]
-    bias_bars = ax2.bar(x, fixed_bias, color=colors, width=0.44, edgecolor=colors)
+    ax2.bar(x, fixed_bias, color=colors, width=bar_w, edgecolor=colors)
     ax2.set_title(
-        "Fixed-detector under-counts B2 and B3 systematically",
+        "Fixed-detector under-counts B2 and especially B3",
         loc="left", pad=8, fontweight="bold",
     )
     ax2.axhline(0, color=INK, linewidth=1.0)
     ax2.set_ylabel("Mean signed error (bunches)")
     ax2.set_ylim(-0.24, 0.13)
+    ax2.set_xlim(-0.62, 3.62)
     ax2.set_xticks(x)
     ax2.set_xticklabels(classes)
     ax2.grid(axis="y", alpha=0.20, linewidth=0.6)
@@ -408,10 +414,9 @@ def figure_gap_bias() -> None:
             ha="center", va=va, fontsize=8.6, color=INK,
         )
 
-    # In-axis legend chip explaining sign
     ax2.text(
-        3.42, -0.215, "negative = undercount",
-        ha="right", va="center", fontsize=8.4, color=MUTED, style="italic",
+        3.55, -0.215, "negative = undercount",
+        ha="right", va="center", fontsize=8.4, color=MUTED, fontstyle="italic",
     )
 
     save(fig, "fig03_gap_bias")
