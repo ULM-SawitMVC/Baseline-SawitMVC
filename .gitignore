@@ -24,6 +24,9 @@ build/
 *.swp
 ~$*
 
+# Local build tools.
+tectonic.exe
+
 # Large/generated experiment artifacts.
 runs/
 wandb/
