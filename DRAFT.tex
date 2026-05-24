@@ -26,28 +26,27 @@
 \maketitle
 
 \begin{abstract}
-Black Bunch Census (BBC) supports oil palm harvest planning by estimating,
-for every tree, how many fresh fruit bunches (FFB) sit in each operational
-maturity class. Image-based BBC is difficult because a single tree is observed
-from multiple side views: additional views reduce occlusion, but the same
-physical bunch can appear in several images and inflate naive counts. Despite an
-active literature on agricultural detection and counting, no benchmark to date
-has separated detector error from tree-level counter error for this task. This
-paper benchmarks multi-view tree-level FFB counting for B1, B2, B3, and B4
-under two carefully isolated detection conditions. In the \textit{GT detection
-setting}, counters receive ground-truth boxes and classes, removing detector
-quality as a source of error. In the \textit{fixed-detector setting}, counters
-receive cached YOLO26m outputs, measuring the deployed
-detector-plus-counter pipeline. The benchmark uses 953 trees, 3,992 side-view
-images, four maturity classes, 4 to 8 views per tree, and a fixed 716/96/141
-train/validation/test split. Under GT detection, ElasticNet reaches 98.05\%
-Class $\pm$1 Acc and 92.20\% Tree $\pm$1 Acc. Under the fixed detector, the
-best Ridge + $F_{\text{all}}$ pipeline reaches 77.48\% Class $\pm$1 Acc and
-32.62\% Tree $\pm$1 Acc. Feature ablation closes only $\approx$1.4\,pp Class
-$\pm$1 Acc over the F0 baseline, and changing the counter family does not
-recover the gap either. The conclusion is direct: tree-level counting is near
-ceiling when detections are accurate, and the remaining 20.57\,pp gap is a
-detector-quality bottleneck, not a counter limitation.
+Oil palm yield forecasting requires estimating, for each tree, how many fruit
+bunches fall into each of four harvest-readiness classes. Image-based automation
+is difficult because multi-view acquisition reduces missed bunches caused by
+occlusion, but it also makes the same physical bunch appear in several images
+and inflates naive counts. The final tree-level estimate therefore depends on
+two coupled components: the detector that supplies per-view evidence and the
+counter that aggregates that evidence into one count vector per tree. To our
+knowledge, this detector-counter interaction has not been explicitly evaluated
+under controlled detection conditions for multi-view tree-level bunch counting.
+This paper benchmarks the task on 953 oil palm trees and 3,992 side-view images
+under two conditions. In the ground-truth detection setting, the counter receives
+annotated boxes and classes, isolating the counting problem from detector error.
+In the fixed-detector setting, the counter receives cached YOLO26m outputs,
+measuring the deployed detector-plus-counter pipeline. Five regression counters
+are evaluated, with an eight-bank feature ablation under fixed-detector outputs.
+With ground-truth detections, the best counter reaches 98.05\% Class $\pm$1 Acc
+and 92.20\% Tree $\pm$1 Acc. With the fixed detector, the best Ridge +
+$F_{\text{all}}$ pipeline reaches 77.48\% and 32.62\%, respectively. The
+20.57 percentage-point class-level gap, together with the small gain from
+feature ablation, indicates that the current bottleneck is detector quality
+rather than tree-level count aggregation.
 \end{abstract}
 
 \begin{IEEEkeywords}
