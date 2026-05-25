@@ -6,6 +6,7 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage[hidelinks]{hyperref}
+\usepackage{balance}
 
 \renewcommand\IEEEkeywordsname{Keywords}
 
@@ -40,17 +41,18 @@ Banjarbaru, Indonesia}
 \bfseries Tree-level yield forecasting often requires a count of objects in several
 readiness classes rather than a single total. Multi-view imaging helps recover
 objects hidden by occlusion, but it also creates duplicate observations of the
-same physical object across views. A deployed system must therefore solve two
-linked problems: detecting objects in individual images and aggregating those
-detections into one count vector per tree. This paper benchmarks that interaction
-on 953 oil palm trees and 3,992 side-view images under two controlled detection
-conditions. When the counting model receives annotated detections, it reaches
-98.05\% accuracy at the class level and 92.20\% at the whole-tree level. When the
-same counting task uses outputs from a fixed object detector, those accuracies
-drop to 77.48\% and 32.62\%. The 20.57 percentage-point class-level gap remains
-after testing multiple counting models and feature sets, indicating that detector
-quality is the limiting factor in this fixed-detector pipeline rather than
-tree-level count aggregation.
+same physical object across views. A deployed system must therefore solve
+detection and tree-level aggregation jointly. Whether failures arise from the
+detector or the aggregation step has not been isolated by prior work. This paper
+benchmarks that question on 953 oil palm trees and 3,992 side-view images under
+two detection conditions. The benchmark evaluates five regression counters under
+both conditions and ablates eight feature configurations in the fixed-detector
+setting. When the counting model receives annotated detections, it reaches
+98.05\% accuracy at the class level and 92.20\% at the whole-tree level. When
+the same task uses outputs from a fixed detector (YOLO26m), those accuracies drop to
+77.48\% and 32.62\%. The 20.57 percentage-point gap remains after testing all
+model and feature combinations. This indicates detector quality is the limiting
+factor, not the tree-level counting step.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -62,83 +64,95 @@ detection, YOLO, tree-level regression, agricultural computer vision.
 \section{Introduction}
 % ---------------------------------------------------------------------------
 
-Oil palm harvest planning is driven by Black Bunch Census (BBC), a field
-practice in which counters estimate, for every tree, how many bunches belong to
-each operational maturity class: typically B1 (ripe, harvest now), B2
-(imminent), B3 (next cycle), and B4 (future inventory)~\cite{ref12}. The
-decision-relevant signal is therefore not the total number of bunches on a
-tree, but the four-dimensional count vector across maturity classes.
-Image-based BBC must reproduce this per-class disaggregation rather than
-collapse it into a single total.
+Harvest scheduling in commercial oil palm plantations depends on knowing, for
+every tree, how many fruit bunches belong to each operational maturity class.
+The Black Bunch Census (BBC) formalises this requirement into a four-class count
+vector, B1 through B4, where each class carries distinct timing and logistics
+implications~\cite{ref12}. Automating BBC through image-based counting would
+reduce the cost and subjectivity of manual field surveys. The central
+operational requirement is reproducing the per-class disaggregation rather than
+collapsing it into a single total.
 
 Tree-level counting is geometrically harder than image-level
-detection~\cite{ref1}. Bunches surround the full circumference of an oil
-palm, so a single image misses bunches because of occlusion, viewing angle, or
-overlapping fronds. Multi-view acquisition reduces missed bunches by
-photographing a tree from four or eight side views, but the same physical bunch
-then appears in several of those images. Fig.~\ref{fig:crossview} illustrates
-the effect: one B3 bunch is visible, and would be detected, in three adjacent
-side views of tree \texttt{DAMIMAS\_A21B\_0847}. A naive sum over per-image
-detections therefore counts appearances, not bunch identities, and is biased
-upward by roughly a factor of two on this dataset.
+detection~\cite{ref1}. Bunches surround the full circumference of an oil palm,
+so a single image misses bunches due to occlusion, viewing angle, or overlapping
+fronds. Multi-view acquisition reduces missed bunches by photographing each tree
+from four to eight side views, but the same physical bunch then appears in
+several images. Fig.~\ref{fig:crossview} illustrates the effect: a single B3
+bunch is visible in three adjacent side views of the same tree. Naive summation
+of per-image detections counts appearances rather than bunch identities and is
+biased upward on this dataset.
 
 \begin{figure*}[!t]
   \centering
   \includegraphics[width=\textwidth]{../figures/paper/fig01_cross_view_linking.pdf}
-  \caption{A single physical B3 bunch on tree \texttt{DAMIMAS\_A21B\_0847} is
-  visible across sides 1, 2, and 3. If every per-image detection is counted,
-  three appearances are added for one bunch. Tree-level counting must therefore
-  aggregate evidence across views rather than sum it.}
+  \caption{A single physical B3 bunch is visible across three adjacent side
+  views. If every per-image detection is counted, three appearances are added
+  for one bunch. Tree-level counting must therefore aggregate evidence across
+  views rather than sum it.}
   \label{fig:crossview}
 \end{figure*}
 
-Prior work frames the problem from three directions. Oil palm FFB detection and
-ripeness classification have been studied with both two-stage and YOLO-style
-detectors~\cite{ref9,ref10,ref11,ref13}; these works report usable mAP on FFB
-but also document recurring weaknesses on partially occluded or
-maturity-ambiguous bunches.
+Multi-view deduplication has been studied across several crops through geometric
+fusion, sequential scan, and neural reconstruction. Mango counting systems
+associated detections across sequential passes using navigation data and canopy
+geometry~\cite{ref5}, and apple pipelines built row-level maps from overlapping
+two-side scans~\cite{ref6}. Comparative evaluation of multi-view apple pipelines
+shows that counting errors typically originate in detection quality rather than
+the aggregation step~\cite{ref7}. Sparse and calibrated viewpoints have been
+addressed through correspondence-free triangulation~\cite{ref3} and few-view 3D
+reconstruction~\cite{ref4}, and recent neural-field methods count from
+unstructured photographs in a shared 3D representation~\cite{ref8}. Most of
+these systems depend on dense sequential overlap, a moving sensor platform, or
+calibrated geometry, and none isolates detector quality from counter quality as
+separate error sources.
 
-Multi-view fruit aggregation has been used in fruit recognition and yield
-estimation, including methods that explicitly fuse evidence across views to
-avoid double counting~\cite{ref2,ref5,ref6}. Recent plant-phenotyping work has
-also treated sparse or calibrated viewpoints as an association problem, either
-by solving multi-view triangulation without known correspondences~\cite{ref3}
-or by contrasting few-view counting with denser 3D reconstruction~\cite{ref4}.
-Recent neural-field approaches extend this idea by counting fruit from
-unstructured multi-view orchard photographs in a shared 3D representation~\cite{ref8}.
-Comparative studies on apple orchards have further refined these
-pipelines~\cite{ref6,ref7}. These methods, however, are evaluated mainly on
-smaller tree-fruit crops with simpler geometry than oil palm, and they do not
-isolate detector quality from counter quality.
+Regression-based aggregation maps detection statistics to a tree-level count
+vector, an approach well established in agricultural
+vision~\cite{ref1,ref6,ref7}. YOLO-style single-stage detectors are now the
+standard front-end for such pipelines~\cite{ref14,ref15}. The regressor is
+typically evaluated only on the detector outputs available during the study,
+so detector quality and counter quality enter the accuracy estimate jointly.
+When end-to-end performance falls short, this coupling makes it impossible to
+determine whether effort should target the detector or the counter. Isolating
+the two contributions requires evaluating the same counting model under both
+controlled and realistic detection conditions.
 
-Regression-based counting and yield estimation in agricultural vision are well
-established~\cite{ref1,ref6,ref7}, and YOLO-style single-stage detectors are now
-standard front-ends for such pipelines~\cite{ref14,ref15}. In this line of work,
-a regressor maps aggregate detection statistics to a target count. The
-regressor is usually tested only on the detector outputs at hand, so detector
-quality and counter quality remain coupled.
+Oil palm counting has received less systematic study than apple or mango.
+Detectors for fresh fruit bunches (FFB) and maturity classification have
+reached production-level accuracy on ripe bunches but show recurring weaknesses
+on partially occluded and maturity-ambiguous classes~\cite{refNaftali2024},
+with both two-stage and YOLO-style architectures explored~\cite{ref9,ref10,ref11,ref13}. The closest public oil palm resource is a video dataset annotated at the frame level for
+detection~\cite{refSuharjito2025}. Tree-level counting labels are absent, and
+no counting evaluation has been reported on it. No existing benchmark evaluates
+tree-level counting strategies under controlled detection conditions or separates
+detector error from counter error for this task.
 
-What is missing is a benchmark that determines, for tree-level multi-view BBC
-counting, whether the limiting factor lies in the detector or in the tree-level
-counter. Existing reports usually fix one component and tune the other, which
-conflates two error sources. This benchmark tests that gap on SawitMVC by
-evaluating the same counters under GT detections and cached YOLO26m outputs,
-ablating eight feature banks under realistic detector outputs, and measuring how
-much of the 20.57 percentage-point Class $\pm$1 Acc gap can be recovered by
-feature richness or counter choice.
+This paper closes that gap by benchmarking tree-level multi-view BBC counting
+under two detection conditions on the SawitMVC dataset (953 trees, 3,992
+images)~\cite{refIndriani2026}. The first condition uses ground-truth detections to isolate counter
+performance from detector error, and the second uses a fixed YOLO26m detector
+to reflect a realistic deployed pipeline. Five regression models and eight
+feature configurations are evaluated within each condition. The paper makes
+three contributions: (1) a systematic benchmark of tree-level bunch counting
+under two detection conditions, establishing an accuracy ceiling and a
+deployment baseline on the same dataset; (2) a feature ablation study showing
+that enriched feature representations recover only a marginal fraction of the
+detector-driven gap; and (3) evidence that the primary performance bottleneck
+is detector output quality rather than the choice of counting model.
 
 % ---------------------------------------------------------------------------
 \section{Methodology}
 % ---------------------------------------------------------------------------
 
 \subsection{Dataset and Task Definition}
+\label{sec:task}
 
 The benchmark uses the SawitMVC multi-view dataset: 953 oil palm trees,
 3,992 side-view images, four maturity classes (B1, B2, B3, and B4), and 4 to
 8 side views per tree. The fixed split contains 716 training trees, 96
 validation trees, and 141 test trees. Dataset construction, annotation
-protocol, and per-class composition are documented in the Zenodo dataset
-release (doi: \url{https://doi.org/10.5281/zenodo.20336323}).
+protocol, and per-class composition are documented in~\cite{refIndriani2026}.
 
 For tree $i$, the ground-truth target is the count vector
 \begin{equation}
@@ -187,6 +201,12 @@ Inference uses the repository default confidence threshold of 0.25 and the
 standard Ultralytics post-processing settings. A single detector checkpoint is
 used for all counter and feature configurations, so any observed differences
 come from the counter or feature representation rather than detector retraining.
+Preliminary experiments across multiple detector architectures and training
+configurations produced no meaningful performance differences on this dataset,
+indicating that the bottleneck lies in task difficulty rather than detector
+design. The y26mv2 checkpoint was therefore selected as a representative fixed
+detector. A deeper detector study, including alternative architectures and
+depth-augmented inputs, is planned as future work.
 
 \begin{table}[!htbp]
   \centering
@@ -208,43 +228,53 @@ come from the counter or feature representation rather than detector retraining.
   \end{tabular}
 \end{table}
 
-The detector is strongest on B1 and weakest on B4. The per-class weakness on
-B4 and the moderate recall on B3 visible in Table~\ref{tab:yolo} are revisited
-in Section~\ref{sec:gap}, where the per-class structure of the fixed-detector
-gap mirrors this profile.
+The per-class weakness on B4 and the moderate recall on B3 in
+Table~\ref{tab:yolo} are revisited in Section~\ref{sec:gap}.
 
 \subsection{Feature Vectors}
 
-For each tree, detections from all views are aggregated into a fixed-length
-feature vector. The 13-dimensional baseline F0 contains, for each class $c$,
-the total count $s_c$, the per-side maximum $m_c$, and the per-side mean
-$\mu_c$, plus the number of available views $n_{\text{views}}$:
+Given either set of detections, observations from all views of a tree are
+aggregated into a fixed-length feature vector. The 13-dimensional baseline
+$F_0$ contains, for each class $c$, the total count $s_c$, the per-side
+maximum $m_c$, and the per-side mean $\mu_c$, plus the number of available
+views $n_{\text{views}}$:
 \begin{equation}
-  F0 = [\,s_{B1\text{:}B4},\;m_{B1\text{:}B4},\;\mu_{B1\text{:}B4},\;
+  F_0 = [\,s_{B1\text{:}B4},\;m_{B1\text{:}B4},\;\mu_{B1\text{:}B4},\;
         n_{\text{views}}\,].
 \end{equation}
 
-Three optional groups extend F0. The confidence group (20-dim) stores five
-statistics per class: confidence sum, mean, max, count above 0.5, and count
-above 0.6. The spatial group (8-dim) stores the mean normalized vertical
-centroid $\overline{cy}_c$ and mean bounding-box area $\overline{A}_c$ for each
-class, reflecting the vertical separation of maturity classes on the tree. The
-side-distribution group (20-dim) stores per-side std, per-side min, coefficient
-of variation, number of sides with detections, and a consistency score for each
+Three optional groups extend $F_0$. The confidence group (20-dim) contains
+five per-class statistics: confidence sum, mean, max, count above 0.5, and
+count above 0.6. Spatial position provides a separate signal: the mean
+normalized vertical centroid $\overline{cy}_c$ and mean bounding-box area
+$\overline{A}_c$ for each class form an 8-dimensional group that reflects the
+vertical separation of maturity classes on the tree. A 20-dimensional
+side-distribution group records per-side std, per-side min, coefficient of
+variation, number of sides with detections, and a consistency score for each
 class.
 
 A cross-class composition group (6-dim), consisting of the total detection
 count, four class fractions, and a B3-vs-(B2+B3) mixture ratio, completes the
-67-dimensional combined bank $F_{\text{all}}$:
+67-dimensional combined set $F_{\text{all}}$:
 \begin{equation*}
-  F_{\text{all}} = F0 \cup \text{conf} \cup \text{spatial}
+  F_{\text{all}} = F_0 \cup \text{conf} \cup \text{spatial}
                       \cup \text{distrib} \cup \text{composition}.
 \end{equation*}
 
-Eight feature banks are evaluated: F0, F0+conf, F0+spatial, F0+distrib,
-F0+conf+spatial, F0+conf+distrib, F0+distrib+spatial, and $F_{\text{all}}$.
+Eight feature sets are evaluated: $F_0$, $F_0$+conf, $F_0$+spatial,
+$F_0$+distrib, $F_0$+conf+spatial, $F_0$+conf+distrib, $F_0$+distrib+spatial,
+and $F_{\text{all}}$.
 
 \subsection{Counter Models and Evaluation Metrics}
+
+Three heuristic baselines are included as reference points. The \textit{naive
+sum} sums all detected appearances per class (defined in
+Section~\ref{sec:task}). The \textit{global divisor} scales the naive sum by
+a fixed constant $k$ fit to the training split, correcting for the average
+number of times a single bunch is observed across views. The
+\textit{visibility-adaptive divisor} replaces the global constant with a
+per-tree factor that varies with the number of side views captured for that
+tree.
 
 Five regression models are evaluated in both detection conditions: Linear
 Regression, Ridge~\cite{ref19}, ElasticNet~\cite{ref17}, SVM~\cite{ref20}, and
@@ -282,7 +312,7 @@ four class predictions are within $\pm 1$ simultaneously,
 \textbf{Signed class bias} is the per-class mean $\hat{y}_{i,c} - y_{i,c}$;
 positive values indicate over-counting, negative values under-counting. Bias
 is reported alongside accuracy because operational aggregate yield estimates
-are sensitive to directional error rather than absolute error alone.
+are sensitive to directional error rather than absolute error alone.\footnote{Source code: \url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}.}
 
 % ---------------------------------------------------------------------------
 \section{Results and Discussion}
@@ -298,11 +328,13 @@ the two conditions per class.
 \label{sec:gt}
 
 Table~\ref{tab:gt} reports counting results when the counter receives GT
-detections. Naive appearance summation reaches only 50.00\% Class $\pm$1 Acc
-and 6.38\% Tree $\pm$1 Acc, confirming that duplicate visibility cannot be
-ignored. The two divisor rules recover most of the loss, and ElasticNet lifts
-the result to 98.05\% Class $\pm$1 Acc. Under accurate detections, the remaining
-counting problem is therefore simple enough for compact regression models.
+detections. Naive appearance summation yields only 50.00\% Class $\pm$1 Acc
+and 6.38\% Tree $\pm$1 Acc. This confirms that duplicate visibility cannot be
+ignored and that direct summation is not a viable estimator. The global divisor
+and visibility-adaptive divisor recover most of the loss, and ElasticNet
+improves further to 98.05\% Class $\pm$1 Acc. Under accurate detections, the
+remaining counting problem is therefore simple enough for compact regression
+models.
 
 \begin{table}[!htbp]
   \centering
@@ -335,14 +367,13 @@ the choice among standard counter families is not the limiting factor.
 \subsection{Fixed-Detector Setting}
 \label{sec:fixed}
 
-Table~\ref{tab:fixed} holds the feature bank at F0 and compares the five
-counter families when they receive cached YOLO26m outputs. The best F0 result,
-ElasticNet at 76.42\% Class $\pm$1 Acc, trails the same counter under GT
-detections by more than 20 percentage points. All five counters remain within a
-3.2 percentage-point window on Class $\pm$1 Acc. The large drop across the two
-detection conditions, coupled with the small spread among counters, points to
-the detector output rather than the counter family as the main source of loss in
-this fixed-detector setting.
+Moving from GT to cached YOLO26m detections, the best $F_0$ result
+(ElasticNet, 76.42\% Class $\pm$1 Acc) trails the same counter under GT by
+more than 20 percentage points (Table~\ref{tab:fixed}). All five counters
+remain within a 3.2 percentage-point window on Class $\pm$1 Acc. The large
+drop across the two detection conditions, coupled with the small spread among
+counters, points to the detector output rather than the counter family as the
+main source of loss.
 
 \begin{table}[!htbp]
   \centering
@@ -363,12 +394,11 @@ this fixed-detector setting.
   \end{tabular}
 \end{table}
 
-Per-class accuracies in Table~\ref{tab:perclass} locate the failure mode. B1
-stays above 95\% across all five counters, B2 remains between 73.76\% and
-80.14\%, and B3 falls to roughly 55--56\%. B4 is intermediate, between 67\% and
-73\%. This profile mirrors Table~\ref{tab:yolo}: the classes with weaker
-detection recall are the same classes that lose the most tree-level counting
-accuracy.
+The per-class breakdown in Table~\ref{tab:perclass} shows that B1 stays near
+its GT ceiling while B3 falls to 55--56\% Class $\pm$1 Acc across all five
+counters. B2 and B4 sit at intermediate losses. This profile matches the
+detection recall in Table~\ref{tab:yolo}: the weakest detector classes lose the
+most counting accuracy.
 
 \begin{table}[!htbp]
   \centering
@@ -403,36 +433,39 @@ accuracy.
     \toprule
     Features                            & Dim & Class $\pm$1 & Tree $\pm$1 & MAE            \\
     \midrule
-    F0                                  &  13 & 76.06\%          & 28.37\%          & 1.053          \\
-    F0 + confidence                     &  33 & 75.89\%          & 29.79\%          & 1.059          \\
-    F0 + spatial                        &  21 & 76.60\%          & 30.50\%          & 1.046          \\
-    F0 + side-distribution              &  33 & 74.82\%          & 28.37\%          & 1.060          \\
-    F0 + confidence + spatial           &  41 & 76.24\%          & 29.08\%          & 1.059          \\
-    F0 + confidence + side-distribution &  53 & 76.42\%          & 29.79\%          & 1.060          \\
-    F0 + side-distribution + spatial    &  41 & 75.71\%          & 30.50\%          & 1.048          \\
+    $F_0$                                  &  13 & 76.06\%          & 28.37\%          & 1.053          \\
+    $F_0$ + confidence                     &  33 & 75.89\%          & 29.79\%          & 1.059          \\
+    $F_0$ + spatial                        &  21 & 76.60\%          & 30.50\%          & 1.046          \\
+    $F_0$ + side-distribution              &  33 & 74.82\%          & 28.37\%          & 1.060          \\
+    $F_0$ + confidence + spatial           &  41 & 76.24\%          & 29.08\%          & 1.059          \\
+    $F_0$ + confidence + side-distribution &  53 & 76.42\%          & 29.79\%          & 1.060          \\
+    $F_0$ + side-distribution + spatial    &  41 & 75.71\%          & 30.50\%          & 1.048          \\
     $F_{\text{all}}$                    &  67 & \textbf{77.48\%} & \textbf{32.62\%} & \textbf{1.035} \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-Table~\ref{tab:ablation} holds the counter family fixed at Ridge, the strongest
-counter under the richest feature bank, and varies only the feature
-configuration. F0 starts at 76.06\% Class $\pm$1 Acc. Adding spatial features
-alone raises this to 76.60\%, while confidence and side-distribution features do
-not improve the baseline by themselves.
+Whether enriched features can recover the detector-driven gap is tested by
+fixing Ridge and varying the feature configuration (Table~\ref{tab:ablation}).
+$F_0$ starts at 76.06\% Class $\pm$1 Acc. Spatial features alone raise this to
+76.60\%; the vertical centroid and bounding-box area encode residual maturity
+position that the raw count statistics in $F_0$ do not capture directly.
+Confidence features do not improve the baseline individually, and adding
+side-distribution alone reduces Class $\pm$1 Acc to 74.82\%, below the $F_0$
+baseline, suggesting this group introduces noise under the current detector.
 
-The full $F_{\text{all}}$ bank gives the best ablation result at 77.48\% Class
-$\pm$1 Acc and 32.62\% Tree $\pm$1 Acc. The gain over F0 is 1.42 percentage
-points at class level and 4.25 points at tree level. This is the largest
-improvement produced by feature ablation, but it recovers only a small fraction
-of the 20.57 percentage points lost between GT and fixed-detector inputs.
+The full $F_{\text{all}}$ set gives the best ablation result at 77.48\% Class
+$\pm$1 Acc and 32.62\% Tree $\pm$1 Acc. The gain over $F_0$ is 1.42 percentage
+points at class level and 4.25 points at tree level. This 1.42-pp gain is the
+ceiling of feature-side improvement. The best feature set narrows only a small
+fraction of the gap between GT and fixed-detector conditions.
 
 \subsection{GT vs.\ Fixed-Detector Gap}
 \label{sec:gap}
 
 The central comparison is the per-class gap between ideal detections and the
-fixed detector. Fig.~\ref{fig:gap} plots this gap in the top panel and shows the
-signed bias of the best fixed-detector configuration in the bottom panel.
+fixed detector, shown with the signed bias of the best configuration in
+Fig.~\ref{fig:gap}.
 
 \begin{figure}[!htbp]
   \centering
@@ -479,15 +512,23 @@ into the next-cycle harvest estimate rather than cancel out as random noise.
   \end{tabular}
 \end{table}
 
-Read together, Tables~\ref{tab:yolo}--\ref{tab:summary} with
-Fig.~\ref{fig:gap} support a single interpretation. Multi-view duplicate
-visibility is real and large, but learned tree-level counters handle it when
-detector evidence is accurate (Section~\ref{sec:gt}). Once a fixed detector
-replaces ground-truth boxes, counter performance drops sharply
-(Section~\ref{sec:fixed}), and richer features or different counter families
-recover only a small fraction of the loss (Section~\ref{sec:ablation}). The
-per-class structure of the gap and bias is consistent with a detector-quality
-bottleneck under the tested YOLO26m checkpoint.
+Across all counter and feature combinations, the per-class gap traces the
+detector recall profile in Table~\ref{tab:yolo}, not the spread among counter
+families. Multi-view duplicate visibility is real and large, but learned
+tree-level counters handle it when detector evidence is accurate
+(Section~\ref{sec:gt}). Once a fixed detector replaces ground-truth boxes,
+counter performance drops sharply (Section~\ref{sec:fixed}), and richer
+features or different counter families close only a small fraction of the loss
+(Section~\ref{sec:ablation}). This aligns with the finding in~\cite{ref7} that
+counting errors typically trace to detection quality. The present benchmark puts
+a concrete upper bound on what counter-side improvements can contribute.
+
+These findings have a direct consequence for system design. The gap between the
+GT ceiling and the fixed-detector result sets an upper bound on what counter-side
+changes alone can recover. No counter or feature combination tested here narrows
+that gap by more than 1.42 pp at the class level. Improving detector recall on
+B3 and B4, the two weakest classes, is therefore the highest-leverage
+intervention available in this pipeline.
 
 Several limitations bound the scope of these findings. The benchmark uses a
 single dataset of 953 trees from two plantations in South Kalimantan, so
@@ -500,7 +541,7 @@ four-class B1 through B4 taxonomy also admits visual ambiguity at the B2/B3 and
 B3/B4 boundaries. Future work should prioritize B3/B4 recall, confidence
 calibration for counting, and explicit cross-view association or geometry-aware
 aggregation~\cite{ref2,ref3,ref4} rather than expanding the tree-level feature
-bank further.
+set further.
 
 % ---------------------------------------------------------------------------
 \section{Conclusion}
@@ -508,12 +549,12 @@ bank further.
 
 This paper benchmarks multi-view tree-level oil palm FFB counting by evaluating
 the same counters under GT detections and cached YOLO26m outputs. With GT
-detections, standard regression counters recover the B1 to B4 count with
-near-ceiling accuracy. With the fixed detector, the best Ridge +
-$F_{\text{all}}$ pipeline reaches 77.48\% Class $\pm$1 Acc, and feature
-ablation recovers only a small fraction of the gap. On SawitMVC under this
-detector checkpoint, the limiting factor is detector output quality, especially
-for B3 and B4, rather than the choice among the tested tree-level counters.
+detections, standard regression counters achieve near-ceiling accuracy on the
+B1 through B4 count. With the fixed detector, neither additional feature groups
+nor alternative counter families narrow the gap appreciably. On SawitMVC under
+this detector checkpoint, the limiting factor is detector output quality,
+especially for B3 and B4, rather than the choice among the tested tree-level
+counters. Closing the gap will require improving the detector, not the counter.
 
 % ---------------------------------------------------------------------------
 \section*{Acknowledgment}
@@ -521,16 +562,10 @@ for B3 and B4, rather than the choice among the tested tree-level counters.
 
 This research was funded by the Badan Pengelola Dana Perkebunan (BPDP),
 Indonesia, under contract number PRJ-36/BPDP/2026, through Universitas Lambung
-Mangkurat (ULM), Banjarmasin, Indonesia. The authors thank the field data
-collection teams and annotators whose work produced the bounding box and
-cross-view identity labels. The authors also thank the plantation staff for
-supervising annotation and the plantation management for facilitating field
-access.
-The source code is available at \url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}.
-The SawitMVC dataset is available on Zenodo at \url{https://zenodo.org/records/20336323}
-(doi: \url{https://doi.org/10.5281/zenodo.20336323}).
+Mangkurat (ULM), Banjarmasin, Indonesia.
 
 % ---------------------------------------------------------------------------
+\balance
 \begin{thebibliography}{00}
 
 \bibitem{ref12}
@@ -546,6 +581,61 @@ A.~Koirala, K.~B.~Walsh, Z.~Wang, and C.~McCarthy,
 yield estimation,''
 \textit{Computers and Electronics in Agriculture}, vol.~162, pp.~219--234,
 Jul.~2019, doi: \url{https://doi.org/10.1016/j.compag.2019.04.017}.
+
+\bibitem{ref5}
+M.~Stein, S.~Bargoti, and J.~Underwood,
+``Image based mango fruit detection, localisation and yield estimation using
+multiple view geometry,''
+\textit{Sensors}, vol.~16, no.~11, Art. no.~1915, Nov.~2016,
+doi: \url{https://doi.org/10.3390/s16111915}.
+
+\bibitem{ref6}
+P.~Roy, A.~Kislay, P.~A.~Plonski, J.~Luby, and V.~Isler,
+``Vision-based preharvest yield mapping for apple orchards,''
+\textit{Computers and Electronics in Agriculture}, vol.~164, Art. no.~104897,
+Sep.~2019, doi: \url{https://doi.org/10.1016/j.compag.2019.104897}.
+
+\bibitem{ref7}
+N.~H\"{a}ni, P.~Roy, and V.~Isler,
+``A comparative study of fruit detection and counting methods for yield
+mapping in apple orchards,''
+\textit{Journal of Field Robotics}, vol.~37, no.~2, pp.~263--282, Mar.~2020,
+doi: \url{https://doi.org/10.1002/rob.21902}.
+
+\bibitem{ref3}
+M.~Gaillard, B.~Benes, M.~C.~Tross, and J.~C.~Schnable,
+``Multi-view triangulation without correspondences,''
+\textit{Computers and Electronics in Agriculture}, vol.~206, Art. no.~107688,
+Mar.~2023, doi: \url{https://doi.org/10.1016/j.compag.2023.107688}.
+
+\bibitem{ref4}
+H.~Freeman, E.~Schneider, C.~H.~Kim, M.~Lee, and G.~Kantor,
+``3D reconstruction-based seed counting of sorghum panicles for agricultural
+inspection,''
+in \textit{Proc. IEEE International Conference on Robotics and Automation
+(ICRA)}, 2023, pp.~9594--9600, doi:
+\url{https://doi.org/10.1109/ICRA48891.2023.10161400}.
+
+\bibitem{ref8}
+L.~Meyer, A.-T.~Ardelean, T.~Weyrich, and M.~Stamminger,
+``FruitNeRF++: A generalized multi-fruit counting method utilizing contrastive
+learning and neural radiance fields,''
+in \textit{Proc. IEEE/RSJ International Conference on Intelligent Robots and
+Systems (IROS)}, 2025, pp.~1717--1724, doi:
+\url{https://doi.org/10.1109/IROS60139.2025.11247341}.
+
+\bibitem{ref14}
+C.-Y.~Wang, A.~Bochkovskiy, and H.-Y.~M.~Liao,
+``YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time
+object detectors,''
+in \textit{Proc. IEEE/CVF Conference on Computer Vision and Pattern
+Recognition (CVPR)}, 2023, pp.~7464--7475,
+doi: \url{https://doi.org/10.1109/CVPR52729.2023.00721}.
+
+\bibitem{ref15}
+G.~Jocher and J.~Qiu,
+``Ultralytics YOLO26,'' Ultralytics, version~26.0.0, 2026. [Software].
+Available: \url{https://github.com/ultralytics/ultralytics}.
 
 \bibitem{ref9}
 N.~A.~Prasetyo, Pranowo, and A.~J.~Santoso,
@@ -576,68 +666,26 @@ YOLO model,''
 \textit{The Visual Computer}, vol.~38, no.~7, pp.~2341--2355, 2022,
 doi: \url{https://doi.org/10.1007/s00371-021-02116-3}.
 
-\bibitem{ref2}
-X.~Liu, S.~W.~Chen, C.~Liu, S.~S.~Shivakumar, J.~Das, C.~J.~Taylor,
-J.~Underwood, and V.~Kumar,
-``Monocular camera based fruit counting and mapping with semantic data
-association,''
-\textit{IEEE Robotics and Automation Letters}, vol.~4, no.~3, pp.~2296--2303,
-Jul.~2019, doi: \url{https://doi.org/10.1109/LRA.2019.2901987}.
+\bibitem{refNaftali2024}
+M.~G.~Naftali, G.~Hugo, and Suharjito,
+``Palm oil counter: State-of-the-art deep learning models for detection and
+counting in plantations,''
+\textit{IEEE Access}, vol.~12, pp.~90395--90417, 2024,
+doi: \url{https://doi.org/10.1109/ACCESS.2024.3419835}.
 
-\bibitem{ref5}
-M.~Stein, S.~Bargoti, and J.~Underwood,
-``Image based mango fruit detection, localisation and yield estimation using
-multiple view geometry,''
-\textit{Sensors}, vol.~16, no.~11, Art. no.~1915, Nov.~2016,
-doi: \url{https://doi.org/10.3390/s16111915}.
+\bibitem{refSuharjito2025}
+Suharjito, M.~G.~Naftali, G.~Hugo, M.~R.~A.~Priyadi, M.~Asrol, and
+D.~N.~Utama,
+``Oil palm fruits dataset in plantations for harvest estimation using digital
+census and smartphone,''
+\textit{Scientific Data}, vol.~12, p.~972, Jun.~2025,
+doi: \url{https://doi.org/10.1038/s41597-025-05227-x}.
 
-\bibitem{ref6}
-P.~Roy, A.~Kislay, P.~A.~Plonski, J.~Luby, and V.~Isler,
-``Vision-based preharvest yield mapping for apple orchards,''
-\textit{Computers and Electronics in Agriculture}, vol.~164, Art. no.~104897,
-Sep.~2019, doi: \url{https://doi.org/10.1016/j.compag.2019.104897}.
-
-\bibitem{ref3}
-M.~Gaillard, B.~Benes, M.~C.~Tross, and J.~C.~Schnable,
-``Multi-view triangulation without correspondences,''
-\textit{Computers and Electronics in Agriculture}, vol.~206, Art. no.~107688,
-Mar.~2023, doi: \url{https://doi.org/10.1016/j.compag.2023.107688}.
-
-\bibitem{ref4}
-H.~Freeman, E.~Schneider, C.~H.~Kim, M.~Lee, and G.~Kantor,
-``3D reconstruction-based seed counting of sorghum panicles for agricultural
-inspection,''
-in \textit{Proc. IEEE International Conference on Robotics and Automation
-(ICRA)}, 2023, pp.~9594--9600, doi:
-\url{https://doi.org/10.1109/ICRA48891.2023.10161400}.
-
-\bibitem{ref8}
-L.~Meyer, A.-T.~Ardelean, T.~Weyrich, and M.~Stamminger,
-``FruitNeRF++: A generalized multi-fruit counting method utilizing contrastive
-learning and neural radiance fields,''
-in \textit{Proc. IEEE/RSJ International Conference on Intelligent Robots and
-Systems (IROS)}, 2025, pp.~1717--1724, doi:
-\url{https://doi.org/10.1109/IROS60139.2025.11247341}.
-
-\bibitem{ref7}
-N.~H\"{a}ni, P.~Roy, and V.~Isler,
-``A comparative study of fruit detection and counting methods for yield
-mapping in apple orchards,''
-\textit{Journal of Field Robotics}, vol.~37, no.~2, pp.~263--282, Mar.~2020,
-doi: \url{https://doi.org/10.1002/rob.21902}.
-
-\bibitem{ref14}
-C.-Y.~Wang, A.~Bochkovskiy, and H.-Y.~M.~Liao,
-``YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time
-object detectors,''
-in \textit{Proc. IEEE/CVF Conference on Computer Vision and Pattern
-Recognition (CVPR)}, 2023, pp.~7464--7475,
-doi: \url{https://doi.org/10.1109/CVPR52729.2023.00721}.
-
-\bibitem{ref15}
-G.~Jocher and J.~Qiu,
-``Ultralytics YOLO26,'' Ultralytics, version~26.0.0, 2026. [Software].
-Available: \url{https://github.com/ultralytics/ultralytics}.
+\bibitem{refIndriani2026}
+F.~Indriani et al.,
+``SawitMVC: A Multi-View Oil Palm Fruit Bunch Dataset for Detection and
+Counting,'' Zenodo, May~22, 2026,
+doi: \url{https://doi.org/10.5281/zenodo.20336323}.
 
 \bibitem{ref16}
 T.-Y.~Lin et al.,
@@ -668,6 +716,14 @@ L.~Breiman,
 ``Random forests,''
 \textit{Machine Learning}, vol.~45, no.~1, pp.~5--32, 2001,
 doi: \url{https://doi.org/10.1023/A:1010933404324}.
+
+\bibitem{ref2}
+X.~Liu, S.~W.~Chen, C.~Liu, S.~S.~Shivakumar, J.~Das, C.~J.~Taylor,
+J.~Underwood, and V.~Kumar,
+``Monocular camera based fruit counting and mapping with semantic data
+association,''
+\textit{IEEE Robotics and Automation Letters}, vol.~4, no.~3, pp.~2296--2303,
+Jul.~2019, doi: \url{https://doi.org/10.1109/LRA.2019.2901987}.
 
 \end{thebibliography}
 
