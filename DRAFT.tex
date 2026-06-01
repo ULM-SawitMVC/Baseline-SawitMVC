@@ -253,9 +253,18 @@ Random Forest~\cite{ref18}. Each counter maps a tree feature vector
 $\mathbf{x}_i$ to the count vector $\hat{\mathbf{y}}_i =
 f_{\theta}(\mathbf{x}_i)$.
 
-All counter models are trained on the 716-tree training split and evaluated on
-the fixed 141-tree test split. Class-level $\pm 1$ correctness for tree $i$
-and class $c$ is
+All machine-learning counters are trained only on the 716-tree training split,
+with deterministic seed 42; continuous outputs are rounded to the nearest
+non-negative integer before metric computation. Linear Regression, Ridge,
+ElasticNet, and SVM use standardized features. Ridge uses RidgeCV over
+$\alpha \in \{0.01,0.1,1,10,100,500\}$, ElasticNet uses MultiTaskElasticNetCV
+with 5-fold cross-validation and 3000 maximum iterations, SVM uses an RBF SVR
+in a multi-output wrapper with 3-fold GridSearchCV over
+$C \in \{0.1,1,10\}$ and $\gamma \in \{\text{scale},0.01,0.1\}$, and Random
+Forest uses 200 trees, maximum depth 10, and random state 42.
+
+All counter models are evaluated on the fixed 141-tree test split. Class-level
+$\pm 1$ correctness for tree $i$ and class $c$ is
 \begin{equation}
   I_{i,c}^{\pm 1} =
   \begin{cases}
