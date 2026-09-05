@@ -1,0 +1,7 @@
+{
+  "weights_sha256": "306f93948c9ec1fb5a305644cae3f38e9c29e99c2b695392f6e33c96a9215838",
+  "conf": 0.25,
+  "imgsz": 640,
+  "weights": "/workspace/Baseline-SawitMVC/runs/reviewer-yolo11/train/weights/best.pt",
+  "predictions": "/workspace/Baseline-SawitMVC/predictions/yolo11m_revision_306f93948c9e_per_tree"
+}

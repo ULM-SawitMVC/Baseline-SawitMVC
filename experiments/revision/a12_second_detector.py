@@ -23,6 +23,11 @@ import numpy as np
 import pandas as pd
 
 import revcommon as rc
+
+# Dataloader workers: lihat "Throughput" di CLAUDE.md. workers=0 membuat GPU
+# menganggur ~69% waktu pada mesin 48-core; dicatat di provenance karena bobot
+# akhir tidak bit-identik antar nilai workers.
+TRAIN_WORKERS = 12
 from a10_revision_audit import comparison
 from a2_error_decomposition import load_json, match_tree
 
@@ -115,7 +120,7 @@ def main():
     if weights is None:
         model=YOLO('yolo11m.pt')
         model.train(data=str(yaml_path),epochs=60,batch=32,imgsz=640,patience=60,
-                    seed=42,deterministic=True,device=args.device,workers=0,
+                    seed=42,deterministic=True,device=args.device,workers=TRAIN_WORKERS,
                     project=str(rc.ROOT/'runs/reviewer-yolo11'),name='train',exist_ok=False)
         weights=Path(model.trainer.best)
     weights=weights.resolve()
@@ -141,7 +146,8 @@ def main():
             inference_settings=settings,images=images)),encoding='utf-8')
         print('Inferred',tid,flush=True)
     rc.OUT_DIR.mkdir(parents=True,exist_ok=True)
-    rc.dump(dict(settings,weights=str(weights),predictions=str(output)),rc.OUT_DIR/'a12_provenance.json')
+    rc.dump(dict(settings,weights=str(weights),predictions=str(output),
+        train_workers=TRAIN_WORKERS),rc.OUT_DIR/'a12_provenance.json')
     evaluate(output)
 
 

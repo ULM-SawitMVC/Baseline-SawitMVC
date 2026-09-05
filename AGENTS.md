@@ -256,3 +256,31 @@ F0 + per-class:
 - RF: `n_estimators=200`, `max_depth=10`, `random_state=42`
 - Counter artifacts bisa diload ulang: `--load-model models/counters/{svm,rf,lr}.pkl`
 - Semua script mendukung `--skip-inference` untuk pakai cached predictions
+
+## Throughput: selalu maksimalkan dataloader workers
+
+Setiap eksperimen yang melatih atau meng-inference detektor **wajib** menyetel
+`workers` ke jumlah yang sepadan dengan mesin, bukan dibiarkan `0`. Default
+`workers=0` aman untuk Windows tapi memaksa decoding JPEG 960x1280 berjalan di
+satu proses; GPU lalu menganggur menunggu data.
+
+Terukur pada run a12 (YOLO11m, 3.000 gambar latih, RTX 2000 Ada 16 GB, 48 core):
+
+| Setelan | Kecepatan | GPU util | Estimasi 60 epoch |
+|---|---|---|---|
+| `workers=0` | 2,9 s/iter | 31% | ~5 jam |
+| `workers=12` | 1,3 iter/detik | 82% | ~1,5 jam |
+
+Aturan:
+
+- Pilih `workers = min(12, nproc // 2)` sebagai titik awal; naikkan selama GPU
+  util belum mendekati ~85%, berhenti sebelum RAM host jadi hambatan.
+- Sebelum menyimpulkan "training memang lambat", ukur dulu:
+  `nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits`
+  disampel ~30 kali. Rata-rata di bawah ~70% berarti data-bound, bukan
+  compute-bound, dan `workers` adalah tuas pertama yang harus dinaikkan.
+- Naikkan `workers` saja; jangan sentuh `epochs`, `batch`, `imgsz`, atau `seed`
+  untuk mengejar waktu. Yang berubah hanya urutan augmentasi per worker, bukan
+  hyperparameter.
+- Catat nilai `workers` yang dipakai pada artifact provenance run tersebut,
+  karena bobot akhir tidak akan bit-identik dengan run `workers=0`.
