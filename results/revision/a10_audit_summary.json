@@ -1,0 +1,43 @@
+{
+  "nontraining237": {
+    "gt": {
+      "mean_pct": 97.72163120567376,
+      "std_pct": 1.0176298033991635
+    },
+    "fixed": {
+      "mean_pct": 72.69592198581562,
+      "std_pct": 2.353731664977067
+    },
+    "gap": {
+      "mean_pct": 25.02570921985815,
+      "std_pct": 2.011605189670051
+    }
+  },
+  "testonly141": {
+    "gt": {
+      "mean_pct": 97.1613300492611,
+      "std_pct": 1.2321683470076983
+    },
+    "fixed": {
+      "mean_pct": 74.08497536945812,
+      "std_pct": 2.956607227867416
+    },
+    "gap": {
+      "mean_pct": 23.07635467980296,
+      "std_pct": 2.655500672204726
+    }
+  },
+  "environment": {
+    "python": "3.14.5",
+    "numpy": "2.4.2",
+    "scipy": "1.17.1",
+    "sklearn": "1.8.0"
+  },
+  "caveats": [
+    "Fold SD is descriptive; repeated folds overlap.",
+    "237 pool includes detector validation trees; 141 pool excludes them.",
+    "Detector is frozen, not retrained in outer folds.",
+    "Historical model builders standardize before internal Ridge/ElasticNet CV; outer fold test trees are excluded.",
+    "Reported-best configurations were highlighted after comparing test results; inference is conditional and exploratory."
+  ]
+}

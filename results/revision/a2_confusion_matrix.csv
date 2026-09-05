@@ -1,0 +1,6 @@
+,pred_B1,pred_B2,pred_B3,pred_B4,pred_background
+gt_B1,172,31,2,0,47
+gt_B2,51,126,158,0,161
+gt_B3,0,26,850,39,494
+gt_B4,0,0,89,104,262
+gt_background,58,158,393,97,0

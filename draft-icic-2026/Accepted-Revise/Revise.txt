@@ -1,0 +1,97 @@
+
+	ICIC2026 (author)		User guide/Log out
+Submission 57	Help	Conference	EasyChair
+Update information
+Update topics
+Update authors
+Update file
+Withdraw
+ICIC2026 Submission 57
+If you want to change any information about your submission, use links in the upper right corner.
+
+For all questions related to your submission you should contact the conference organizers. Click here to see information about this conference.
+
+All reviews sent to you can be found at the bottom of this page.
+
+Submission 57
+Title	Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector
+Paper	ICIC2026_paper_57.pdf(Jun 19, 14:45)
+Author keywords	Oil palm
+fresh fruit bunch
+black bunch census
+multi-view counting
+object detection
+YOLO
+tree-level regression
+agricultural computer vision
+Topics	Computing and Processing
+Abstract	In oil palm plantations, each harvest cycle is planned from a per-tree count of fruit bunches grouped by maturity class, since each class ripens on a different schedule. Multi-view imaging recovers bunches hidden by occlusion, but the same bunch then reappears across several side views, so per-image detections must be aggregated into a per-tree count rather than summed. How well different counting methods perform this tree-level aggregation has not been benchmarked for oil palm. This paper evaluates five regression counters and eight feature configurations on 953 oil palm trees and 3,992 side-view images, under two detection conditions: ground-truth detections, which measure the counters in isolation, and a fixed YOLO26m detector, which reflects a deployed pipeline. With ground-truth detections, the best counter reaches 98.05% accuracy at the class level and 92.20% at the whole-tree level. Under the fixed detector, both fall sharply, to 77.48% and 32.62%. This gap of 20.57 and 59.58 points respectively persists across all five counters and eight feature configurations. Although the study sets out to compare counting methods, the dominant finding is that detector output quality, more than the choice of counter, limits deployed accuracy.
+Submitted	Jun 19, 14:45
+Last update	Jun 19, 14:47
+Showing 
+all
+ entries of 9 (1 to 9)	
+Search
+Authors
+First name	Last name	Email	Country	Affiliation	
+Corresponding?
+Submitting?
+Presenter
+Muhammad Zainal	Muttaqin	mz.muttaqin1@gmail.com	Indonesia	Lambung Mangkurat University	✔	✔	✔
+Fatma	Indriani	f.indriani@ulm.ac.id	Indonesia	Lambung Mangkurat University	✔		
+Setyo Wahyu	Saputro	setyo.saputro@ulm.ac.id	Indonesia	Lambung Mangkurat University			
+Alia	Rahmi	alia.rahmi@ulm.ac.id	Indonesia	Lambung Mangkurat University			
+Triando Hamonangan	Saragih	triando.saragih@ulm.ac.id	Indonesia	Lambung Mangkurat University			
+Hartoni	Hartoni	hartoni@ulm.ac.id	Indonesia	Lambung Mangkurat University			
+Dwi	Kartini	dwikartini@ulm.ac.id	Indonesia	Lambung Mangkurat University			
+Naufal	Said	naufal.said@ulm.ac.id	Indonesia	Lambung Mangkurat University			
+Reviews
+Review 1
+Overall evaluation	
+2: accept
+Overall, great. Only a few revisions can be added to strengthen your research paper:
+1) CONCLUSION: Include further implications for the field. Discuss benefits or shortcomings of your work and suggest future areas for research.
+Thank you
+Review 2
+Overall evaluation	
+-1: weak reject
+The paper has a worthwhile contribution because it addresses an underexplored problem in oil-palm computer vision: tree-level multi-view fruit-bunch counting rather than merely image-level detection.
+
+The controlled comparison between ground-truth and fixed-detector conditions is particularly valuable and produces a clear practical conclusion.
+
+However, the current manuscript does not yet provide sufficient evidence to support some of its broader conclusions. The use of a single detector, limited test set, absence of statistical significance analysis, and limited error decomposition are the main weaknesses.
+
+I would recommend acceptance after minor revision, provided that the authors strengthen the statistical analysis, clarify the scope of their conclusions, and provide a more rigorous decomposition of detector and counting errors.
+Review 3
+Overall evaluation	
+-1: weak reject
+The authors should prioritize the following revisions:
+
+1. Add statistical uncertainty/significance analysis for the reported model differences.
+
+2. Clarify the scope of the detector-related conclusion, because only one detector checkpoint is evaluated.
+
+3. Provide more detailed error decomposition for missed detections, false positives, and maturity-class confusion.
+
+4. Add additional counting metrics, especially per-class MAE/RMSE and total bunch-count error.
+
+5. Strengthen validation using repeated splits, cross-validation, or an independent plantation if available.
+
+6. Expand the feature-definition table to improve reproducibility.
+
+7. Discuss the poor Random Forest performance more thoroughly.
+
+8. Moderate broad generalizations about detector quality versus counter quality.
+
+9. Clearly distinguish detector performance limitations from multi-view association/aggregation limitations.
+
+10. Carefully proofread the manuscript for formatting, equations, tables, and citation consistency.
+Review 4
+Overall evaluation	
+1: weak accept
+The paper features a clear problem statement and maintains a logically coherent, contradiction-free trajectory by investigating the gap between multi-view detection and tree-level aggregation in oil palm bunch counting.
+The SawitMVC dataset (953 trees, 3,992 images) provides sufficient data with well-defined splits, and the literature review adequately connects multi-crop agricultural vision methods to current oil palm gaps.
+The methodology is sound; decoupling ground-truth from fixed-detector inputs offers empirical novelty by definitively demonstrating that detector quality—rather than regression counter design—is the primary deployment bottleneck.
+Both discussion and conclusion are focused, honest about limitations, and well-supported.
+For revisions, the authors should fix several noticeable typesetting and column-alignment errors in Tables III and V, briefly evaluate an additional detector architecture to strengthen the generalizability of the findings, and clarify how robust the vertical spatial features are to real-world camera pitch variations.
+Copyright © 2002 – 2026 EasyChair

@@ -1,0 +1,7 @@
+label,accuracy_pct
+GT detections + counter,98.04964539007092
+"Matched IDs, GT classes",86.17021276595744
+"Matched IDs, class vote",71.80851063829788
+Class vote + unmatched boxes,62.23404255319149
+Deployed counter,77.48226950354609
+Naive detection sum,50.70921985815603
