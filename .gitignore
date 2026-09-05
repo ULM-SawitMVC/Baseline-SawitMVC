@@ -35,6 +35,9 @@ checkpoints/
 weights/
 *.pt
 *.pth
+# Kecuali checkpoint yang sengaja diarsipkan di models/ (dilacak via Git LFS,
+# lihat .gitattributes). Bobot hasil training ada di runs/ dan tetap diabaikan.
+!models/**/*.pt
 *.onnx
 *.engine
 *.pkl
