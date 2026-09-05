@@ -34,11 +34,12 @@ ground-truth detections, the best reported counter reaches 98.05\% Class
 $\pm$1 accuracy and 92.20\% Tree $\pm$1 accuracy; under the fixed detector both fall
 sharply, to 77.48\% and 32.62\%. A tree-level bootstrap places the class-level
 gap at 20.57 points (95\% CI 17.20--23.94), while no two counters differ
-significantly on Class $\pm$1 accuracy after multiplicity correction.
+significantly under fixed inputs on Class $\pm$1 accuracy after multiplicity correction.
 Diagnostic matching finds 22.7\% of test bunches undetected in every view,
 alongside substantial maturity-class confusion; these diagnostics do not
 provide an additive decomposition of the deployed error. The GT advantage
-persists in matched cross-validation and comparisons of four YOLO26 checkpoints.
+persists in matched cross-validation, four YOLO26 checkpoints, and a separately
+trained YOLO11m, whose matched-counter GT gap is 23.94 points.
 These results support prioritising detector output quality on this dataset,
 while leaving improvements from other counters and detector families open.
 \end{abstract}
@@ -189,6 +190,12 @@ so they are compared on a checkpoint-fair subset, the 590 trees that train
 under both protocols and the 64 excluded from gradient training under both.
 This subset includes validation trees used during detector development; it is
 not an independent test of a second architecture family.
+We additionally train YOLO11m on the official 716/96/141 split, using the same
+epoch, batch, image-size and seed settings, with 12 data-loader workers and
+Ultralytics 8.4.140. Its validation-selected checkpoint is frozen before test
+evaluation; Ridge$+F_0$ is refitted on 716 training trees for each input source.
+Software versions and architecture-specific defaults differ, so this is a
+pipeline comparison, not an isolated causal effect of architecture.
 
 Validation mAP50 follows the COCO convention~\cite{ref16}.
 
@@ -307,9 +314,10 @@ and $F_{\text{all}}$.
 Two heuristic baselines are included as reference points. The \textit{naive
 sum} sums all detected appearances per class (defined in
 Section~\ref{sec:task}). The \textit{global divisor} scales the naive sum by a
-single constant $k = 1.891$, the ratio of appearances to unique bunches over
-the 716 training trees, which corrects for the average number of views in which
-a bunch is seen. The global divisor is calibrated only on training trees.
+single constant fitted separately in each input condition: the ratio of input
+appearances to annotated unique bunches over the 716 training trees.
+This gives $k=1.891$ for GT inputs and $k=1.793$ for fixed-detector inputs;
+neither calibration uses validation or test trees.
 
 Five regression models are evaluated in both detection conditions: Linear
 Regression, Ridge~\cite{ref19}, ElasticNet~\cite{ref17}, SVM~\cite{ref20}, and
@@ -446,7 +454,7 @@ Section~\ref{sec:rf} examines RF's prediction behaviour.
     Method & Class $\pm$1 & Tree $\pm$1 & MAE & Class $\pm$1 & Tree $\pm$1 & MAE \\
     \midrule
     Naive sum         & 50.00          & 6.38           & 2.142          & 50.71          & 10.64          & 2.447 \\
-    Global divisor    & 95.57          & 86.52          & 0.356          & ---            & ---            & ---   \\
+    Global divisor    & 95.57          & 86.52          & 0.356          & 70.21          & 22.70          & 1.188 \\
     \addlinespace[2pt]
     ElasticNet        & \textbf{98.05} & \textbf{92.20} & 0.277          & \textbf{76.42} & 29.79          & \textbf{1.043} \\
     SVM               & 97.87          & 91.49          & \textbf{0.266} & 74.82          & 29.08          & \textbf{1.043} \\
@@ -458,7 +466,7 @@ Section~\ref{sec:rf} examines RF's prediction behaviour.
 \par\vspace{3pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} Accuracy is in \%; MAE is macro MAE. The divisor uses training GT only; --- denotes not evaluated.
+    \textit{Note:} Accuracy is in \%; MAE is macro MAE. The divisor is fitted separately per input condition using training trees only.
   \end{minipage}
 \end{table}
 
@@ -653,9 +661,18 @@ an implemented association module and controlled interventions on that module.
 \label{sec:robust}
 
 A claim about detector quality drawn from one checkpoint and one split needs
-external checks. Table~\ref{tab:robust} reports two: moving the detector along
-its own precision/recall curve, and swapping the checkpoint for one of a
-different capacity.
+additional checks. Table~\ref{tab:robust} compares a second detector family,
+YOLO26 checkpoint capacities, and confidence thresholds.
+
+On the official 141-tree test set, Ridge$+F_0$ reaches 73.76\% Class $\pm$1
+and 26.24\% Tree $\pm$1 with YOLO11m, versus 76.06\% and 28.37\% with
+YOLO26m. The Class $\pm$1 difference is $-2.30$\,pp (95\% CI
+$-4.96$ to $+0.35$, exact $p=0.118$); this does not establish equivalence.
+GT reaches 97.70\%, retaining a 23.94-point gap to YOLO11m
+(95\% CI 20.57--27.30, $p<0.001$). YOLO11m has 976 unmatched and 399
+misclassified appearances out of 2,612 annotations, plus 463 unmatched
+detections out of 2,099. Thus the GT advantage extends to this additional
+family, without establishing a general architecture ranking.
 
 The operating-point sweep re-runs inference at confidence 0.05 and filters
 upward; Ridge$+F_{\text{all}}$ is refitted on the 716 training trees at every
@@ -668,16 +685,13 @@ are not identical. Threshold 0.10 ties 0.25 on Class $\pm$1 and reaches
 not independent threshold selection: among these eleven operating points,
 none exceeds 77.48\% Class $\pm$1, but the whole-tree endpoint can improve.
 
-Capacity is varied on a checkpoint-fair subset: three earlier YOLO26
-checkpoints (n, s, m) trained under the previous protocol are compared with
-\texttt{y26mv2} on the 64 trees outside gradient training under both protocols, with counters
-fitted on the 590 trees that train under both. Across four checkpoints spanning
-three model sizes, deployed Class $\pm$1 Acc moves within 3.13 points
-(70.70--73.83\%), while the gap to the GT-detection condition on the very same
-trees is 23.44 points. These are descriptive results within one YOLO26 family;
-capacity and historical training splits are confounded, and the subset includes
-detector validation trees. They neither rank architectures nor substitute for
-an independent evaluation of a separately trained detector family.
+On the 64 trees outside gradient training under both split protocols,
+Ridge$+F_0$ is fitted on the 590 shared training trees. Class $\pm$1 ranges
+from 70.70\% to 73.83\% across four YOLO26 checkpoints, versus 97.27\% for GT:
+a 3.13-point checkpoint spread and a 23.44-point GT gap to \texttt{y26mv2}.
+This within-family comparison confounds capacity with historical training
+splits and includes detector validation trees; it is not an independent
+architecture ranking.
 
 Matched $5\times5$-fold CV with Ridge$+F_0$ on the same 237-tree pool gives
 $97.72\pm1.02$\% (GT) versus $72.70\pm2.35$\% (fixed), a mean gap of
@@ -706,32 +720,37 @@ reacquired pitched images are available to validate those effects.
   \footnotesize
   \renewcommand{\arraystretch}{1.13}
   \setlength{\tabcolsep}{3pt}
-  \caption{Detector checkpoint and threshold sensitivity.}
+  \caption{Detector family, checkpoint and threshold sensitivity.}
   \label{tab:robust}
   \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}
     \toprule
     Setting & Detections & Recall & Class $\pm$1 & Tree $\pm$1 \\
     \midrule
+    \multicolumn{5}{@{}l}{\emph{Family, Ridge$+F_0$, 141 test trees}} \\
+    YOLO11m            & 2099 & 0.445 & 73.76 & 26.24 \\
+    YOLO26m            & 2354 & 0.442 & 76.06 & 28.37 \\
+    GT detections      & 2612 & 1.000 & 97.70 & 90.78 \\
+    \addlinespace[2pt]
     \multicolumn{5}{@{}l}{\emph{Checkpoint, Ridge$+F_0$, 64 evaluation trees}} \\
-    YOLO26n            & --- & 0.442 & 72.66 & 34.38 \\
-    YOLO26s            & --- & 0.383 & 72.27 & 26.56 \\
-    YOLO26m            & --- & 0.427 & 70.70 & 28.12 \\
-    \texttt{y26mv2}    & --- & 0.442 & \textbf{73.83} & 31.25 \\
-    GT detections      & --- & 1.000 & 97.27 & 89.06 \\
+    YOLO26n            & 1013 & 0.442 & 72.66 & 34.38 \\
+    YOLO26s            &  825 & 0.383 & 72.27 & 26.56 \\
+    YOLO26m            &  950 & 0.427 & 70.70 & 28.12 \\
+    \texttt{y26mv2}    & 1067 & 0.442 & \textbf{73.83} & 31.25 \\
+    GT detections      & 1203 & 1.000 & 97.27 & 89.06 \\
     \addlinespace[2pt]
     \multicolumn{5}{@{}l}{\emph{Operating point, Ridge$+F_{\text{all}}$, 141 test trees}} \\
-    $\tau = 0.05$      & 8807 & ---   & 76.24 & 34.75 \\
-    $\tau = 0.10$      & 5522 & ---   & \textbf{77.48} & \textbf{38.30} \\
-    $\tau = 0.25$      & 2353 & ---   & \textbf{77.48} & 32.62 \\
-    $\tau = 0.35$      & 1488 & ---   & 73.05 & 23.40 \\
-    $\tau = 0.50$      &  799 & ---   & 67.91 & 21.28 \\
-    $\tau = 0.70$      &  125 & ---   & 63.12 & 14.89 \\
+    $\tau = 0.05$      & 8807 & 0.591 & 76.24 & 34.75 \\
+    $\tau = 0.10$      & 5522 & 0.556 & \textbf{77.48} & \textbf{38.30} \\
+    $\tau = 0.25$      & 2353 & 0.441 & \textbf{77.48} & 32.62 \\
+    $\tau = 0.35$      & 1488 & 0.355 & 73.05 & 23.40 \\
+    $\tau = 0.50$      &  799 & 0.245 & 67.91 & 21.28 \\
+    $\tau = 0.70$      &  125 & 0.086 & 63.12 & 14.89 \\
     \bottomrule
   \end{tabular*}
 \par\vspace{3pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} Recall is macro appearance recall. The threshold sweep uses the filtered cache; recall was not recomputed for that cache.
+    \textit{Note:} Recall is macro class-correct appearance recall at IoU $\geq0.5$; threshold recall is recomputed after filtering. GT counts are annotated appearances; their recall is 1 by construction.
   \end{minipage}
 \end{table}
 
@@ -766,12 +785,15 @@ Several limitations bound these findings. The benchmark uses one dataset of 953
 trees from two estates in South Kalimantan, and the smaller estate contributes
 99 trees, so cross-site evidence is suggestive rather than conclusive and
 absolute numbers may shift under other regions, varieties, or acquisition
-protocols. The detector evidence covers four checkpoints of one architecture
-family, and the 64-tree comparison is descriptive rather than an architecture
-ranking. A second family and a plantation excluded from detector training
-remain untested. Repeated CV refits counters only; it does not estimate
-detector training variability. Feature-shift tests do not establish robustness
-to physical camera rotation. Test-based highlighting of configurations limits confirmatory claims;
+protocols. The detector evidence covers YOLO26 and one YOLO11m training run;
+software/default differences and the descriptive 64-tree checkpoint comparison
+prevent an architecture-only ranking. A plantation excluded from detector
+training remains untested. Repeated CV refits counters only; it does not estimate
+detector training variability. Camera-pitch robustness remains unverified:
+the dataset lacks calibrated pitch measurements or repeated captures at known
+angles. Synthetic feature shifts cannot reproduce changes in visibility and
+detector output, so spatial-feature findings are limited to the observed
+acquisition conditions. Test-based highlighting of configurations limits confirmatory claims;
 the validation-selection sensitivity check uses the same historical test set.
 The counters treat each tree independently and ignore plantation-scale spatial
 or temporal regularities that operational forecasts sometimes exploit. Finally,
@@ -802,11 +824,12 @@ quality it receives. Cached detections, tree splits, and evaluation code make
 these comparisons reproducible. Per-class and total-count errors further
 separate maturity allocation from overall inventory error.
 
-Evidence remains limited to one dataset, one detector family, and two unequal
+The matched-counter GT advantage also holds for YOLO11m (23.94\,pp).
+Evidence remains limited to one dataset, two detector families, and two unequal
 estates. Future work should improve B3/B4 detection and B2$\rightarrow$B3
 classification, test explicit cross-view association~\cite{ref2,ref3,ref4}
-against learned aggregation under matched inputs, and evaluate a different
-detector family. An independent plantation, calibrated pitch changes, and
+against learned aggregation under matched inputs, and broaden detector evaluation.
+An independent plantation, repeated captures at measured camera-pitch angles, and
 repeated detector training are needed before extending the conclusion to
 other acquisition conditions or operational harvest forecasts.
 

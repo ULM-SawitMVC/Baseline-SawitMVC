@@ -12,9 +12,9 @@ the experiments cannot establish.
 Sections and tables refer to `main-new.tex`. The revised paper is eight pages.
 The diagnostic figure is now Fig. 2; the redundant two-condition schematic was
 replaced by a description in Sec. II-B. Tests and artifacts are supplied with the
-revision in `experiments/revision/` and `results/revision/`. Evaluation of a second
-detector family and physical camera-pitch changes remains outstanding; we identify
-these limits explicitly rather than presenting our proxy studies as substitutes.
+revision in `experiments/revision/` and `results/revision/`. A separately trained
+YOLO11m now supplies the requested second-family evaluation. Physical camera-pitch
+changes remain untested; synthetic feature shifts are not presented as substitutes.
 
 ## Reviewer 1
 
@@ -25,9 +25,9 @@ GT-input and detector-input evaluations help practitioners separate counter
 behaviour from input quality. It recommends investigating recall and maturity
 confusion alongside aggregation, reports both class allocation and inventory error,
 and describes the reproducibility benefits of cached predictions and fixed splits.
-It states the limits of one dataset, one detector family, and two unequal estates.
+It states the limits of one dataset, two detector families, and two unequal estates.
 Future work includes class-specific detector improvement, explicit association,
-another detector family, independently acquired plantation data, calibrated pitch
+broader detector evaluation, independently acquired plantation data, calibrated pitch
 tests, and repeated detector training. We do not claim a numerical ceiling on
 improvements from future counters.
 
@@ -65,8 +65,13 @@ improvements from future counters.
   matched boxes, and unmatched detections. Diagnostic identity-based counting
   rules make their effects visible but do not form an additive decomposition of
   deployed error or an upper bound on counter improvement.
-- Four YOLO26 checkpoints provide within-family sensitivity evidence. They do not
-  establish generality to other detector families. Details follow below.
+- Four YOLO26 checkpoints provide within-family sensitivity evidence. A new
+  YOLO11m trained on the official split reaches **73.76%** Class ±1 with Ridge+F0,
+  versus **76.06%** for YOLO26m and **97.70%** for GT using that same counter.
+  The GT–YOLO11 gap is **23.94 pp** (95% CI **20.57–27.30**, p < 0.001).
+  YOLO11–YOLO26 is −2.30 pp (CI −4.96 to +0.35, exact p = 0.118). The additional
+  family supports the GT advantage without establishing model equivalence or a
+  universal architecture ranking.
 
 ## Reviewer 3
 
@@ -98,6 +103,14 @@ exploratory and does not constitute independent model selection.
 ### 2. Scope of the detector conclusion
 
 **Addressed as a scope clarification — Sec. II-B, III-E, III-G; Table VI.**
+The new first block of Table VI compares YOLO11m, YOLO26m and GT on the official
+141 test trees, with Ridge+F0 fitted on the same 716 training trees. YOLO11m uses
+60 epochs, batch 32, image size 640, seed 42, and 12 data-loader workers. The best
+checkpoint is selected on the 96 validation trees. YOLO11m used Ultralytics
+8.4.140, while the reference detector training log records 8.4.49; architecture
+defaults also differ. The comparison evaluates these trained pipelines rather
+than isolating architecture as the sole cause of a difference.
+
 Three earlier YOLO26 checkpoints (n, s, m) and released y26mv2 are compared with
 Ridge+F0 fitted on the same 590 trees and evaluated on 64 trees outside gradient
 training under both historical split protocols. Their Class ±1 scores range from
@@ -133,7 +146,10 @@ we no longer claim that this procedure isolates pure localisation failure.
 Table I specifies GT-class versus predicted-class denominators and distinguishes
 pooled test recall from macro validation recall. The diagnostic cache and the
 filtered threshold cache differ by one detection at 0.25; Table VI now discloses
-this and does not reuse recall from the original cache for the filtered pass.
+this and reports recall recomputed from the actual filtered cache at each
+threshold, rather than reusing the original cache's recall. For example, macro
+appearance recall at 0.25 is 0.441 for the filtered pass versus 0.442 for the
+original pass. These values have been checked through a14 matching counts.
 
 ### 4. Per-class MAE/RMSE and total-count errors
 
@@ -227,7 +243,12 @@ and metric averaging, and retained the corrected global divisor results
 (95.57% / 86.52% / 0.356). We excluded M01 from the manuscript comparison because
 overlap between its historical 228-tree development snapshot and the current
 test split could not be established. Its code and historical results remain
-available. The retained global divisor is calibrated on the 716 training trees.
+available. The retained global divisor is now evaluated under both inputs, with
+its scale calibrated separately on the 716 training trees: k = 1.891 (GT) and
+1.793 (fixed). Fixed-input Class ±1 / Tree ±1 / macro MAE are **70.21% / 22.70% /
+1.188**. All missing entries in Tables III and VI have been computed from the
+corresponding caches, including checkpoint detection counts, GT appearance
+counts, and per-threshold recall. GT recall equals one by construction.
 
 The Tree ±1 indicator renders correctly; the exact whole-tree gap rounds to
 59.57 pp. References retain first-citation order and the unsupported software
@@ -253,23 +274,34 @@ the combined counter table, ablation table, per-class table, and feature table.
 
 > Briefly evaluate an additional detector architecture.
 
-**Partially addressed; a different architecture family has not been evaluated.**
-Table VI adds four checkpoints spanning three YOLO26 sizes and a confidence
-sweep. They show within-family sensitivity only. We explicitly acknowledge that
-these do not fulfil an independent second-family comparison. The conclusion is
-restricted accordingly, and a separately trained detector family is a stated next
-experiment. No claim of completed cross-architecture validation is made.
+**Addressed — Sec. II-B, III-E; Table VI.** The author completed YOLO11m training
+and evaluation on a separate GPU machine. The revision includes the selected
+checkpoint, all 953 tree prediction files, 60-epoch training logs, arguments,
+per-tree counting predictions, confusion matrix, and paired statistics.
 
-We supply `a12_second_detector.py`, `Reviewer-4-GPU.ipynb`, and a portable
-`reviewer-gpu-bundle.zip` to train YOLO11m on the official 716/96/141 tree split
-and compare both detector caches using Ridge+F0. Data preparation was executed
-and validated all 3,992 images (3,000 train / 404 validation / 588 test).
-Training and evaluation have **not** been run: the local runtime has no CUDA GPU.
-The notebook is an execution package, not evidence of an additional result.
+With the same Ridge+F0 protocol, YOLO11m reaches **73.76% Class ±1 / 26.24%
+Tree ±1 / 1.087 macro MAE**, compared with **76.06% / 28.37% / 1.053** for
+YOLO26m and **97.70% / 90.78% / 0.275** for GT. The Class ±1 difference between
+the two detectors is not significant (−2.30 pp, CI −4.96 to +0.35, p = 0.118).
+The GT–YOLO11m difference remains large (23.94 pp, CI 20.57–27.30, p < 0.001).
+All comparisons use 141 test trees and counters fitted on 716 training trees.
+
+The validation-selected checkpoint's metrics match epoch 16 (mAP50 0.52450,
+mAP50–95 0.25077); training ran the planned 60 epochs. The SHA-256 checksum
+matches the hash embedded in every prediction cache. `a13_gpu_result_audit.py`
+independently refits the counters on CPU and reproduces every committed metric,
+paired test, per-tree prediction, and confusion count. It also verifies the
+953-tree / 3,992-image coverage and split labels.
+
+This fulfils the requested additional architecture evaluation for this dataset.
+One training run per detector, software/default differences, and reuse of the
+historical test set still limit wider generalisation. Calibrated camera-pitch
+testing remains separate and outstanding.
 
 > Clarify robustness of vertical features to real-world camera pitch.
 
-**Partially addressed by a feature sensitivity test — Sec. III-E.** We transform
+**Addressed through sensitivity analysis and explicit limitations — Sec. III-E,
+III-G and IV; physical pitch validation remains future work.** We transform
 mean vertical features with a ∈ [0.90, 1.10] and b ∈ [−0.10, 0.10], clip to [0,1],
 and preserve missing-class sentinels. Ridge+F_all loses at most **1.42 pp**;
 Gaussian noise at σ = 0.05 costs **0.53 pp** in the seeded run. The previous
@@ -277,6 +309,12 @@ simulation incorrectly moved sentinel values for undetected classes; corrected
 outputs are now supplied. This is a synthetic feature-shift test, not calibrated
 camera rotation, which can also affect box area, occlusion, and detector output.
 Physical pitch robustness remains unverified and is identified as a limitation.
+The dataset does not contain calibrated pitch measurements or repeated captures
+at known angles, so the revision restricts the spatial-feature findings to the
+observed acquisition conditions. We explicitly propose repeated captures at
+measured camera-pitch angles followed by end-to-end detection and counting
+evaluation as future work. This clarifies the extent of the available robustness
+evidence without asserting invariance to camera pitch.
 
 ## Reproducibility
 
@@ -293,8 +331,10 @@ Physical pitch robustness remains unverified and is identified as a limitation.
 | `a9_low_threshold_sweep.py`, a9 results | Low-threshold inference sweep with per-threshold counter refitting |
 | `a10_revision_audit.py`, a10 results | All paired exact tests, Holm correction, reproduced headline metrics, matched CV and per-tree predictions |
 | `a11_validation_selection.py`, a11 results | Validation-only ranking of 40 candidates per condition; selected test predictions, paired interval and exact test |
-| `a12_second_detector.py` | Prepared second-family experiment; data preparation validated, training/evaluation pending |
-| `Reviewer-4-GPU.ipynb`, `reviewer-gpu-bundle.zip` | Portable GPU execution package, not executed |
+| `a12_second_detector.py`, a12 results and YOLO11 checkpoint/cache | Completed second-family GPU training and paired evaluation |
+| `a13_gpu_result_audit.py`, `a13_gpu_audit.json` | Checkpoint/cache integrity, split coverage, CPU reproduction of a12 metrics and paired tests, training diagnostics |
+| `a14_complete_table_metrics.py`, a14 results | Global divisor fitted separately under each input condition; checkpoint/GT appearance counts and recomputed threshold recall; completes Tables III/VI |
+| `Reviewer-4-GPU.ipynb`, `reviewer-gpu-bundle.zip` | Historical portable package; actual completed GPU run used the committed a12 script |
 | `test_revision_audit.py` | Six checks: exact inference against SciPy, Holm, comparison coverage, matched CV, validation ranking, selected metrics |
 | `scripts/generate_revision_figure.py` | Fig. 2, derived from saved metrics |
 | `figures/paper/imagegen-figure-prompt.txt`, `fig04_imagegen.png` | Image Gen prompt and layout reference; quantitative manuscript figure uses the vector plot |

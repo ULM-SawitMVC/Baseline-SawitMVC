@@ -7,6 +7,9 @@
 > keenam tabel dan Fig. 2 didesain ulang, dan paket a12 disiapkan untuk GPU.
 > Pengujian audit kini berjumlah enam. Keterangan M01 dan layout di bawah adalah
 > rekam keadaan sebelum perubahan lanjutan tersebut.
+> **Pembaruan GPU:** training YOLO11m kini selesai dan telah diaudit; status
+> menunggu arsitektur kedua di bawah sudah digantikan oleh
+> [GPU-Training-Analysis.md](GPU-Training-Analysis.md).
 
 Naskah aktif adalah `../main-new.tex` dan `../main-new.pdf`. `../main.tex`
 tetap merupakan versi lama. Audit ini memeriksa permintaan empat reviewer,

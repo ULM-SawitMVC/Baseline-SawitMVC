@@ -5,17 +5,17 @@ Naskah aktif: [main-new.pdf](../main-new.pdf), dengan sumber
 [Response-to-Reviewers.md](Response-to-Reviewers.md).
 Versi anonim: [main-blind.pdf](../main-blind.pdf).
 
-Revisi mencakup substansi, statistik, dan tata letak. **Belum semua permintaan
-eksperimen selesai secara empiris:** arsitektur detektor kedua dan pitch kamera
-nyata masih memerlukan eksekusi/data tambahan. Klaim naskah sudah dibatasi sesuai
-bukti yang tersedia; paket ini belum diunggah ke konferensi atau GitHub.
+Revisi mencakup substansi, statistik, dan tata letak. **Arsitektur detektor kedua
+sudah dievaluasi:** hasil GPU YOLO11m ditarik hingga commit `2d73b6ed` dan
+direproduksi secara lokal. Pitch kamera nyata masih memerlukan data tambahan.
+Pembaruan naskah dari audit GPU ini belum di-push atau diunggah ke konferensi.
 
 ## Pemetaan seluruh komentar
 
 | Komentar | Perubahan dan bukti | Status |
 |---|---|---|
 | R1 — implikasi, manfaat, kekurangan, arah riset | Kesimpulan dan keterbatasan menjelaskan implikasi counting, detector recall/confusion, asosiasi, dan validasi lanjutan. | Selesai pada naskah |
-| R2 — satu detektor | Empat checkpoint YOLO26; batas generalisasi dinyatakan eksplisit, a12 disiapkan untuk keluarga kedua. | Parsial; keluarga kedua belum dievaluasi |
+| R2 — satu detektor | Empat checkpoint YOLO26 dan training YOLO11m pada split resmi; gap GT tetap 23,94 pp dengan Ridge+F0. | Selesai untuk evaluasi keluarga tambahan; generalisasi tetap dibatasi |
 | R2 — ukuran test terbatas | Matched repeated CV pada 237 dan 141 pohon; ukuran dan ketergantungan fold dijelaskan. | Analisis tambahan selesai; tidak menambah data independen |
 | R2 — signifikansi | Bootstrap berpasangan, exact paired permutation, semua 10 pasangan counter per kondisi, koreksi Holm; a10. | Selesai |
 | R2 — dekomposisi error | Matching appearance, confusion matrix, objek hilang lintas-view dan aturan diagnostik; a2, Tabel I, Fig. 2. | Selesai sebagai diagnosis; bukan atribusi kausal aditif |
@@ -30,8 +30,8 @@ bukti yang tersedia; paket ini belum diunggah ke konferensi atau GitHub.
 | R3.9 — detector vs association | Enam aturan pada Fig. 2; tiga aturan berbasis identitas dijelaskan sebagai estimator diagnostik. Klaim bound 8,69 pp dihapus. | Selesai sebagai klarifikasi; atribusi kausal butuh modul asosiasi eksplisit |
 | R3.10 — proofreading | Caption singkat, font tabel 8 pt, angka sejajar, persamaan dan urutan sitasi diperiksa. M01 dikeluarkan karena provenance development belum jelas. | Selesai |
 | R4 — layout Tabel III/V | Keenam tabel diperbaiki, detail caption dipindah ke catatan atau paragraf terkait. | Selesai |
-| R4 — arsitektur tambahan | Script a12, notebook GPU dan ZIP portabel. Validasi split/data selesai; belum ada hasil training baru. | Menunggu GPU/eksekusi |
-| R4 — pitch nyata | Sentinel feature diperbaiki, uji affine/noise diulang. Klaim hanya feature sensitivity; bukan rotasi fisik. | Parsial; perlu gambar dengan pitch terukur |
+| R4 — arsitektur tambahan | Training YOLO11m 60 epoch, best checkpoint, cache 953 pohon, paired evaluation a12, dan reproduksi CPU a13 tersedia. | Selesai |
+| R4 — pitch nyata | Uji affine/noise, keterbatasan data pitch, batas generalisasi dan rencana pengambilan gambar bersudut terukur dijelaskan pada III-E, III-G dan IV. | Klarifikasi ditanggapi; validasi pitch fisik menjadi future work |
 
 ## Hasil baru: model dipilih pada validation
 
@@ -68,25 +68,39 @@ Karena panjang bar pada raster generatif tidak seluruhnya presisi, naskah memaka
 dibuat oleh [script plotting](../../scripts/generate_revision_figure.py).
 Caption keenam tabel dipersingkat; definisi tetap ada dalam catatan atau teks.
 
-## Melengkapi eksperimen yang tersisa
+Pada pembaruan 6 September, seluruh tanda strip di Tabel III/VI dilengkapi
+dengan perhitungan [a14](../../experiments/revision/a14_complete_table_metrics.py).
+Global divisor dikalibrasi terpisah per kondisi pada 716 pohon train (k GT
+1,891; fixed 1,793); hasil fixed **70,21% / 22,70% / MAE 1,188**. Jumlah deteksi
+checkpoint dihitung pada 64 pohon evaluasi yang sesuai. GT berisi jumlah
+appearance anotasi (2.612 pada 141 test; 1.203 pada 64 evaluasi), bukan jumlah
+tandan unik. Recall threshold dihitung ulang dari cache low-confidence setelah
+filtering. Recall 0,25 filtered **0,441** berbeda dari cache asli **0,442**.
+Hasil lengkap, confusion counts dan prediksi divisor tersedia di
+[a14_completed_table_metrics.json](../../results/revision/a14_completed_table_metrics.json),
+[a14_appearance_metrics.csv](../../results/revision/a14_appearance_metrics.csv) dan
+[a14_global_divisor_predictions.csv](../../results/revision/a14_global_divisor_predictions.csv).
 
-Untuk arsitektur kedua, buka [Reviewer-4-GPU.ipynb](Reviewer-4-GPU.ipynb) di
-Colab dengan GPU dan unggah [reviewer-gpu-bundle.zip](reviewer-gpu-bundle.zip).
-Notebook memuat langkah autentikasi dataset, validasi data, training, inference,
-evaluasi berpasangan dan ekspor hasil. Notebook belum dijalankan.
-Alternatif CLI pada mesin yang sudah memiliki GPU/dependensi/dataset:
+## Hasil GPU dan eksperimen yang tersisa
+
+Training YOLO11m telah selesai 60 epoch pada mesin GPU penulis. Audit memverifikasi
+hash checkpoint, **953 pohon / 3.992 gambar**, split **716/96/141**, dan reproduksi
+seluruh metrik, paired tests, prediksi counting serta confusion matrix.
+Dengan Ridge+F0 yang sama, Class ±1 YOLO11m **73,76%**, YOLO26m **76,06%**,
+dan GT **97,70%**. Gap GT–YOLO11m **23,94 pp** (CI 20,57–27,30; p < 0,001).
+Selisih antardetektor belum signifikan (−2,30 pp; CI −4,96–0,35; p = 0,118).
+Hasil ini sudah masuk Tabel VI dan respons reviewer.
+
+Lihat [GPU-Training-Analysis.md](GPU-Training-Analysis.md) untuk diagnosis kurva,
+error per kelas dan provenance. Best checkpoint cocok dengan epoch 16 menurut
+fitness validation; evaluasi menggunakan best.pt, bukan last.pt. Perbedaan versi
+software/default dan satu training run membatasi klaim ranking arsitektur.
+Notebook/ZIP lama tetap menjadi rekam persiapan; run selesai menggunakan script
+a12 pada mesin GPU. Reproduksi audit tanpa training:
 
 ```powershell
-python experiments/revision/a12_second_detector.py --prepare-only
-python experiments/revision/a12_second_detector.py --device 0
+python experiments/revision/a13_gpu_result_audit.py
 ```
-
-Persiapan lokal sudah memvalidasi **3.992 gambar**: train 3.000 / val 404 /
-test 588, dengan split **716/96/141 pohon**. Training YOLO11m direncanakan
-60 epoch, batch 32, imgsz 640, seed 42; checkpoint dipilih memakai validation.
-Counter pembanding ditetapkan Ridge+F0. Default training khusus arsitektur
-disimpan, sehingga perbandingan tidak diklaim mengisolasi pengaruh arsitektur saja.
-Hasil a12 baru boleh dimasukkan ke Tabel VI setelah training/evaluasi selesai.
 
 Pitch nyata memerlukan gambar berulang dari pohon yang sama dengan sudut kamera
 terukur, lalu inference dan evaluasi ulang. Data baru itu belum tersedia.
@@ -102,8 +116,8 @@ pernah digunakan untuk training detektor.
   bukan konfirmasi batas halaman resmi ICIC 2026.
 - Seluruh 22 font pada masing-masing PDF terbenam; 23 sitasi mengikuti urutan
   kemunculan pertama. Seluruh halaman utama diperiksa secara visual.
-- Sel Python pada notebook GPU lolos pemeriksaan sintaks; training/inference
-  YOLO11 belum diuji end-to-end pada GPU.
+- Training/inference YOLO11 selesai pada GPU; hasilnya direproduksi oleh audit
+  CPU a13. Seluruh artefak GPU asli dipertahankan.
 - Dokumen belum melalui PDF eXpress atau diunggah sebagai camera-ready.
 - Urutan penulis pada sumber berbeda dari daftar EasyChair yang dilampirkan;
   metadata penulis tidak diubah otomatis. Cocokkan sebelum submit.
