@@ -110,7 +110,8 @@ def figure_cross_view_linking() -> None:
         3: [537, 435, 683, 600],
     }
 
-    fig = plt.figure(figsize=(7.4, 3.95))
+    # Designed to remain readable at one IEEE column (roughly 3.5 inches).
+    fig = plt.figure(figsize=(7.4, 3.5))
     grid = fig.add_gridspec(
         2, 3,
         height_ratios=[0.12, 1.0],
@@ -126,7 +127,7 @@ def figure_cross_view_linking() -> None:
         ax_ribbon.set_ylim(0, 1)
         ax_ribbon.axis("off")
         ribbon = FancyBboxPatch(
-            (0.04, 0.20), 0.92, 0.60,
+            (0.04, 0.03), 0.92, 0.94,
             boxstyle="round,pad=0.02,rounding_size=0.10",
             linewidth=0, facecolor=GT_COLOR,
         )
@@ -134,7 +135,7 @@ def figure_cross_view_linking() -> None:
         ax_ribbon.text(
             0.5, 0.5, f"Side {side}",
             ha="center", va="center",
-            fontsize=10.5, fontweight="bold", color="white",
+            fontsize=16, fontweight="bold", color="white",
         )
 
     # Image crops
@@ -143,7 +144,10 @@ def figure_cross_view_linking() -> None:
         ax = fig.add_subplot(grid[1, idx])
         path = IMAGES / f"{tree_id}_{side}.jpg"
         if not path.exists():
-            raise FileNotFoundError(f"Missing source image: {path}")
+            candidates = list((ROOT / "SawitMVC-YOLO" / "images").glob(f"*/{path.name}"))
+            if len(candidates) != 1:
+                raise FileNotFoundError(f"Expected one source image for {path.name}, found {len(candidates)}")
+            path = candidates[0]
         img = Image.open(path).convert("RGB")
         crop, shifted = crop_around_box(img, boxes[side])
         crop = draw_box_with_halo(crop, shifted)
@@ -156,7 +160,7 @@ def figure_cross_view_linking() -> None:
         crop_axes.append(ax)
 
     # Reserve space at the bottom for the connector + caption, then draw overlays.
-    fig.subplots_adjust(bottom=0.22, top=0.97, left=0.025, right=0.975)
+    fig.subplots_adjust(bottom=0.24, top=0.99, left=0.025, right=0.975)
     fig.canvas.draw()
 
     line_ax = fig.add_axes([0, 0, 1, 1], frameon=False)
@@ -205,11 +209,11 @@ def figure_cross_view_linking() -> None:
     )
 
     # Caption pill, anchored directly below the hub.
-    caption_text = "same physical B3 bunch — three appearances, one tree-level count"
+    caption_text = "One B3 bunch: three appearances, one tree-level count"
     line_ax.text(
         hub_x, hub_y - 0.045, caption_text,
         ha="center", va="top",
-        fontsize=9.3, color=ACCENT_RED, fontweight="bold",
+        fontsize=16, color=ACCENT_RED, fontweight="bold",
         bbox=dict(
             boxstyle="round,pad=0.45,rounding_size=0.30",
             facecolor="white", edgecolor=ACCENT_RED, linewidth=0.9,
@@ -217,7 +221,10 @@ def figure_cross_view_linking() -> None:
     )
 
     fig.savefig(OUT / "fig01_cross_view_linking.png", dpi=320, facecolor="white")
-    fig.savefig(OUT / "fig01_cross_view_linking.pdf", facecolor="white")
+    # The PDF embeds the photo crops as raster; matplotlib resamples them to
+    # this dpi. At the default 100 they land near 210 dpi once the figure is
+    # scaled to one IEEE column, below the 300 dpi IEEE asks for photographs.
+    fig.savefig(OUT / "fig01_cross_view_linking.pdf", dpi=200, facecolor="white")
     plt.close(fig)
 
 

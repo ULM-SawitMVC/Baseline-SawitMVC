@@ -112,10 +112,20 @@ pernah digunakan untuk training detektor.
 - Enam pengujian audit statistik/seleksi lulus.
 - Main dan blind berhasil dibangun; pemeriksaan overflow horizontal dan referensi
   terdefinisi dilakukan oleh `scripts/build_icic_revision.py`.
-- PDF utama dan anonim masing-masing 8 halaman. Ini target layout saat ini,
-  bukan konfirmasi batas halaman resmi ICIC 2026.
-- Seluruh 22 font pada masing-masing PDF terbenam; 23 sitasi mengikuti urutan
-  kemunculan pertama. Seluruh halaman utama diperiksa secara visual.
+- PDF utama dan anonim masing-masing **6 halaman**, mengikuti batas yang
+  diminta penulis. Keenam tabel, kedua gambar dan 23 referensi tetap dipertahankan.
+  Rincian pemadatan dan cakupan reviewer ada di
+  [Six-Page-Revision-Audit.md](Six-Page-Revision-Audit.md).
+- Seluruh 21 font pada masing-masing PDF terbenam dan ter-subset; 23 sitasi
+  mengikuti urutan kemunculan pertama. Seluruh halaman diperiksa secara visual.
+- Kepatuhan format ICIC/IEEE Xplore diverifikasi ulang pada 7 September 2026 dan
+  kini diasersi otomatis oleh `scripts/build_icic_revision.py`: ukuran halaman
+  A4 595x842 pt, nol anotasi tautan, nol bookmark, maksimum enam halaman, dan
+  tidak ada em dash. Sebelum pemeriksaan ini naskah masih terkompilasi pada
+  US Letter dan memuat 49 tautan serta 17 bookmark dari `hyperref`.
+- Foto pada Gambar 1 kini tertanam pada 424 DPI efektif, naik dari 212 DPI,
+  memenuhi anjuran IEEE 300 DPI untuk foto. Ukuran PDF 1,5 MB, di bawah batas
+  2 MB.
 - Training/inference YOLO11 selesai pada GPU; hasilnya direproduksi oleh audit
   CPU a13. Seluruh artefak GPU asli dipertahankan.
 - Dokumen belum melalui PDF eXpress atau diunggah sebagai camera-ready.

@@ -9,7 +9,15 @@ counter comparisons, per-class and total-count errors, appearance-level matching
 matched resampling, and sensitivity analyses. It also removes interpretations that
 the experiments cannot establish.
 
-Sections and tables refer to `main-new.tex`. The revised paper is eight pages.
+Sections and tables refer to `main-new.tex`. The revised paper is six pages.
+The six tables, both figures, all reported table values, all 23 references, and
+the methodological and interpretive responses below are retained. Repeated
+statements have been consolidated, affiliation formatting simplified, and
+literal phrasing revised. Em dashes have been removed, including figure labels.
+Internal weight-file names are no longer printed: detectors are named by
+architecture (YOLO26n/s/m, YOLO11m) and, where two checkpoints of the same
+architecture appear, by training split. Affiliations use numbered superscripts
+instead of the footnote symbols IEEEtran emits by default.
 The diagnostic figure is now Fig. 2; the redundant two-condition schematic was
 replaced by a description in Sec. II-B. Tests and artifacts are supplied with the
 revision in `experiments/revision/` and `results/revision/`. A separately trained
@@ -111,11 +119,11 @@ checkpoint is selected on the 96 validation trees. YOLO11m used Ultralytics
 defaults also differ. The comparison evaluates these trained pipelines rather
 than isolating architecture as the sole cause of a difference.
 
-Three earlier YOLO26 checkpoints (n, s, m) and released y26mv2 are compared with
+Three earlier YOLO26 checkpoints (n, s, m) and the new-split YOLO26m are compared with
 Ridge+F0 fitted on the same 590 trees and evaluated on 64 trees outside gradient
 training under both historical split protocols. Their Class ±1 scores range from
 70.70% to 73.83%; the corresponding GT score is 97.27%. The 23.44-point difference
-between GT and released y26mv2 remains much larger than the observed 3.13-point
+between GT and the new-split YOLO26m remains much larger than the observed 3.13-point
 checkpoint spread.
 
 These 64 trees include detector validation trees. Different capacities also

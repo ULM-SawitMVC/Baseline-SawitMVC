@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[conference,a4paper]{IEEEtran}
 \usepackage[T1]{fontenc}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -6,217 +6,143 @@
 \usepackage{textcomp}
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage[hidelinks]{hyperref}
+\usepackage{url}
 \usepackage{balance}
+\usepackage{etoolbox}
+% Replace the template's em-dash separators with periods.
+\patchcmd{\abstract}{---}{.\ }{}{\errmessage{Abstract separator patch failed}}
+\patchcmd{\IEEEkeywords}{---}{.\ }{}{\errmessage{Keyword separator patch failed}}
 
 \renewcommand\IEEEkeywordsname{Keywords}
+
+% Numbered affiliation marks; zero-height box keeps the author block spacing.
+\newcommand{\affmark}[1]{\raisebox{0pt}[0pt][0pt]{\textsuperscript{\footnotesize #1}}}
 
 \begin{document}
 
 \title{Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector}
 
 \author{
-\IEEEauthorblockN{Muhammad Zainal Muttaqin\IEEEauthorrefmark{1},
-Fatma Indriani\IEEEauthorrefmark{1},
-Setyo Wahyu Saputro\IEEEauthorrefmark{1},
-Alia Rahmi\IEEEauthorrefmark{2},\\
-Dwi Kartini\IEEEauthorrefmark{1},
-Triando Hamonangan Saragih\IEEEauthorrefmark{1},
-Naufal Said\IEEEauthorrefmark{1} and
-Hartoni\IEEEauthorrefmark{3}}
-\IEEEauthorblockA{\IEEEauthorrefmark{1}\textit{Department of Computer Science,}\\
-\textit{Faculty of Mathematics and Natural Sciences,}\\
-\textit{Lambung Mangkurat University,} Banjarbaru, Indonesia\\
+\IEEEauthorblockN{Muhammad Zainal Muttaqin\affmark{1},
+Fatma Indriani\affmark{1},
+Setyo Wahyu Saputro\affmark{1},
+Alia Rahmi\affmark{2},\\
+Dwi Kartini\affmark{1},
+Triando Hamonangan Saragih\affmark{1},
+Naufal Said\affmark{1} and
+Hartoni\affmark{3}}
+\IEEEauthorblockA{\affmark{1}Department of Computer Science, Faculty of Mathematics and Natural Sciences\\
+\affmark{2}Department of Agro-Industrial Technology, Faculty of Agriculture\\
+\affmark{3}Department of Agribusiness, Faculty of Agriculture\\
+Lambung Mangkurat University, Banjarbaru, Indonesia\\
 f.indriani@ulm.ac.id}
-\IEEEauthorblockA{\IEEEauthorrefmark{2}\textit{Department of Agro-Industrial Technology,}\\
-\textit{Faculty of Agriculture, Lambung Mangkurat University,}\\
-Banjarbaru, Indonesia}
-\IEEEauthorblockA{\IEEEauthorrefmark{3}\textit{Department of Agribusiness,}\\
-\textit{Faculty of Agriculture, Lambung Mangkurat University,}\\
-Banjarbaru, Indonesia}
 }
 
 \maketitle
 
 \begin{abstract}
-\bfseries In oil palm plantations, each harvest cycle is planned from a per-tree
-count of fruit bunches grouped by maturity class, since each class ripens on a
-different schedule. Multi-view imaging recovers bunches hidden by occlusion, but
-the same bunch then reappears across several side views, so per-image detections
-must be aggregated into a per-tree count rather than summed. Comparing methods
-for this tree-level aggregation remains underexplored in oil palm.
-This paper evaluates five regression counters and eight feature
-configurations on 953 oil palm trees and 3,992 side-view images, under two
-detection conditions: ground-truth detections, which measure the counters in
-isolation, and a fixed YOLO26m detector, which reflects a deployed pipeline. With
-ground-truth detections, the best reported counter reaches 98.05\% Class
-$\pm$1 accuracy and 92.20\% Tree $\pm$1 accuracy; under the fixed detector both fall
-sharply, to 77.48\% and 32.62\%. A tree-level bootstrap places the class-level
-gap at 20.57 points (95\% CI 17.20--23.94), while no two counters differ
-significantly under fixed inputs on Class $\pm$1 accuracy after multiplicity correction.
-Diagnostic matching finds 22.7\% of test bunches undetected in every view,
-alongside substantial maturity-class confusion; these diagnostics do not
-provide an additive decomposition of the deployed error. The GT advantage
-persists in matched cross-validation, four YOLO26 checkpoints, and a separately
-trained YOLO11m, whose matched-counter GT gap is 23.94 points.
-These results support prioritising detector output quality on this dataset,
-while leaving improvements from other counters and detector families open.
-\end{abstract}
+Oil palm harvest planning requires a per-tree count of bunches in each maturity
+class. Multi-view imaging reduces occlusion, but the same bunch reappears across
+photographs, so detections must be aggregated into unique counts. We compare
+five regression counters and eight feature sets on SawitMVC (953 trees, 3,992
+images), using ground-truth (GT) detections and a fixed YOLO26m detector. The
+best observed Class $\pm$1 accuracies are 98.05\% and 77.48\%, respectively;
+Tree $\pm$1 accuracies are 92.20\% and 32.62\%. The class-level gap is 20.57
+percentage points (95\% CI 17.20--23.94), whereas no fixed-input counter pair
+differs significantly after multiplicity correction. Diagnostic matching finds
+22.7\% of test bunches undetected in every view, alongside substantial maturity
+confusion. The GT advantage persists in matched cross-validation, four YOLO26
+checkpoints and a separately trained YOLO11m, whose matched-counter gap is
+23.94 points. These results support prioritising detector output quality on
+this dataset. They do not establish a ceiling on counter improvement, and
+the diagnostic rules do not provide an additive decomposition of deployed error.
 
+\end{abstract}
 \begin{IEEEkeywords}
-\bfseries\itshape Oil palm, fresh fruit bunch, black bunch census, multi-view counting, object
+Oil palm, fresh fruit bunch, black bunch census, multi-view counting, object
 detection, YOLO, tree-level regression, agricultural computer vision.
 \end{IEEEkeywords}
 
-% ---------------------------------------------------------------------------
 \section{Introduction}
-% ---------------------------------------------------------------------------
+Harvest planning in oil palm plantations depends on knowing how many bunches
+on each tree belong to each maturity class. The Black Bunch Census (BBC)
+records four classes, B1 to B4, with different ripening schedules~\cite{ref12}. Automating this survey could reduce manual effort
+and subjectivity, but requires the full class breakdown for each tree.
 
-Harvest planning in commercial oil palm plantations depends on knowing, for
-each surveyed tree, how many fruit bunches belong to each operational maturity
-class. The Black Bunch Census (BBC) formalises this requirement into a four-class
-count vector, B1 through B4, where each class carries distinct timing and
-logistics implications~\cite{ref12}. Automating BBC through image-based counting
-would reduce the cost and subjectivity of manual field surveys. An automated
-census is therefore useful only if it recovers the full per-class breakdown for
-each tree.
+Bunches surround the trunk, so a single image misses fruit hidden by fronds,
+other bunches or the viewing angle~\cite{ref1}. Photographing each tree from
+four to eight sides improves coverage, but the same bunch can appear in several
+images. Summing detections therefore counts appearances separately
+(Fig.~\ref{fig:crossview}), although the census requires unique bunch counts.
 
-Tree-level counting is geometrically harder than image-level
-detection~\cite{ref1}. Bunches surround the full circumference of an oil palm,
-so a single image misses bunches due to occlusion, viewing angle, or overlapping
-fronds. Multi-view acquisition reduces missed bunches by photographing each tree
-from four to eight side views, but the same physical bunch then appears in
-several images. Fig.~\ref{fig:crossview} illustrates the effect: a single B3
-bunch is visible in three adjacent side views of the same tree. Naive summation
-of per-image detections counts appearances rather than bunch identities and is
-biased upward on this dataset.
+Multi-view counting has been studied in other crops. Mango systems associate
+detections using navigation data and canopy geometry~\cite{ref5}, while apple
+systems build maps from overlapping scans~\cite{ref6}. A comparative apple
+study identifies detection quality as a major source of counting
+error~\cite{ref7}. Other approaches use correspondence-free
+triangulation~\cite{ref3}, few-view reconstruction~\cite{ref4}, or neural
+fields~\cite{ref8}. Their dense overlap, moving sensors and calibrated geometry
+differ from our sparse views of individual trees.
 
-\begin{figure*}[!tb]
+Regression offers an alternative by mapping detection statistics to a count
+vector~\cite{ref1,ref6,ref7}, often with a YOLO detector providing the
+inputs~\cite{ref14,ref15}. Evaluation only on detector outputs combines errors from both
+stages. Comparing the same counters with accurate annotations helps assess
+their dependence on input quality.
+
+Oil palm detection remains difficult for occluded bunches and visually ambiguous
+maturity classes~\cite{refNaftali2024}, despite work on two-stage and YOLO
+models~\cite{ref9,ref10,ref11,ref13}. A public video dataset provides frame-level
+annotations, but no tree-level counting labels or reported counting
+evaluation~\cite{refSuharjito2025}. We study tree-level counting on
+SawitMVC~\cite{refIndriani2026}, comparing five counters and eight feature sets
+under ground-truth (GT) and fixed-detector inputs. Paired statistical comparisons, feature ablation and detection
+diagnostics assess the main results; detector, threshold, resampling and estate
+analyses examine their wider scope.
+
+\begin{figure}[!tb]
   \centering
-  \includegraphics[width=0.86\textwidth]{../figures/paper/fig01_cross_view_linking.pdf}
-  \caption{A single physical B3 bunch is visible across three adjacent side
-  views. If every per-image detection is counted, three appearances are added
-  for one bunch. Tree-level counting must therefore aggregate evidence across
-  views rather than sum it.}
+  \includegraphics[width=\columnwidth]{../figures/paper/fig01_cross_view_linking.pdf}
+  \caption{One B3 bunch in three adjacent views: three image appearances must
+  contribute one tree-level bunch count.}
   \label{fig:crossview}
-\end{figure*}
+\end{figure}
 
-Multi-view deduplication has been studied across several crops. Mango systems
-associated detections across sequential passes using navigation data and canopy
-geometry~\cite{ref5}, and apple pipelines built row-level maps from overlapping
-two-side scans~\cite{ref6}; a comparative evaluation of the latter reports that
-counting errors originate mainly in detection quality rather than in the
-aggregation step~\cite{ref7}. Sparse and calibrated viewpoints have been
-addressed through correspondence-free triangulation~\cite{ref3} and few-view 3D
-reconstruction~\cite{ref4}, and neural-field methods count from unstructured
-photographs in a shared 3D representation~\cite{ref8}. Most of these systems
-depend on dense sequential overlap, a moving sensor platform, or calibrated
-geometry. Their acquisition settings differ from the sparse tree-level
-views evaluated here.
-
-Regression-based aggregation instead maps detection statistics to a tree-level
-count vector, an approach well established in agricultural
-vision~\cite{ref1,ref6,ref7}, with YOLO-style detectors as the standard
-front-end~\cite{ref14,ref15}. A counter is typically evaluated only on the
-detector output available during the study, so its reported accuracy reflects
-that detector's limitations as much as its own quality. Benchmarking counting
-methods on their own terms therefore calls for a detection-controlled condition
-alongside the realistic one.
-
-Oil palm counting has received less systematic study than apple or mango.
-Detectors for fresh fruit bunches (FFB) and maturity classification reach
-high image-level accuracy on ripe bunches but show recurring weaknesses on
-partially occluded and maturity-ambiguous classes~\cite{refNaftali2024}, with
-both two-stage and YOLO-style architectures
-explored~\cite{ref9,ref10,ref11,ref13}. The closest public oil palm resource is
-a video dataset annotated at the frame level for
-detection~\cite{refSuharjito2025}; it carries no tree-level counting labels and
-no counting evaluation has been reported on it. No existing benchmark evaluates
-tree-level counting strategies for oil palm under both controlled and realistic
-detection conditions.
-
-This paper closes that gap by benchmarking tree-level multi-view BBC counting
-under two detection conditions on the SawitMVC dataset (953 trees, 3,992
-images)~\cite{refIndriani2026}: ground-truth detections, which isolate counter
-performance from detector error, and a fixed YOLO26m detector, which reflects a
-deployed pipeline. Five regression models and eight feature configurations are
-compared, with feature ablation focused on fixed-detector inputs. The
-contributions are (1) a controlled-input reference and deployment baseline
-with tree-level confidence intervals and paired tests; (2) a feature ablation
-quantifying the limited gains observed among the tested representations;
-(3) appearance-level error analysis and diagnostic counting rules using
-ground-truth identities; and (4) sensitivity analyses across matched
-cross-validation, estates, YOLO26 checkpoints, and confidence thresholds.
-
-% ---------------------------------------------------------------------------
 \section{Methodology}
-% ---------------------------------------------------------------------------
-
 \subsection{Dataset and Task Definition}
 \label{sec:task}
-
-The benchmark uses the SawitMVC multi-view dataset: 953 oil palm trees,
-3,992 side-view images, four maturity classes (B1, B2, B3, and B4), and 4 to
-8 side views per tree. The fixed split contains 716 training trees, 96
-validation trees, and 141 test trees. Dataset construction, annotation
-protocol, and per-class composition are documented in~\cite{refIndriani2026}.
-
-For tree $i$, the ground-truth target is the count vector
-\begin{equation}
-  \mathbf{y}_i = [\,y_{i,B1},\;y_{i,B2},\;y_{i,B3},\;y_{i,B4}\,],
-\end{equation}
-and the prediction is $\hat{\mathbf{y}}_i =
-[\,\hat{y}_{i,B1},\ldots,\hat{y}_{i,B4}\,]$. The evaluation unit is the tree,
-not the individual image: per-image appearance counts are not valid BBC outputs.
-
-Let $a_{i,c}$ denote the number of detected appearances of class $c$ across
-all views of tree $i$. The naive multi-view estimator
-\begin{equation}
-  \hat{y}_{i,c}^{\text{naive}} = a_{i,c}
-\end{equation}
-is biased upward whenever a bunch is visible from more than one side. Under GT
-annotations, this estimator reaches only 50.00\% Class $\pm$1 Acc and 6.38\%
-Tree $\pm$1 Acc on the test split, which motivates learned tree-level
-aggregation rather than direct summation.
+SawitMVC contains 953 trees and 3,992 images, with four maturity classes and
+4 to 8 views per tree~\cite{refIndriani2026}. The fixed split is 716 training,
+96 validation and 141 test trees. The target is
+$\mathbf y_i=[y_{i,B1},\ldots,y_{i,B4}]$; predictions
+$\hat{\mathbf y}_i$ are evaluated per tree. If $a_{i,c}$ counts class-$c$
+appearances across views, naive counting sets $\hat y_{i,c}=a_{i,c}$ and counts
+repeated appearances as separate bunches. Dataset construction, annotations
+and class composition are documented in~\cite{refIndriani2026}.
 
 \subsection{Detection Conditions}
+Counters are fitted separately to features from GT boxes and classes and from
+cached YOLO26m outputs. This comparison measures aggregation with accurate
+inputs alongside the deployed pipeline. GT supplies an empirical reference;
+it is not a mathematical upper bound on future counting methods. The fixed YOLO26m detector uses 716 training trees, 60 epochs,
+batch 32, image size 640, patience 60 and seed 42 (Ultralytics 8.4.49). Inference
+uses confidence 0.25 and standard post-processing. This checkpoint is fixed
+throughout Sections~\ref{sec:gt}--\ref{sec:gap}.
 
-The same counter is fitted separately under two input conditions: annotated
-boxes and classes $\rightarrow$ features $\rightarrow$ counts, and cached
-detector boxes and classes $\rightarrow$ features $\rightarrow$ counts.
+Sensitivity checks include YOLO26n/s/m checkpoints trained under an earlier
+763/95/95 split. Counters are fitted on the 590 trees in both training splits
+and evaluated on 64 trees outside gradient training in both, which include
+detector validation trees. A separate YOLO11m run uses the official 716/96/141 split,
+the same epochs, batch, image size, patience and seed, 12 data-loader workers,
+and Ultralytics 8.4.140. Its checkpoint is selected on validation and frozen;
+Ridge$+F_0$ is fitted on 716 trees per input source. Software and architecture
+defaults differ, preventing attribution to architecture alone.
 
-In the \textit{GT detection setting}, the feature extractor reads ground-truth
-bounding boxes and classes directly from the annotation files. Counters trained
-on these features provide an empirical reference when detections are accurate,
-rather than a mathematical upper bound on all counters. In the \textit{fixed-detector setting}, the feature
-extractor reads cached YOLO26m~\cite{ref15} predictions from the released
-\texttt{y26mv2} checkpoint. The detector was trained on the official 716-tree training
-split for 60 epochs (batch size 32, image size 640, patience 60, seed 42;
-Ultralytics 8.4.49 in the training log).
-Inference uses the repository default confidence threshold of 0.25 and the
-standard Ultralytics post-processing settings. A single detector checkpoint is
-used for all counter and feature configurations in
-Sections~\ref{sec:gt}--\ref{sec:gap}, so any observed difference there comes
-from the counter or feature representation rather than from detector
-retraining.
-
-Because a claim about detector quality cannot rest on one checkpoint,
-Section~\ref{sec:robust} varies the detector along two axes: its operating
-point, by sweeping the confidence threshold of the same checkpoint, and its
-capacity, by comparing three earlier YOLO26 checkpoints (n, s, and m) against
-\texttt{y26mv2}. Those three were trained under an earlier 763/95/95 protocol,
-so they are compared on a checkpoint-fair subset, the 590 trees that train
-under both protocols and the 64 excluded from gradient training under both.
-This subset includes validation trees used during detector development; it is
-not an independent test of a second architecture family.
-We additionally train YOLO11m on the official 716/96/141 split, using the same
-epoch, batch, image-size and seed settings, with 12 data-loader workers and
-Ultralytics 8.4.140. Its validation-selected checkpoint is frozen before test
-evaluation; Ridge$+F_0$ is refitted on 716 training trees for each input source.
-Software versions and architecture-specific defaults differ, so this is a
-pipeline comparison, not an isolated causal effect of architecture.
-
-Validation mAP50 follows the COCO convention~\cite{ref16}.
+Table~\ref{tab:yolo} reports validation mAP50 under the COCO
+convention~\cite{ref16} and test matching (Section~\ref{sec:attrib}). Missed,
+Wrong and FP denote unmatched annotations, matched boxes with incorrect classes,
+and unmatched detections. Test recall requires both localisation and class
+correctness; its protocol differs from validation.
 
 \begin{table}[!tb]
   \centering
@@ -245,42 +171,16 @@ Validation mAP50 follows the COCO convention~\cite{ref16}.
   \end{minipage}
 \end{table}
 
-The test block uses the one-to-one IoU matching in Section~\ref{sec:attrib}:
-Missed denotes an unmatched annotation, Wrong a matched but misclassified box,
-and FP an unmatched detection. Recall requires both localisation and class
-correctness; the validation and test blocks use different protocols.
-
-The per-class weakness on B4 and the moderate recall on B3 in
-Table~\ref{tab:yolo} are revisited in Sections~\ref{sec:gap}
-and~\ref{sec:attrib}.
-
 \subsection{Feature Vectors}
-
-Given either set of detections, observations from all views of a tree are
-aggregated into a fixed-length feature vector. The 13-dimensional baseline
-$F_0$ contains, for each class $c$, the total count $s_c$, the per-side
-maximum $m_c$, and the per-side mean $\mu_c$, plus the number of available
-views $n_{\text{views}}$:
-\begin{equation}
-  F_0 = [\,s_{B1\text{:}B4},\;m_{B1\text{:}B4},\;\mu_{B1\text{:}B4},\;
-        n_{\text{views}}\,].
-\end{equation}
-
-Four optional groups extend $F_0$: detection confidence (20-dim), spatial
-position (8-dim), side distribution (20-dim), and cross-class composition
-(6-dim). Together they form the 67-dimensional combined set
-\begin{equation*}
-  F_{\text{all}} = F_0 \cup \text{conf} \cup \text{spatial}
-                      \cup \text{distrib} \cup \text{composition}.
-\end{equation*}
-For $n_v$ views, let $k_{c,v}$ denote the class-$c$ count in view $v$,
-$P_c$ its confidence multiset, $s_c=\sum_v k_{c,v}$, $\mu_c=s_c/n_v$,
-and $\sigma_c$ the population SD over all views, including zero-count views.
-All denominators use $\varepsilon=10^{-6}$.
-Table~\ref{tab:features} defines every entry so that the representation can be
-rebuilt from the definition alone. Under GT detections all confidences equal
-one, so the confidence group degenerates there and the ablation is run only in
-the fixed-detector setting.
+The baseline $F_0=[s_{B1:B4},m_{B1:B4},\mu_{B1:B4},n_v]$ has 13 dimensions:
+class totals, per-view maxima and means, and view count. For class $c$ and view
+$v$, let $k_{c,v}$ be the count, $P_c$ the confidence multiset,
+$s_c=\sum_v k_{c,v}$, $\mu_c=s_c/n_v$, and $\sigma_c$ the population SD over
+all views, including empty ones. Ratio denominators use $\varepsilon=10^{-6}$.
+Table~\ref{tab:features} defines confidence (20), spatial (8), distribution
+(20) and composition (6) additions; their union with $F_0$ gives $F_{\text{all}}$
+(67). Eight sets are listed in Table~\ref{tab:ablation}. Feature ablation uses
+fixed inputs because GT confidences are all one.
 
 \begin{table}[!tb]
   \centering
@@ -308,8 +208,8 @@ the fixed-detector setting.
     distrib (20) & $\sigma_c$, $\min_v k_{c,v}$,
       $\sigma_c/(\mu_c{+}\varepsilon)$, $|\{v\!:\!k_{c,v}{>}0\}|$,
       $1/(1{+}\sigma_c)$
-      & spread and floor across views, coefficient of variation, views holding
-        a detection, and view-to-view consistency \\
+      & SD and minimum across views, coefficient of variation, views with
+        detections, and view-to-view consistency \\
     \addlinespace[2pt]
     compos.\ (6) & $T$, $s_c/(T{+}\varepsilon)$,
       $s_{B3}/(s_{B2}{+}s_{B3}{+}\varepsilon)$
@@ -320,101 +220,63 @@ the fixed-detector setting.
 \par\vspace{3pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} Entries repeat for B1--B4 unless marked global. Empty confidence mean/max and area are 0; empty height is 0.5.
+    \textit{Note:} Entries repeat for B1--B4 unless marked global. Empty confidence mean/max and area are 0; empty mean vertical position is 0.5.
   \end{minipage}
 \end{table}
 
-Eight feature sets are evaluated: $F_0$, $F_0$+conf, $F_0$+spatial,
-$F_0$+distrib, $F_0$+conf+spatial, $F_0$+conf+distrib, $F_0$+distrib+spatial,
-and $F_{\text{all}}$.
-
 \subsection{Counter Models and Evaluation Metrics}
+Two heuristic baselines provide reference points. The naive sum counts all
+appearances, while a global divisor corrects for average repeated visibility.
+The divisor is the ratio of input appearances to unique GT bunches in the
+716 training trees, fitted separately for each condition:
+$k=1.891$ (GT) and $1.793$ (fixed). No validation or test trees enter fitting.
 
-Two heuristic baselines are included as reference points. The \textit{naive
-sum} sums all detected appearances per class (defined in
-Section~\ref{sec:task}). The \textit{global divisor} scales the naive sum by a
-single constant fitted separately in each input condition: the ratio of input
-appearances to annotated unique bunches over the 716 training trees.
-This gives $k=1.891$ for GT inputs and $k=1.793$ for fixed-detector inputs;
-neither calibration uses validation or test trees.
+Five regressors map each tree feature vector to its four class counts: linear regression, Ridge~\cite{ref19},
+ElasticNet~\cite{ref17}, SVM~\cite{ref20} and Random Forest (RF)~\cite{ref18}.
+All use seed 42; continuous predictions are rounded to the nearest
+non-negative integer before scoring. Features are
+standardised except for RF. RidgeCV tests
+$\alpha\in\{0.01,0.1,1,10,100,500\}$; MultiTaskElasticNetCV uses five folds and
+3000 iterations. Multi-output RBF SVR uses three-fold GridSearchCV with
+$C\in\{0.1,1,10\}$ and $\gamma\in\{\mathrm{scale},0.01,0.1\}$.
+RF uses 200 trees of maximum depth 10.
 
-Five regression models are evaluated in both detection conditions: Linear
-Regression, Ridge~\cite{ref19}, ElasticNet~\cite{ref17}, SVM~\cite{ref20}, and
-Random Forest~\cite{ref18}. Each counter maps a tree feature vector
-$\mathbf{x}_i$ to the count vector $\hat{\mathbf{y}}_i =
-f_{\theta}(\mathbf{x}_i)$.
+These settings preserve the released benchmark.
+Ridge and ElasticNet scale training data before internal CV; SVM scales within its
+CV pipeline. Outer test trees never enter fitting.
 
-All fitted counters are trained only on the 716-tree training split with
-deterministic seed 42, and continuous outputs are rounded to the nearest
-non-negative integer before scoring. All but Random Forest use standardized
-features. Ridge uses RidgeCV over $\alpha \in \{0.01,0.1,1,10,100,500\}$;
-ElasticNet uses MultiTaskElasticNetCV with 5-fold cross-validation and 3000
-maximum iterations; SVM is an RBF SVR in a multi-output wrapper with 3-fold
-GridSearchCV over $C \in \{0.1,1,10\}$ and
-$\gamma \in \{\text{scale},0.01,0.1\}$; Random Forest uses 200 trees of
-maximum depth 10.
-
-These settings preserve the released benchmark. Ridge and ElasticNet scale
-the outer training data before their internal CV; SVM scales within its CV
-pipeline. Outer test trees never enter these fits. ``Best'' below denotes the
-highest observed test score among compared configurations, not a model selected
-on an independent validation set.
-
-All counter models are evaluated on the fixed 141-tree test split. Class-level
-$\pm 1$ correctness for tree $i$ and class $c$ is
-\begin{equation}
-  I_{i,c}^{\pm 1} =
-  \begin{cases}
-    1, & |\hat{y}_{i,c} - y_{i,c}| \leq 1, \\
-    0, & \text{otherwise}.
-  \end{cases}
-\end{equation}
-
-\textbf{Class $\pm$1 Acc} averages this indicator over all test trees and
-classes:
-\begin{equation}
-  \text{Class } \pm 1 \text{ Acc} =
-    \frac{1}{4N}\sum_{i=1}^{N}\sum_{c=1}^{4} I_{i,c}^{\pm 1}.
-\end{equation}
-
-\textbf{Tree $\pm$1 Acc} is stricter: a tree counts as correct only if all
-four class predictions are within $\pm 1$ simultaneously,
-\begin{equation}
-  \text{Tree } \pm 1 \text{ Acc} =
-    \frac{1}{N}\sum_{i=1}^{N}
-      \mathbf{1}\!\left(\sum_{c=1}^{4} I_{i,c}^{\pm 1} = 4\right).
-\end{equation}
-
-\textbf{Macro MAE} is the mean absolute error averaged over trees and classes,
-and \textbf{macro RMSE} is the per-class root mean squared error averaged over
-classes; RMSE is reported because a squared penalty exposes the few badly
-mis-counted trees that MAE dilutes. \textbf{Signed class bias} is the per-class
-mean $\hat{y}_{i,c} - y_{i,c}$; positive values indicate over-counting,
-negative values under-counting. Bias is reported alongside accuracy because
-operational aggregate yield estimates are sensitive to directional error rather
-than absolute error alone. Two whole-tree aggregate measures complete the set:
-\textbf{total-count MAE}, the mean of $|\sum_c \hat{y}_{i,c} - \sum_c y_{i,c}|$,
-and \textbf{total $\pm$1 Acc}, the fraction of trees whose total bunch count is
-within one of the truth. These matter for block-level yield forecasting, where
-per-class assignment can be wrong while the total remains
-usable.\footnote{Source code: \url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}.}
+Class $\pm$1 accuracy measures correctness separately for each maturity class.
+Tree $\pm$1 is stricter: all four class counts must be within one bunch of
+the truth simultaneously. For $N$ test trees, define $e_{i,c}=\hat y_{i,c}-y_{i,c}$ and
+$I_{i,c}=\mathbf1(|e_{i,c}|\leq1)$. The accuracy measures are
+\begin{align}
+\mathrm{Class}\ \pm1&=\frac{1}{4N}\sum_{i,c}I_{i,c},\\
+\mathrm{Tree}\ \pm1&=\frac{1}{N}\sum_i\mathbf1\!\left(\sum_c I_{i,c}=4\right).
+\end{align}
+Macro MAE averages $|e_{i,c}|$ over trees and classes; macro RMSE averages
+the four class RMSEs, emphasising large errors. Class bias is mean $e_{i,c}$
+(positive: overcount; negative: undercount). Total-count MAE averages
+$|\sum_c e_{i,c}|$; total $\pm$1 is the fraction with $|\sum_c e_{i,c}|\leq1$.
+These inventory measures allow class errors to cancel, unlike Tree $\pm$1.
+Directional and absolute errors matter for yield estimates, but per-tree
+metrics do not alone determine block-level forecast error. Code and results
+are available.\footnote{Source code: \url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}.}
 
 \subsection{Uncertainty and Validation Protocol}
 \label{sec:stats}
 
-For the main fitted configurations, percentile bootstrap intervals resample
-trees ($B=10{,}000$, seed 42); paired intervals reuse the same tree indices.
-The release includes intervals for per-class and aggregate metrics. Class
-$\pm$1 differences use an exact paired permutation test exchanging model
-outcomes within each tree, preserving dependence among its four classes.
-All ten counter pairs per condition are tested, with Holm adjustment within
-each condition; the seven Ridge feature comparisons against $F_0$ form a
-separate family. Unadjusted $p$ and adjusted $p_H$ are distinguished below.
-Wilcoxon tests on per-tree macro absolute error and exact McNemar tests on
-Tree $\pm$1 outcomes address different endpoints and are reported separately.
-Intervals and tests condition on fitted models and do not account for
-post-hoc configuration selection or detector retraining. Nonsignificance
+Bootstrap confidence intervals resample trees 10,000 times (seed 42), reusing
+the same indices for paired comparisons. Intervals cover per-class and aggregate
+metrics. Exact paired permutation tests exchange model outcomes within trees,
+preserving dependence among their four classes. Holm adjustment covers ten
+counter pairs within each condition; seven Ridge feature comparisons against
+$F_0$ form a separate family. We report raw $p$ and adjusted $p_H$ separately.
+Wilcoxon tests on per-tree macro absolute error and exact McNemar tests on Tree
+$\pm$1 address different endpoints. These analyses condition on fitted models,
+excluding configuration selection and detector retraining; nonsignificance
 does not establish equivalence.
+
+``Best'' denotes the highest observed test score among compared configurations.
 
 A separate selection check ranks all 40 model/feature candidates in each
 condition on the 96 validation trees: highest Class $\pm$1, then lowest
@@ -422,42 +284,39 @@ macro MAE, fewer dimensions, and model/feature name as deterministic tie-breaks.
 Only training trees enter model fitting; test labels do not select the winner.
 This reanalysis uses the historical test set, not newly collected test data.
 
-Repeated stratified 5-fold CV with 5 repeats uses estate and dominant class
-jointly for stratification. Matched GT/fixed Ridge$+F_0$ comparisons use
-identical folds of the 237 trees outside detector gradient training, fitting
-on 189--190 trees per fold. Because this pool includes the detector's 96
-validation trees, a stricter check uses only the 141 original test trees
-(112--113 training trees per fold). The detector stays frozen. Fold standard
-deviations are descriptive, since repeated folds overlap. Cross-estate tests
-transfer the counter; the detector was trained on both estates.
+Repeated five-fold cross-validation (CV), with five repeats, jointly stratifies
+by estate and dominant class. GT and fixed Ridge$+F_0$ use identical folds
+over 237 trees outside detector gradient training (189--190 fit trees per fold).
+This pool includes 96 detector validation trees, so a stricter check uses
+the 141 original test trees (112--113 fit trees per fold). The detector stays
+frozen. Fold SDs are descriptive because repeated folds overlap. Estate transfer
+evaluates counters; the detector was trained on both estates.
 
-% ---------------------------------------------------------------------------
 \section{Results and Discussion}
-% ---------------------------------------------------------------------------
-
-Section~\ref{sec:gt} reports both detection conditions,
-Section~\ref{sec:ablation} tests whether richer features recover the loss, and
-Section~\ref{sec:gap} compares the conditions per class.
-Section~\ref{sec:attrib} examines detection and aggregation diagnostics,
-Section~\ref{sec:robust} tests how far the resulting
-claim survives changes of detector, split, and site, and
-Section~\ref{sec:rf} explains the one counter that behaves differently.
-
 \subsection{Counting Under the Two Detection Conditions}
 \label{sec:gt}
-
-Table~\ref{tab:counting} places both conditions side by side. Under GT
-detections, naive appearance summation yields only 50.00\% Class $\pm$1 Acc and
-6.38\% Tree $\pm$1 Acc, confirming that duplicate visibility cannot be ignored
-and that direct summation is not a viable estimator. The calibrated divisor
-recovers most of that loss, and ElasticNet improves further to 98.05\%, so with
-accurate detections the counting problem is simple enough for compact
-regression models. The four best fitted counters sit within 0.53 percentage
-points of each other on Class $\pm$1 Acc and 2.13 points on Tree $\pm$1 Acc,
-and their pairwise Class $\pm$1 differences are not significant ($p_H=1$).
-ElasticNet exceeds Random Forest by 2.13\,pp (95\% CI 0.89--3.55,
+Table~\ref{tab:counting} shows why repeated appearances need to be accounted
+for even with accurate detections. Naive summation performs poorly, whereas
+the calibrated divisor recovers most of the loss and compact regressors improve
+further. The four non-RF counters span only 0.53 percentage points (pp) on Class
+$\pm$1 and 2.13 pp on Tree $\pm$1. Their pairwise Class $\pm$1 tests give
+$p_H=1$. ElasticNet exceeds RF by 2.13 pp (95\% CI 0.89--3.55;
 $p=0.0042$, $p_H=0.0376$); SVM also exceeds RF ($p_H=0.0342$).
-Section~\ref{sec:rf} examines RF's prediction behaviour.
+
+The result changes substantially with detector inputs. The strongest $F_0$
+Class $\pm$1 scores have 95\% CIs of 97.0--99.1\% under GT and 73.2--79.6\%
+under the fixed detector. ElasticNet loses 21.63 pp between conditions
+(CI 18.44--25.00; $p<0.001$), while the five fixed-input counters span only
+3.19 pp. None of their ten comparisons is significant; the largest, ElasticNet
+versus RF, gives CI 0.00--6.38, $p=0.0628$ and $p_H=0.628$.
+The much larger difference between input conditions supports investigating
+detector outputs, although this test set cannot establish counter equivalence.
+
+The class pattern is consistent across counters: fixed-input accuracies are
+B1 95.74--96.45\%, B2 73.76--80.14\%, B3 55.32--56.03\%, and B4
+67.38--73.05\%. B3 has the largest counting loss despite higher test recall
+than B2 and B4. Recall alone therefore does not rank counting difficulty:
+larger counts and class confusion also affect the absolute $\pm$1 criterion.
 
 \begin{table}[!tb]
   \centering
@@ -489,27 +348,19 @@ Section~\ref{sec:rf} examines RF's prediction behaviour.
   \end{minipage}
 \end{table}
 
-For the strongest $F_0$ Class $\pm$1 scores, the 95\% bootstrap intervals
-are 97.0--99.1\% (GT) and 73.2--79.6\% (fixed).
-Moving to cached YOLO26m detections, the best $F_0$ result (ElasticNet,
-76.42\%) trails the same counter under GT by 21.63 percentage points (95\% CI
-18.44 to 25.00, $p < 0.001$). All five counters stay within a 3.19-point
-window, and none of the ten Class $\pm$1 comparisons is significant;
-the widest, ElasticNet over Random Forest, gives $+3.19$\,pp
-(95\% CI $0.00$ to $+6.38$, $p=0.0628$, $p_H=0.628$). A large drop across
-conditions, set against a spread among counters that the test set cannot
-resolve, points to the detector output rather than the counter family as the
-main source of loss.
-
-The per-class picture is the same whichever counter is used: B1 stays near its
-GT ceiling at 95.74--96.45\% Class $\pm$1 Acc, B3 collapses to 55.32--56.03\%,
-and B2 (73.76--80.14\%) and B4 (67.38--73.05\%) sit at intermediate losses.
-Detection recall alone does not rank these losses: B3 has the largest
-counting loss despite higher test recall than B2/B4. Its larger counts and
-cross-class confusion also affect the absolute $\pm$1 criterion.
-
 \subsection{Feature Ablation}
 \label{sec:ablation}
+To test whether richer features recover the gap, we fix Ridge and vary its
+inputs (Table~\ref{tab:ablation}). Class $\pm$1 ranges from 74.82\% ($F_0$+D)
+to 77.48\% ($F_{\text{all}}$). The full set gains 1.42 points at class level
+and 4.25 at tree level over $F_0$. The CV column applies the protocol in
+Section~\ref{sec:stats} to the same eight sets.
+
+The class-level gain is not statistically resolved (95\% CI $-0.53$ to
+$+3.37$; $p=0.201$, $p_H=1$). CV means span only 0.92 points, less than half
+their fold SDs, and $F_{\text{all}}$ no longer leads. No Class $\pm$1 comparison
+with $F_0$ is significant after adjustment. Thus evidence for these particular
+additions is limited; other representations may still recover useful information.
 
 \begin{table}[!tb]
   \centering
@@ -539,56 +390,26 @@ cross-class confusion also affect the absolute $\pm$1 criterion.
   \end{minipage}
 \end{table}
 
-Whether enriched features can recover the detector-driven gap is tested by
-fixing Ridge and varying the feature configuration (Table~\ref{tab:ablation}).
-On the fixed test split the eight configurations run from 74.82\%
-($F_0$+D) to 77.48\% ($F_{\text{all}}$) Class $\pm$1 Acc, so the full set gains
-1.42 points at class level and 4.25 at tree level over the 13-dimensional
-baseline. The CV column repeats the eight feature sets using the protocol
-in Section~\ref{sec:stats}.
-
-The gain is not statistically resolved. Paired against $F_0$ it gives
-$+1.42$\,pp (95\% CI $-0.53$ to $+3.37$, $p=0.201$, $p_H=1$).
-Under cross-validation the eight
-feature sets fall inside a 0.92-point band whose fold-to-fold standard
-deviation is more than twice as wide, with $F_{\text{all}}$ no longer leading
-(Table~\ref{tab:ablation}, last column). No Class $\pm$1 comparison with
-$F_0$ is significant after adjustment. This limits the evidence for these
-particular feature additions; it does not prove that detector outputs contain
-no further useful information or that all counting methods are equivalent.
-
 \subsection{GT vs.\ Fixed-Detector Gap}
 \label{sec:gap}
+The best observed configurations (Table~\ref{tab:summary}) differ by 20.57 pp
+on Class $\pm$1 (95\% CI 17.20--23.94; $p<0.001$) and 59.57 pp on Tree
+$\pm$1. Class losses are B1 2.84, B2 16.31, B3 36.17 and B4 26.95 pp.
+Using Ridge$+F_0$ in both conditions retains a 21.63-point gap
+(CI 18.44--25.00; $p<0.001$), so different counter families do not explain it.
+Macro RMSE rises from 0.522 to 1.418; total-count MAE from 0.979 to 1.787;
+total $\pm$1 falls from 78.01\% to 48.94\%. Block-level forecast error also
+depends on cancellation and dependence across trees.
 
-The central comparison is the per-class gap between ideal detections and the
-fixed detector, reported with the signed bias of the best configuration in each
-condition in Table~\ref{tab:summary}.
+Validation selects Ridge$+F_0$ (GT) and SVM$+(F_0+\mathrm{conf})$ (fixed):
+test Class $\pm$1 is 97.70\% versus 74.11\%, a 23.58-point gap
+(CI 20.21--27.13; $p<0.001$); Tree $\pm$1 is 90.78\% versus 27.66\%.
+The gap persists without test-based selection.
 
-The gap is large, at 20.57 percentage points in Class $\pm$1 Acc (95\% CI 17.20
-to 23.94, $p < 0.001$) and 59.57 points in Tree $\pm$1 Acc, and it is not
-uniform across maturity classes: B1 loses 2.84\,pp, B2 16.31\,pp, B3
-36.17\,pp, and B4 26.95\,pp. With the same Ridge$+F_0$ configuration in both
-conditions, the gap remains 21.63\,pp (95\% CI 18.44--25.00, $p<0.001$),
-so it does not depend on comparing different counter families. The squared-error view
-agrees: macro RMSE rises from 0.522 to 1.418 and total-count MAE from 0.979 to
-1.787 bunches per tree; total $\pm$1 accuracy is 78.01\% and 48.94\%,
-respectively. This is per-tree count error; block-level forecasting
-error also depends on cancellation and dependence across trees.
-
-Validation-based selection chooses Ridge$+F_0$ for GT and SVM$+(F_0+\mathrm{conf})$
-for fixed inputs. Their test Class $\pm$1 accuracies are 97.70\% and 74.11\%,
-respectively: a 23.58-point gap (95\% CI 20.21--27.13, $p<0.001$).
-Their Tree $\pm$1 accuracies are 90.78\% and 27.66\%. Thus the large
-between-condition difference persists when test scores do not determine
-configuration selection.
-
-Bias adds direction to the gap. The fixed-detector Ridge $+ F_{\text{all}}$
-pipeline under-counts B2 by 0.078 and B3 by 0.177 bunches per tree, while B4 is
-over-counted by 0.071 despite its low recall. A learned counter combines
-misses, false positives, and class confusion, so this output bias cannot be
-assigned to a single confusion direction. The total signed bias is $-0.170$
-bunches per tree; it should be assessed alongside per-tree absolute error
-before extrapolating to operational harvest forecasts.
+Signed bias adds direction to the absolute errors. Fixed Ridge$+F_{\text{all}}$
+underestimates B2 and B3 and overestimates B4 despite low recall; its total bias
+is $-0.170$ bunches/tree. Bias combines missed detections, false positives and
+class confusion, so it cannot be assigned to one confusion direction.
 
 \begin{table}[!tb]
   \centering
@@ -619,10 +440,8 @@ before extrapolating to operational harvest forecasts.
   \end{minipage}
 \end{table}
 
-% ---------------------------------------------------------------------------
 \subsection{Detection and Aggregation Diagnostics}
 \label{sec:attrib}
-
 Two mechanisms are candidates for the residual: bunches missed in every view
 and maturity-class confusion. A counter may infer missing counts statistically,
 but cannot directly associate a bunch with no matched detection. To inspect
@@ -634,17 +453,36 @@ classification errors among matched boxes are separated from unmatched boxes.
 An unmatched annotation can reflect absence, IoU below threshold, or matching
 competition; it is not a pure measure of visibility or localisation failure.
 
-The right block of Table~\ref{tab:yolo} reports the outcome. Of 2,612 annotated
-appearances on the 141 test trees, 964 (36.9\%) are missed outright and 396
+Table~\ref{tab:yolo} reports the matching results. Of 2,612 test appearances,
+964 (36.9\%) are unmatched and 396
 (15.2\%) are localised but assigned another maturity class, leaving 1,252
 (47.9\%) both found and labelled correctly; in the other direction, 706 of
-2,354 detections (30.0\%) match no annotation, at a mean confidence (0.337)
-well below that of matched detections (0.487). The failure modes are
+2,354 detections (30.0\%) match no annotation, at a mean confidence of 0.337,
+well below the 0.487 of matched detections. The failure modes are
 class-specific: B2 loses more appearances to class confusion (209, of which 158
 are read as B3) than to missed detection (161), whereas B4 is dominated by
-outright misses (262 of 455). Counted as physical bunches, 317 of the 1,397
+unmatched annotations (262 of 455). Counted as physical bunches, 317 of the 1,397
 test bunches (22.7\%) are never detected in any view, from 8.5\% for B1 to
 42.3\% for B4.
+
+Figure~\ref{fig:attrib}(a) places three identity-based diagnostic rules
+alongside the GT counter, deployed counter and naive sum. Counting each
+matched physical bunch once with its GT class gives 86.17\% Class $\pm$1
+Acc. Replacing that GT class by a confidence-weighted vote across matched
+detections gives 71.81\%; adding every unmatched detection as a separate
+bunch gives 62.23\%. Identity is known only for matched detections, so the
+last rule does not deduplicate false positives across views.
+
+The losses of 13.83 points from exact GT counts to the first rule, 14.36 between
+the first two rules, and 9.58 between the last two depend on their ordering,
+voting and treatment of unmatched detections. They cannot be added to the GT
+counter's 1.95-point error to explain deployment. The deployed 77.48\% exceeds
+two diagnostic rules because learned aggregation can compensate statistically.
+Likewise, the 8.69-point difference between 86.17\% and deployment is not an
+association bound: the first rule uses GT classes and excludes unmatched boxes.
+These diagnostics expose detection failures, while the matched-input comparison
+measures their combined effect on a specified counter. Isolating association
+error requires an explicit module and controlled interventions on it.
 
 \begin{figure*}[!tb]
   \centering
@@ -655,84 +493,30 @@ test bunches (22.7\%) are never detected in any view, from 8.5\% for B1 to
   \label{fig:attrib}
 \end{figure*}
 
-Figure~\ref{fig:attrib}(a) compares three diagnostic rules. Counting each
-matched physical bunch once with its GT class gives 86.17\% Class $\pm$1
-Acc. Replacing its GT class by a confidence-weighted vote across matched
-detections gives 71.81\%; adding every unmatched detection as a separate
-bunch gives 62.23\%. Identity is known only for matched detections, so the
-last rule does not deduplicate false positives across views.
-
-The reductions of 13.83 points from exact GT counts to the first rule,
-14.36 between the first two rules, and 9.58 between the last two depend on
-this ordering, voting rule, and treatment of unmatched detections. They
-cannot be added to the GT counter's 1.95-point error to explain the deployed
-counter. Indeed, the deployed 77.48\% exceeds two diagnostic rules: learned
-aggregation can compensate for systematic detector errors. Likewise,
-$86.17-77.48=8.69$ points is a difference between estimators, not an upper
-bound on association or counter improvements; the first rule uses GT classes
-and removes unmatched detections. The diagnostics expose detection failures,
-while the matched-input comparison measures their combined effect on a
-specified counting pipeline. Isolating association error itself would require
-an implemented association module and controlled interventions on that module.
-
-% ---------------------------------------------------------------------------
 \subsection{Sensitivity and Resampling}
 \label{sec:robust}
+A conclusion drawn from one detector and one split needs additional checks.
+Table~\ref{tab:robust} compares detector families, checkpoints and thresholds. With the
+same Ridge$+F_0$ protocol on 141 test trees, YOLO11m differs from YOLO26m by
+$-2.30$ pp on Class $\pm$1 (95\% CI $-4.96$ to $+0.35$; $p=0.118$).
+GT retains a 23.94-point advantage over YOLO11m (CI 20.57--27.30; $p<0.001$).
+YOLO11m has 976 unmatched and 399 misclassified GT appearances out of 2,612,
+and 463 unmatched detections out of 2,099. This supports the GT advantage in
+another family, without establishing equivalence or a general architecture ranking.
 
-A claim about detector quality drawn from one checkpoint and one split needs
-additional checks. Table~\ref{tab:robust} compares a second detector family,
-YOLO26 checkpoint capacities, and confidence thresholds.
+The threshold sweep filters a second inference pass at confidence 0.05,
+refitting Ridge$+F_{\text{all}}$ on 716 trees at each of eleven thresholds.
+At 0.25, this cache has 2,353 detections versus 2,354 originally, with the same
+counting accuracies. Threshold 0.10 ties the best Class $\pm$1 (77.48\%) and
+raises Tree $\pm$1 to 38.30\% from 32.62\%; 0.70 reduces Class $\pm$1 to
+63.12\%, while 0.05 yields 76.24\% from 8,807 detections. Across eleven thresholds, none exceeds the reported best Class $\pm$1,
+although the whole-tree endpoint can improve. This exploratory test sweep
+does not independently select a new threshold.
 
-On the official 141-tree test set, Ridge$+F_0$ reaches 73.76\% Class $\pm$1
-and 26.24\% Tree $\pm$1 with YOLO11m, versus 76.06\% and 28.37\% with
-YOLO26m. The Class $\pm$1 difference is $-2.30$\,pp (95\% CI
-$-4.96$ to $+0.35$, exact $p=0.118$); this does not establish equivalence.
-GT reaches 97.70\%, retaining a 23.94-point gap to YOLO11m
-(95\% CI 20.57--27.30, $p<0.001$). YOLO11m has 976 unmatched and 399
-misclassified appearances out of 2,612 annotations, plus 463 unmatched
-detections out of 2,099. Thus the GT advantage extends to this additional
-family, without establishing a general architecture ranking.
-
-The operating-point sweep re-runs inference at confidence 0.05 and filters
-upward; Ridge$+F_{\text{all}}$ is refitted on the 716 training trees at every
-threshold. Raising the threshold from 0.25 to 0.70 reduces Class $\pm$1 Acc
-from 77.48\% to 63.12\%. At 0.05, 8,807 test detections yield 76.24\%.
-The filtered pass contains 2,353 detections at 0.25 versus 2,354 in the
-original cache, with the same reported counting accuracies; the two caches
-are not identical. Threshold 0.10 ties 0.25 on Class $\pm$1 and reaches
-38.30\% Tree $\pm$1 versus 32.62\%. This is an exploratory test-set sweep,
-not independent threshold selection: among these eleven operating points,
-none exceeds 77.48\% Class $\pm$1, but the whole-tree endpoint can improve.
-
-On the 64 trees outside gradient training under both split protocols,
-Ridge$+F_0$ is fitted on the 590 shared training trees. Class $\pm$1 ranges
-from 70.70\% to 73.83\% across four YOLO26 checkpoints, versus 97.27\% for GT:
-a 3.13-point checkpoint spread and a 23.44-point GT gap to \texttt{y26mv2}.
-This within-family comparison confounds capacity with historical training
-splits and includes detector validation trees; it is not an independent
-architecture ranking.
-
-Matched $5\times5$-fold CV with Ridge$+F_0$ on the same 237-tree pool gives
-$97.72\pm1.02$\% (GT) versus $72.70\pm2.35$\% (fixed), a mean gap of
-25.03\,pp. Restricting both conditions to the 141 original test trees gives
-$97.16\pm1.23$\% versus $74.08\pm2.96$\%, a 23.08-point gap. These checks
-support the ordering with a frozen detector, but their smaller counter
-training sets prevent interpreting the original gap as conservative.
-For Ridge$+F_{\text{all}}$, counter transfer from DAMIMAS (641 training trees)
-to LONSUM (24 evaluation trees) gives 71.88\%, versus 72.92\% when fitted on
-LONSUM's 75 training trees. The reverse transfer to 213 DAMIMAS evaluation
-trees gives 68.78\%. These comparisons confound estate and counter training
-size; the detector saw training trees from both estates.
-
-Vertical-feature sensitivity is tested with the synthetic transformation
-$\overline{cy}\mapsto\operatorname{clip}(a\overline{cy}+b,0,1)$ on test
-features, with $a\in[0.90,1.10]$ and $b\in[-0.10,0.10]$. Missing-class
-sentinels stay at 0.5, and the counter is trained on unperturbed data.
-For Ridge$+F_{\text{all}}$, the worst loss is 1.42\,pp; additive Gaussian
-noise with $\sigma=0.05$ and seed 42 costs 0.53\,pp. This checks sensitivity
-to feature shifts, not physical camera pitch. Actual rotation changes
-perspective, box area, visibility, and detector outputs; no calibration or
-reacquired pitched images are available to validate those effects.
+On the 64-tree subset, four YOLO26
+checkpoints span 70.70--73.83\% (3.13 pp), versus GT 97.27\%, a 23.44-point
+gap to the best checkpoint. Capacity and training splits are confounded;
+the subset includes detector validation trees.
 
 \begin{table}[!tb]
   \centering
@@ -754,7 +538,7 @@ reacquired pitched images are available to validate those effects.
     YOLO26n            & 1013 & 0.442 & 72.66 & 34.38 \\
     YOLO26s            &  825 & 0.383 & 72.27 & 26.56 \\
     YOLO26m            &  950 & 0.427 & 70.70 & 28.12 \\
-    \texttt{y26mv2}    & 1067 & 0.442 & \textbf{73.83} & 31.25 \\
+    YOLO26m, new split & 1067 & 0.442 & \textbf{73.83} & 31.25 \\
     GT detections      & 1203 & 1.000 & 97.27 & 89.06 \\
     \addlinespace[2pt]
     \multicolumn{5}{@{}l}{\emph{Operating point, Ridge$+F_{\text{all}}$, 141 test trees}} \\
@@ -769,99 +553,88 @@ reacquired pitched images are available to validate those effects.
 \par\vspace{3pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} Recall is macro class-correct appearance recall at IoU $\geq0.5$; threshold recall is recomputed after filtering. GT counts are annotated appearances; their recall is 1 by construction.
+    \textit{Note:} Recall is macro class-correct appearance recall at IoU $\geq0.5$; threshold recall is recomputed after filtering. GT counts are annotated appearances; their recall is 1 by construction. Checkpoint rows use the earlier split unless marked.
   \end{minipage}
 \end{table}
 
-% ---------------------------------------------------------------------------
+Matched $5\times5$ CV gives Class $\pm$1 means and fold SDs of
+$97.72\pm1.02$\% (GT) and $72.70\pm2.35$\% (fixed) on 237 trees
+(gap 25.03 pp); the 141-test-tree check gives $97.16\pm1.23$\% and
+$74.08\pm2.96$\% (gap 23.08 pp). Both analyses support the GT advantage when the detector is frozen. However,
+their smaller counter training sets prevent interpreting the original gap as
+conservative.
+
+For Ridge$+F_{\text{all}}$, transfer
+from 641 DAMIMAS training trees to 24 LONSUM evaluation trees gives 71.88\%,
+versus 72.92\% when trained on 75 LONSUM trees. Reverse transfer to 213
+DAMIMAS evaluation trees gives 68.78\%. Estate and training size are confounded;
+the detector saw both estates.
+
+To examine sensitivity of the vertical spatial features, we transform test
+features using $\overline{cy}\mapsto\operatorname{clip}
+(a\overline{cy}+b,0,1)$ over 35 settings of $a\in[0.90,1.10]$ and
+$b\in[-0.10,0.10]$; the clip leaves missing-class sentinels at 0.5. Training
+uses unperturbed data.
+Ridge$+F_{\text{all}}$ loses at most 1.42 pp; Gaussian noise with
+$\sigma=0.05$ and seed 42 costs 0.53 pp. These perturbations test sensitivity to feature shifts. Physical camera pitch
+also changes perspective, box area, visibility and detector outputs, which
+this experiment does not reproduce. Robustness to actual camera rotation
+therefore remains unverified.
+
 \subsection{Why Random Forest Trails}
 \label{sec:rf}
+Under GT inputs, RF trails ElasticNet and SVM after Holm correction. Each tree
+averages training targets within a leaf, and the forest averages those predictions.
+It therefore cannot extrapolate beyond the training count range. When high-count
+examples are sparse, averaging can pull estimates towards more common counts.
+Slopes from regressing predictions on true counts are
+0.754--0.888 for RF versus 0.865--0.951 for linear counters; relative prediction
+SD is smaller for RF in every class. B1 predictions never exceed three bunches,
+although the maximum is five in training and six in the test set; MAE is 0.149
+versus Ridge's 0.050.
+RF trails ElasticNet by 3.07 pp in the highest-load bin (94.74\% versus 97.81\%).
+These diagnostics suggest shrinkage, without proving causality or excluding
+benefits from tuning. With fixed inputs, the ElasticNet versus RF difference remains unresolved
+($p=0.0628$, $p_H=0.628$).
 
-RF's Class $\pm$1 deficit relative to ElasticNet and SVM is significant under
-GT detections after Holm correction. A plausible explanation is its
-prediction range: a forest averages the
-training targets reaching each leaf, so its output cannot leave the training
-range and is pulled towards the centre of the target distribution wherever a
-leaf is thinly populated. Under GT detections the slope of an ordinary
-least-squares fit of prediction on truth is 0.754--0.888 across the four
-classes for the forest, against 0.865--0.951 for the linear counters, and the
-standard deviation of its predictions is a smaller fraction of the true one for
-every class. The effect is sharpest where counts are small and the mapping is
-close to affine: for B1 the forest never predicts more than three bunches
-although the test set holds trees with six, and its MAE is three times that of
-Ridge (0.149 against 0.050); the B1 training maximum is only five. In the
-highest-load bin it trails ElasticNet by 3.07 points (94.74\% versus
-97.81\%). These diagnostics are consistent with shrinkage and sparse
-high-count examples, but do not isolate a cause or exclude improvement from
-RF tuning. Under the fixed detector, the ElasticNet--RF Class $\pm$1 gap
-is unresolved ($p=0.0628$, $p_H=0.628$).
-
-% ---------------------------------------------------------------------------
 \subsection{Limitations}
 \label{sec:limits}
+Evidence covers one dataset from two South Kalimantan estates, the smaller
+with 99 trees. Generalisation to other regions, varieties and acquisition
+conditions remains uncertain; no plantation was excluded from detector training.
+YOLO11m has one training run, software versions and defaults differ, and the 64-tree analysis
+is descriptive. Counter CV does not measure detector training variability.
+The dataset lacks calibrated pitch measurements and repeated captures at known
+angles, so feature sensitivity does not establish physical pitch robustness.
+Test-based highlighting and reuse of the historical test set limit confirmatory
+claims. Counters ignore spatial and temporal regularities; tree resampling
+ignores dependence among neighbours. B2/B3 and B3/B4 are visually ambiguous,
+but no inter-annotator study quantifies their contribution to confusion.
 
-Several limitations bound these findings. The benchmark uses one dataset of 953
-trees from two estates in South Kalimantan, and the smaller estate contributes
-99 trees, so cross-site evidence is suggestive rather than conclusive and
-absolute numbers may shift under other regions, varieties, or acquisition
-protocols. The detector evidence covers YOLO26 and one YOLO11m training run;
-software/default differences and the descriptive 64-tree checkpoint comparison
-prevent an architecture-only ranking. A plantation excluded from detector
-training remains untested. Repeated CV refits counters only; it does not estimate
-detector training variability. Camera-pitch robustness remains unverified:
-the dataset lacks calibrated pitch measurements or repeated captures at known
-angles. Synthetic feature shifts cannot reproduce changes in visibility and
-detector output, so spatial-feature findings are limited to the observed
-acquisition conditions. Test-based highlighting of configurations limits confirmatory claims;
-the validation-selection sensitivity check uses the same historical test set.
-The counters treat each tree independently and ignore plantation-scale spatial
-or temporal regularities that operational forecasts sometimes exploit. Finally,
-the B1 through B4 taxonomy admits genuine visual ambiguity at the B2/B3 and
-B3/B4 boundaries. Without inter-annotator measurements we cannot quantify
-how much measured confusion arises from label ambiguity. Tree resampling also
-does not model spatial dependence among neighbouring trees.
-
-% ---------------------------------------------------------------------------
 \section{Conclusion}
-% ---------------------------------------------------------------------------
+The GT advantage persists across counter choices, validation-based selection,
+matched resampling and an additional detector family. For BBC, the results
+support improving B3/B4 detection and B2-to-B3 classification alongside
+aggregation. Evaluating the same counter under GT and detector inputs helps
+practitioners assess input quality alongside aggregation. Class and total-count
+metrics distinguish maturity allocation from inventory error: a plausible total
+can conceal errors that affect the harvest schedule. Reporting signed bias
+alongside absolute error also helps assess systematic overcounting or
+undercounting. Cached predictions, fixed splits and code allow comparisons
+without repeating detector inference. These benefits are limited by the dataset's
+two unequal estates and untested acquisition changes; the results do not provide
+an association-error budget or a limit on what future counters can achieve.
+Future work should compare explicit association~\cite{ref2,ref3,ref4} with learned
+aggregation under matched inputs, broaden detector evaluation, repeat detector
+training, and test an independent plantation and measured camera-pitch changes
+before extending claims to operational harvest forecasts.
 
-This benchmark compares multi-view tree-level FFB counting under GT boxes and
-cached YOLO26m outputs. The best reported Class $\pm$1 scores are 98.05\%
-and 77.48\%, a 20.57-point gap (95\% CI 17.20--23.94). The same
-Ridge$+F_0$ counter in both conditions retains a 21.63-point gap. No fixed-input
-counter pair or Ridge feature addition is significant on Class $\pm$1 after
-multiplicity correction, although this does not establish equivalence.
-Matched resampling supports the GT advantage, and identity-based diagnostics
-reveal substantial missed bunches and class confusion without establishing a
-causal error budget or a ceiling on counter improvement.
-
-For automated BBC, these findings favour investigating detector recall and
-maturity confusion alongside aggregation, rather than expecting small feature
-changes to close the observed gap. Reporting both controlled-input and
-detector-input results helps distinguish counter behaviour from the input
-quality it receives. Cached detections, tree splits, and evaluation code make
-these comparisons reproducible. Per-class and total-count errors further
-separate maturity allocation from overall inventory error.
-
-The matched-counter GT advantage also holds for YOLO11m (23.94\,pp).
-Evidence remains limited to one dataset, two detector families, and two unequal
-estates. Future work should improve B3/B4 detection and B2$\rightarrow$B3
-classification, test explicit cross-view association~\cite{ref2,ref3,ref4}
-against learned aggregation under matched inputs, and broaden detector evaluation.
-An independent plantation, repeated captures at measured camera-pitch angles, and
-repeated detector training are needed before extending the conclusion to
-other acquisition conditions or operational harvest forecasts.
-
-% ---------------------------------------------------------------------------
 \section*{Acknowledgment}
-% ---------------------------------------------------------------------------
-
 This research was funded by the Badan Pengelola Dana Perkebunan (BPDP),
 Indonesia, under contract number PRJ-36/BPDP/2026, through Universitas Lambung
 Mangkurat (ULM), Banjarmasin, Indonesia.
-
-% ---------------------------------------------------------------------------
 \balance
+
 \begin{thebibliography}{00}
 
 \bibitem{ref12}
