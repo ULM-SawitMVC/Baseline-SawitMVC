@@ -128,7 +128,15 @@ pernah digunakan untuk training detektor.
   2 MB.
 - Training/inference YOLO11 selesai pada GPU; hasilnya direproduksi oleh audit
   CPU a13. Seluruh artefak GPU asli dipertahankan.
-- Dokumen belum melalui PDF eXpress atau diunggah sebagai camera-ready.
+- PDF eXpress: **Pass** pada 7 September 2026 pukul 13.00.41, Conference ID 71916X,
+  Paper ID 2026318348. Berkas tersertifikasi disimpan sebagai
+  [2026318348.pdf](../2026318348.pdf); isinya identik halaman per halaman dengan
+  `main-new.pdf`, dan hanya berkas itu yang membawa stempel IEEE pada metadata.
+  Berkas itulah yang harus diunggah sebagai camera-ready, bukan `main-new.pdf`.
+  Setiap perubahan naskah membatalkan sertifikasi dan menuntut validasi ulang.
+- Naskah belum diunggah sebagai camera-ready. Tenggat yang tertera pada dasbor
+  PDF eXpress adalah 11/09/2026 dalam format Amerika; konfirmasikan ke panitia
+  apakah itu 9 November atau 11 September 2026.
 - Urutan penulis pada sumber berbeda dari daftar EasyChair yang dilampirkan;
   metadata penulis tidak diubah otomatis. Cocokkan sebelum submit.
 
