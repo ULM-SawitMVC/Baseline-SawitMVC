@@ -20,13 +20,15 @@ def anonymous_source(source):
     start = source.index("\\author{")
     end = source.index("\\maketitle", start)
     source = source[:start] + "\\author{Anonymous Authors}\n\n" + source[end:]
-    source = source.replace(
-        "\\footnote{Source code: \\url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}.}",
-        "\\footnote{Repository link withheld in this anonymous companion.}")
-    # Remove both the heading and funding paragraph, not just the heading.
-    source, count = re.subn(
-        r"\\section\*\{Acknowledgment\}.*?(?=\\balance)", "", source, flags=re.S)
-    assert count == 1, "Acknowledgment section boundary changed"
+    # The link is inline, not a footnote: in Word a footnote referenced from a
+    # right column whose left column is full moves to the next page and leaves
+    # the right column part-empty.
+    link = "are available at \\url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}."
+    assert source.count(link) == 1, "Repository link sentence changed"
+    source = source.replace(link, "are available; the link is withheld in this anonymous companion.")
+    # The funding acknowledgment is the title's unnumbered \thanks footnote.
+    source, count = re.subn(r"\n\\thanks\{[^{}]*\}", "", source)
+    assert count == 1, "Funding footnote boundary changed"
     for marker in ("PRJ-36", "f.indriani@", "\\IEEEauthorblock", "anonymous.4open.science"):
         assert marker not in source, marker
     return source
@@ -45,11 +47,20 @@ def main():
                        cwd=DRAFT, check=True)
         log = (DRAFT / (name + ".log")).read_text(encoding="utf-8", errors="replace")
         assert "Overfull \\hbox" not in log, f"Horizontal overflow in {name}"
+        # A page whose content runs into the bottom margin; the certified
+        # 2026-09-07 build carried a 1.2 pt one, so allow up to 2 pt.
+        worst = max((float(v) for v in re.findall(
+            r"Overfull \\vbox \(([\d.]+)pt too high\)", log)), default=0.0)
+        assert worst <= 2.0, f"{name}: page content runs {worst:.1f} pt into the bottom margin"
         assert not re.search(r"(?:Reference|Citation) .+ undefined", log), name
         assert "multiply defined" not in log, name
         with fitz.open(DRAFT / (name + ".pdf")) as pdf:
             assert len(pdf) <= args.max_pages, f"{name}: {len(pdf)} pages exceeds {args.max_pages}"
-            assert "\u2014" not in "\n".join(page.get_text() for page in pdf), f"Em dash in {name}"
+            pdf_text = "\n".join(page.get_text() for page in pdf)
+            assert pdf_text.count("Abstract\u2014") == 1, \
+                f"{name}: abstract separator must be an em dash"
+            assert pdf_text.count("Keywords\u2014") == 1, \
+                f"{name}: keyword separator must be an em dash"
             # IEEE Xplore rejects PDFs carrying bookmarks or link annotations.
             assert not pdf.get_toc(), f"{name}: PDF bookmarks are not allowed"
             assert not any(page.get_links() for page in pdf), \
@@ -57,8 +68,8 @@ def main():
             width, height = round(pdf[0].rect.width), round(pdf[0].rect.height)
             assert (width, height) == (595, 842), \
                 f"{name}: page is {width}x{height} pt, ICIC requires A4 (595x842)"
-    print("Built both revised PDFs: A4, within the page limit, no em dashes, "
-          "no links or bookmarks; inspect layout before submission.")
+    print("Built both revised PDFs: A4, within the page limit, with template "
+          "em-dash separators, no links or bookmarks; inspect layout before submission.")
 
 
 if __name__ == "__main__":

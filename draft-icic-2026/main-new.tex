@@ -1,4 +1,7 @@
 \documentclass[conference,a4paper]{IEEEtran}
+% Conference mode ignores \thanks without this; the template needs it for the
+% unnumbered first-page funding footnote.
+\IEEEoverridecommandlockouts
 \usepackage[T1]{fontenc}
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
@@ -9,33 +12,78 @@
 \usepackage{url}
 \usepackage{balance}
 \usepackage{etoolbox}
-% Replace the template's em-dash separators with periods.
-\patchcmd{\abstract}{---}{.\ }{}{\errmessage{Abstract separator patch failed}}
-\patchcmd{\IEEEkeywords}{---}{.\ }{}{\errmessage{Keyword separator patch failed}}
-
 \renewcommand\IEEEkeywordsname{Keywords}
 
-% Numbered affiliation marks; zero-height box keeps the author block spacing.
-\newcommand{\affmark}[1]{\raisebox{0pt}[0pt][0pt]{\textsuperscript{\footnotesize #1}}}
+% ICIC template: one block per author, left to right, four per row when there
+% are more than six authors.
+\makeatletter
+% 10 pt names and 9 pt affiliations (the Word template uses 9 pt) so that four
+% blocks fit across the page.
+\def\@IEEEauthorblockNstyle{\normalfont\normalsize}
+\def\@IEEEauthorblockAstyle{\normalfont\small}
+\def\@IEEEauthorblockAinterlinespace{2.5ex}
+\newcommand{\linebreakand}{%
+  \end{@IEEEauthorhalign}
+  \hfill\mbox{}\par
+  \mbox{}\hfill\begin{@IEEEauthorhalign}
+}
+\makeatother
 
 \begin{document}
 
-\title{Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector}
+\title{Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector
+\thanks{This research was funded by the Badan Pengelola Dana Perkebunan (BPDP),
+Indonesia, under contract number PRJ-36/BPDP/2026, through Universitas Lambung
+Mangkurat (ULM), Banjarmasin, Indonesia.}}
 
 \author{
-\IEEEauthorblockN{Muhammad Zainal Muttaqin\affmark{1},
-Fatma Indriani\affmark{1},
-Setyo Wahyu Saputro\affmark{1},
-Alia Rahmi\affmark{2},\\
-Dwi Kartini\affmark{1},
-Triando Hamonangan Saragih\affmark{1},
-Naufal Said\affmark{1} and
-Hartoni\affmark{3}}
-\IEEEauthorblockA{\affmark{1}Department of Computer Science, Faculty of Mathematics and Natural Sciences\\
-\affmark{2}Department of Agro-Industrial Technology, Faculty of Agriculture\\
-\affmark{3}Department of Agribusiness, Faculty of Agriculture\\
-Lambung Mangkurat University, Banjarbaru, Indonesia\\
+\IEEEauthorblockN{Muhammad Zainal Muttaqin}
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science}\\
+\textit{Lambung Mangkurat University}\\
+Banjarbaru, Indonesia\\
+mz.muttaqin1@gmail.com}
+\and
+\IEEEauthorblockN{Fatma Indriani}
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science}\\
+\textit{Lambung Mangkurat University}\\
+Banjarbaru, Indonesia\\
 f.indriani@ulm.ac.id}
+\and
+\IEEEauthorblockN{Setyo Wahyu Saputro}
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science}\\
+\textit{Lambung Mangkurat University}\\
+Banjarbaru, Indonesia\\
+setyo.saputro@ulm.ac.id}
+\and
+\IEEEauthorblockN{Alia Rahmi}
+\IEEEauthorblockA{\textit{Dept.\ of Agro-Industrial Technology}\\
+\textit{Lambung Mangkurat University}\\
+Banjarbaru, Indonesia\\
+alia.rahmi@ulm.ac.id}
+\linebreakand
+\IEEEauthorblockN{Triando Hamonangan Saragih}
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science}\\
+\textit{Lambung Mangkurat University}\\
+Banjarbaru, Indonesia\\
+triando.saragih@ulm.ac.id}
+\and
+\IEEEauthorblockN{Hartoni}
+\IEEEauthorblockA{\textit{Dept.\ of Agribusiness}\\
+\textit{Lambung Mangkurat University}\\
+Banjarbaru, Indonesia\\
+hartoni@ulm.ac.id}
+\and
+\IEEEauthorblockN{Dwi Kartini}
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science}\\
+\textit{Lambung Mangkurat University}\\
+Banjarbaru, Indonesia\\
+dwikartini@ulm.ac.id}
+\and
+\IEEEauthorblockN{Naufal Said}
+\IEEEauthorblockA{\textit{Dept.\ of Computer Science}\\
+\textit{Lambung Mangkurat University}\\
+Banjarbaru, Indonesia\\
+naufal.said@ulm.ac.id}
 }
 
 \maketitle
@@ -46,11 +94,12 @@ class. Multi-view imaging reduces occlusion, but the same bunch reappears across
 photographs, so detections must be aggregated into unique counts. We compare
 five regression counters and eight feature sets on SawitMVC (953 trees, 3,992
 images), using ground-truth (GT) detections and a fixed YOLO26m detector. The
-best observed Class $\pm$1 accuracies are 98.05\% and 77.48\%, respectively;
-Tree $\pm$1 accuracies are 92.20\% and 32.62\%. The class-level gap is 20.57
-percentage points (95\% CI 17.20--23.94), whereas no fixed-input counter pair
+best observed class-level accuracies within one bunch are 98.05 and 77.48
+percent, respectively; the corresponding tree-level accuracies are 92.20 and
+32.62 percent. The class-level gap is 20.57 percentage points (95 percent
+confidence interval 17.20 to 23.94), whereas no fixed-input counter pair
 differs significantly after multiplicity correction. Diagnostic matching finds
-22.7\% of test bunches undetected in every view, alongside substantial maturity
+22.7 percent of test bunches undetected in every view, alongside substantial maturity
 confusion. The GT advantage persists in matched cross-validation, four YOLO26
 checkpoints and a separately trained YOLO11m, whose matched-counter gap is
 23.94 points. These results support prioritising detector output quality on
@@ -85,7 +134,7 @@ fields~\cite{ref8}. Their dense overlap, moving sensors and calibrated geometry
 differ from our sparse views of individual trees.
 
 Regression offers an alternative by mapping detection statistics to a count
-vector~\cite{ref1,ref6,ref7}, often with a YOLO detector providing the
+vector~\cite{ref1,ref6,ref7}, often with a You Only Look Once (YOLO) detector providing the
 inputs~\cite{ref14,ref15}. Evaluation only on detector outputs combines errors from both
 stages. Comparing the same counters with accurate annotations helps assess
 their dependence on input quality.
@@ -138,10 +187,12 @@ and Ultralytics 8.4.140. Its checkpoint is selected on validation and frozen;
 Ridge$+F_0$ is fitted on 716 trees per input source. Software and architecture
 defaults differ, preventing attribution to architecture alone.
 
-Table~\ref{tab:yolo} reports validation mAP50 under the COCO
-convention~\cite{ref16} and test matching (Section~\ref{sec:attrib}). Missed,
-Wrong and FP denote unmatched annotations, matched boxes with incorrect classes,
-and unmatched detections. Test recall requires both localisation and class
+Table~\ref{tab:yolo} reports validation mean average precision at an
+intersection over union (IoU) of 0.5 (mAP50) under the Common Objects in
+Context (COCO) convention~\cite{ref16} and test matching
+(Section~\ref{sec:attrib}). Missed, Wrong and false positives (FP) denote
+unmatched annotations, matched boxes with incorrect classes, and unmatched
+detections. Test recall requires both localisation and class
 correctness; its protocol differs from validation.
 
 \begin{table}[!tb]
@@ -155,19 +206,19 @@ correctness; its protocol differs from validation.
     \toprule
       & \multicolumn{2}{c}{Validation} & \multicolumn{5}{c}{Test split, appearance level} \\
     \cmidrule(lr){2-3}\cmidrule(l){4-8}
-    Class & mAP50 & Recall & GT app. & Missed & Wrong & FP & Recall \\
+    Class & mAP50 & Recall & GT app. & Missed\textsuperscript{a} & Wrong\textsuperscript{a} & FP\textsuperscript{b} & Recall \\
     \midrule
     B1  & \textbf{0.746} & \textbf{0.801} &  252 &  47 &  33 &  58 & \textbf{0.683} \\
     B2  & 0.425          & 0.433          &  496 & 161 & 209 & 158 & 0.254          \\
     B3  & 0.550          & 0.656          & 1409 & 494 &  65 & 393 & 0.603          \\
     B4  & 0.363          & 0.389          &  455 & 262 &  89 &  97 & 0.229          \\
-    All & 0.521          & 0.570          & 2612 & 964 & 396 & 706 & 0.479          \\
+    All\textsuperscript{c} & 0.521          & 0.570          & 2612 & 964 & 396 & 706 & 0.479          \\
     \bottomrule
   \end{tabular*}
-\par\vspace{3pt}
+\par\vspace{1pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} Missed/Wrong use GT classes; FP uses predicted classes. Test All recall is pooled; validation All is macro-averaged.
+    \textsuperscript{a}Uses GT classes. \textsuperscript{b}Uses predicted classes. \textsuperscript{c}Test recall is pooled; validation values are macro-averaged.
   \end{minipage}
 \end{table}
 
@@ -175,7 +226,7 @@ correctness; its protocol differs from validation.
 The baseline $F_0=[s_{B1:B4},m_{B1:B4},\mu_{B1:B4},n_v]$ has 13 dimensions:
 class totals, per-view maxima and means, and view count. For class $c$ and view
 $v$, let $k_{c,v}$ be the count, $P_c$ the confidence multiset,
-$s_c=\sum_v k_{c,v}$, $\mu_c=s_c/n_v$, and $\sigma_c$ the population SD over
+$s_c=\sum_v k_{c,v}$, $\mu_c=s_c/n_v$, and $\sigma_c$ the population standard deviation (SD) over
 all views, including empty ones. Ratio denominators use $\varepsilon=10^{-6}$.
 Table~\ref{tab:features} defines confidence (20), spatial (8), distribution
 (20) and composition (6) additions; their union with $F_0$ gives $F_{\text{all}}$
@@ -191,7 +242,7 @@ fixed inputs because GT confidences are all one.
   \label{tab:features}
   \begin{tabular}{@{}l>{\raggedright\arraybackslash}p{0.30\columnwidth}>{\raggedright\arraybackslash}p{0.42\columnwidth}@{}}
     \toprule
-    Group (dim) & Entries & Definition \\
+    Group (dim) & Entries\textsuperscript{a} & Definition\textsuperscript{b} \\
     \midrule
     $F_0$ (13) & $s_c$, $m_c$, $\mu_c$, $n_v$
       & total, per-view maximum, and per-view mean detections of class $c$;
@@ -217,10 +268,10 @@ fixed inputs because GT confidences are all one.
         of the B2/B3 pair (global) \\
     \bottomrule
   \end{tabular}
-\par\vspace{3pt}
+\par\vspace{1pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} Entries repeat for B1--B4 unless marked global. Empty confidence mean/max and area are 0; empty mean vertical position is 0.5.
+    \textsuperscript{a}Repeated for B1--B4 unless marked global. \textsuperscript{b}For an empty class, confidence mean, confidence maximum and area are 0; mean vertical position is 0.5.
   \end{minipage}
 \end{table}
 
@@ -232,17 +283,17 @@ The divisor is the ratio of input appearances to unique GT bunches in the
 $k=1.891$ (GT) and $1.793$ (fixed). No validation or test trees enter fitting.
 
 Five regressors map each tree feature vector to its four class counts: linear regression, Ridge~\cite{ref19},
-ElasticNet~\cite{ref17}, SVM~\cite{ref20} and Random Forest (RF)~\cite{ref18}.
+ElasticNet~\cite{ref17}, support vector machine (SVM)~\cite{ref20} and Random Forest (RF)~\cite{ref18}.
 All use seed 42; continuous predictions are rounded to the nearest
-non-negative integer before scoring. Features are
+nonnegative integer before scoring. Features are
 standardised except for RF. RidgeCV tests
 $\alpha\in\{0.01,0.1,1,10,100,500\}$; MultiTaskElasticNetCV uses five folds and
-3000 iterations. Multi-output RBF SVR uses three-fold GridSearchCV with
+3000 iterations. Multi-output support vector regression (SVR) with a radial basis function (RBF) kernel uses three-fold GridSearchCV with
 $C\in\{0.1,1,10\}$ and $\gamma\in\{\mathrm{scale},0.01,0.1\}$.
 RF uses 200 trees of maximum depth 10.
 
 These settings preserve the released benchmark.
-Ridge and ElasticNet scale training data before internal CV; SVM scales within its
+Ridge and ElasticNet scale training data before internal cross-validation (CV); SVM scales within its
 CV pipeline. Outer test trees never enter fitting.
 
 Class $\pm$1 accuracy measures correctness separately for each maturity class.
@@ -253,19 +304,19 @@ $I_{i,c}=\mathbf1(|e_{i,c}|\leq1)$. The accuracy measures are
 \mathrm{Class}\ \pm1&=\frac{1}{4N}\sum_{i,c}I_{i,c},\\
 \mathrm{Tree}\ \pm1&=\frac{1}{N}\sum_i\mathbf1\!\left(\sum_c I_{i,c}=4\right).
 \end{align}
-Macro MAE averages $|e_{i,c}|$ over trees and classes; macro RMSE averages
+Macro mean absolute error (MAE) averages $|e_{i,c}|$ over trees and classes; macro root mean square error (RMSE) averages
 the four class RMSEs, emphasising large errors. Class bias is mean $e_{i,c}$
 (positive: overcount; negative: undercount). Total-count MAE averages
 $|\sum_c e_{i,c}|$; total $\pm$1 is the fraction with $|\sum_c e_{i,c}|\leq1$.
 These inventory measures allow class errors to cancel, unlike Tree $\pm$1.
 Directional and absolute errors matter for yield estimates, but per-tree
 metrics do not alone determine block-level forecast error. Code and results
-are available.\footnote{Source code: \url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}.}
+are available at \url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC}.
 
 \subsection{Uncertainty and Validation Protocol}
 \label{sec:stats}
 
-Bootstrap confidence intervals resample trees 10,000 times (seed 42), reusing
+Bootstrap confidence intervals (CIs) resample trees 10,000 times (seed 42), reusing
 the same indices for paired comparisons. Intervals cover per-class and aggregate
 metrics. Exact paired permutation tests exchange model outcomes within trees,
 preserving dependence among their four classes. Holm adjustment covers ten
@@ -284,7 +335,7 @@ macro MAE, fewer dimensions, and model/feature name as deterministic tie-breaks.
 Only training trees enter model fitting; test labels do not select the winner.
 This reanalysis uses the historical test set, not newly collected test data.
 
-Repeated five-fold cross-validation (CV), with five repeats, jointly stratifies
+Repeated five-fold CV, with five repeats, jointly stratifies
 by estate and dominant class. GT and fixed Ridge$+F_0$ use identical folds
 over 237 trees outside detector gradient training (189--190 fit trees per fold).
 This pool includes 96 detector validation trees, so a stricter check uses
@@ -329,10 +380,10 @@ larger counts and class confusion also affect the absolute $\pm$1 criterion.
     \toprule
      & \multicolumn{3}{c}{GT detections} & \multicolumn{3}{c}{Fixed detector} \\
     \cmidrule(lr){2-4}\cmidrule(l){5-7}
-    Method & Class $\pm$1 & Tree $\pm$1 & MAE & Class $\pm$1 & Tree $\pm$1 & MAE \\
+    Method\textsuperscript{a} & Class $\pm$1 & Tree $\pm$1 & MAE & Class $\pm$1 & Tree $\pm$1 & MAE \\
     \midrule
     Naive sum         & 50.00          & 6.38           & 2.142          & 50.71          & 10.64          & 2.447 \\
-    Global divisor    & 95.57          & 86.52          & 0.356          & 70.21          & 22.70          & 1.188 \\
+    Global divisor\textsuperscript{b} & 95.57          & 86.52          & 0.356          & 70.21          & 22.70          & 1.188 \\
     \addlinespace[2pt]
     ElasticNet        & \textbf{98.05} & \textbf{92.20} & 0.277          & \textbf{76.42} & 29.79          & \textbf{1.043} \\
     SVM               & 97.87          & 91.49          & \textbf{0.266} & 74.82          & 29.08          & \textbf{1.043} \\
@@ -341,10 +392,10 @@ larger counts and class confusion also affect the absolute $\pm$1 criterion.
     Random forest     & 95.92          & 84.40          & 0.365          & 73.23          & 26.95          & 1.110 \\
     \bottomrule
   \end{tabular*}
-\par\vspace{3pt}
+\par\vspace{1pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} Accuracy is in \%; MAE is macro MAE. The divisor is fitted separately per input condition using training trees only.
+    \textsuperscript{a}Accuracies are in percent; MAE is macro MAE. \textsuperscript{b}Fitted separately per input condition using training trees only.
   \end{minipage}
 \end{table}
 
@@ -371,7 +422,7 @@ additions is limited; other representations may still recover useful information
   \label{tab:ablation}
   \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lccccc@{}}
     \toprule
-    Features & Dim & Class $\pm$1 & Tree $\pm$1 & MAE & CV Class $\pm$1 \\
+    Features\textsuperscript{a} & Dim & Class $\pm$1 & Tree $\pm$1 & MAE\textsuperscript{b} & CV Class $\pm$1\textsuperscript{c} \\
     \midrule
     $F_0$        & 13 & 76.06          & 28.37          & 1.053          & 72.70 $\pm$ 2.35 \\
     $F_0$+C      & 33 & 75.89          & 29.79          & 1.059          & \textbf{73.26} $\pm$ 2.36 \\
@@ -383,14 +434,14 @@ additions is limited; other representations may still recover useful information
     $F_{\text{all}}$ & 67 & \textbf{77.48} & \textbf{32.62} & \textbf{1.035} & 72.34 $\pm$ 2.08 \\
     \bottomrule
   \end{tabular*}
-\par\vspace{3pt}
+\par\vspace{1pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} C: confidence; S: spatial; D: distribution. CV: mean $\pm$ fold SD on 237 trees, including detector validation trees. MAE is macro MAE.
+    \textsuperscript{a}C: confidence; S: spatial; D: distribution. \textsuperscript{b}Macro MAE. \textsuperscript{c}Mean $\pm$ fold SD on 237 trees, including detector validation trees.
   \end{minipage}
 \end{table}
 
-\subsection{GT vs.\ Fixed-Detector Gap}
+\subsection{Ground-Truth Versus Fixed-Detector Gap}
 \label{sec:gap}
 The best observed configurations (Table~\ref{tab:summary}) differ by 20.57 pp
 on Class $\pm$1 (95\% CI 17.20--23.94; $p<0.001$) and 59.57 pp on Tree
@@ -415,28 +466,28 @@ class confusion, so it cannot be assigned to one confusion direction.
   \centering
   \footnotesize
   \renewcommand{\arraystretch}{1.13}
-  \setlength{\tabcolsep}{3pt}
+  \setlength{\tabcolsep}{2pt}
   \caption{Per-class counting performance.}
   \label{tab:summary}
   \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}llccccc@{}}
     \toprule
-    Configuration & Metric & B1 & B2 & B3 & B4 & All \\
+    Configuration & Metric\textsuperscript{a} & B1 & B2 & B3 & B4 & All\textsuperscript{b} \\
     \midrule
     GT,                     & Acc.\ $\pm$1 (\%) & 100.00  & 99.29   & 93.62   & 99.29   & 98.05 \\
     ElasticNet$+F_0$        & MAE             & 0.050   & 0.227   & 0.603   & 0.227   & 0.277 \\
                             & RMSE            & 0.223   & 0.519   & 0.855   & 0.491   & 0.522 \\
-                            & Bias            & $-.050$ & $+.043$ & $-.064$ & $-.028$ & $-.099$ \\
+                            & Bias            & $-0.050$ & $+0.043$ & $-0.064$ & $-0.028$ & $-0.099$ \\
     \addlinespace[2pt]
     Fixed,                  & Acc.\ $\pm$1 (\%) & 97.16   & 82.98   & 57.45   & 72.34   & 77.48 \\
     Ridge$+F_{\text{all}}$  & MAE             & 0.369   & 1.014   & 1.553   & 1.206   & 1.035 \\
                             & RMSE            & 0.652   & 1.437   & 1.984   & 1.598   & 1.418 \\
-                            & Bias            & $+.014$ & $-.078$ & $-.177$ & $+.071$ & $-.170$ \\
+                            & Bias            & $+0.014$ & $-0.078$ & $-0.177$ & $+0.071$ & $-0.170$ \\
     \bottomrule
   \end{tabular*}
-\par\vspace{3pt}
+\par\vspace{1pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} All is the class mean, except Bias, which is total signed error. Counts and errors are in bunches per tree.
+    \textsuperscript{a}Counts and errors are in bunches per tree. \textsuperscript{b}Class mean, except for Bias, which is the total signed error.
   \end{minipage}
 \end{table}
 
@@ -465,7 +516,7 @@ unmatched annotations (262 of 455). Counted as physical bunches, 317 of the 1,39
 test bunches (22.7\%) are never detected in any view, from 8.5\% for B1 to
 42.3\% for B4.
 
-Figure~\ref{fig:attrib}(a) places three identity-based diagnostic rules
+Fig.~\ref{fig:attrib}(a) places three identity-based diagnostic rules
 alongside the GT counter, deployed counter and naive sum. Counting each
 matched physical bunch once with its GT class gives 86.17\% Class $\pm$1
 Acc. Replacing that GT class by a confidence-weighted vote across matched
@@ -527,14 +578,14 @@ the subset includes detector validation trees.
   \label{tab:robust}
   \begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccc@{}}
     \toprule
-    Setting & Detections & Recall & Class $\pm$1 & Tree $\pm$1 \\
+    Setting & Detections\textsuperscript{a} & Recall\textsuperscript{b} & Class $\pm$1 & Tree $\pm$1 \\
     \midrule
     \multicolumn{5}{@{}l}{\emph{Family, Ridge$+F_0$, 141 test trees}} \\
     YOLO11m            & 2099 & 0.445 & 73.76 & 26.24 \\
     YOLO26m            & 2354 & 0.442 & 76.06 & 28.37 \\
     GT detections      & 2612 & 1.000 & 97.70 & 90.78 \\
     \addlinespace[2pt]
-    \multicolumn{5}{@{}l}{\emph{Checkpoint, Ridge$+F_0$, 64 evaluation trees}} \\
+    \multicolumn{5}{@{}l}{\emph{Checkpoint, Ridge$+F_0$, 64 evaluation trees}\textsuperscript{c}} \\
     YOLO26n            & 1013 & 0.442 & 72.66 & 34.38 \\
     YOLO26s            &  825 & 0.383 & 72.27 & 26.56 \\
     YOLO26m            &  950 & 0.427 & 70.70 & 28.12 \\
@@ -550,10 +601,10 @@ the subset includes detector validation trees.
     $\tau = 0.70$      &  125 & 0.086 & 63.12 & 14.89 \\
     \bottomrule
   \end{tabular*}
-\par\vspace{3pt}
+\par\vspace{1pt}
   \begin{minipage}{\columnwidth}
     \footnotesize\raggedright
-    \textit{Note:} Recall is macro class-correct appearance recall at IoU $\geq0.5$; threshold recall is recomputed after filtering. GT counts are annotated appearances; their recall is 1 by construction. Checkpoint rows use the earlier split unless marked.
+    \textsuperscript{a}For GT, annotated appearances. \textsuperscript{b}Macro class-correct appearance recall at IoU $\geq0.5$, recomputed after filtering for thresholds; GT recall is 1 by construction. \textsuperscript{c}Earlier split unless marked.
   \end{minipage}
 \end{table}
 
@@ -629,10 +680,6 @@ aggregation under matched inputs, broaden detector evaluation, repeat detector
 training, and test an independent plantation and measured camera-pitch changes
 before extending claims to operational harvest forecasts.
 
-\section*{Acknowledgment}
-This research was funded by the Badan Pengelola Dana Perkebunan (BPDP),
-Indonesia, under contract number PRJ-36/BPDP/2026, through Universitas Lambung
-Mangkurat (ULM), Banjarmasin, Indonesia.
 \balance
 
 \begin{thebibliography}{00}
@@ -749,8 +796,7 @@ doi: 10.1038/s41597-025-05227-x.
 
 \bibitem{refIndriani2026}
 F.~Indriani et al.,
-``SawitMVC: A Multi-View Oil Palm Fruit Bunch Dataset for Detection and
-Counting,'' Zenodo, May~22, 2026,
+``SawitMVC: A multi-view oil palm fruit bunch dataset for detection and counting,'' Zenodo, May~22, 2026,
 doi: 10.5281/zenodo.20336323.
 
 \bibitem{ref16}

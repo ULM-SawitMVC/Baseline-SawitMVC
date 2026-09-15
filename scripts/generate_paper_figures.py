@@ -111,6 +111,8 @@ def figure_cross_view_linking() -> None:
     }
 
     # Designed to remain readable at one IEEE column (roughly 3.5 inches).
+    # Labels use 17 pt Times New Roman: scaled from 7.4 in to one column they
+    # print at about 8 pt, the size the ICIC/IEEE template asks for.
     fig = plt.figure(figsize=(7.4, 3.5))
     grid = fig.add_gridspec(
         2, 3,
@@ -135,7 +137,7 @@ def figure_cross_view_linking() -> None:
         ax_ribbon.text(
             0.5, 0.5, f"Side {side}",
             ha="center", va="center",
-            fontsize=16, fontweight="bold", color="white",
+            fontsize=17, fontweight="bold", color="white", fontfamily="Times New Roman",
         )
 
     # Image crops
@@ -213,7 +215,7 @@ def figure_cross_view_linking() -> None:
     line_ax.text(
         hub_x, hub_y - 0.045, caption_text,
         ha="center", va="top",
-        fontsize=16, color=ACCENT_RED, fontweight="bold",
+        fontsize=17, color=ACCENT_RED, fontweight="bold", fontfamily="Times New Roman",
         bbox=dict(
             boxstyle="round,pad=0.45,rounding_size=0.30",
             facecolor="white", edgecolor=ACCENT_RED, linewidth=0.9,

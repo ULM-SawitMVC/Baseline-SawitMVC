@@ -29,14 +29,16 @@ def main():
     stages = ['L1_recall','L2_recall_class','L3_full_detector','L4_deployed_counter','naive_sum_detector']
     values = [gt]+[ladder.loc[s,'macro']*100 for s in stages]
     blue, orange, red = '#2553a4','#bc5914','#b44b48'
-    plt.rcParams.update({'font.family':'DejaVu Sans','font.size':8,'axes.labelsize':8,
-        'xtick.labelsize':7.5,'ytick.labelsize':7.5,'pdf.fonttype':42,'ps.fonttype':42,
+    # ICIC/IEEE template: figure labels in 8 pt Times New Roman. The figure is
+    # drawn at print width, so these sizes are the printed sizes.
+    plt.rcParams.update({'font.family':'Times New Roman','font.size':8,'axes.labelsize':8,
+        'xtick.labelsize':8,'ytick.labelsize':8,'pdf.fonttype':42,'ps.fonttype':42,
         'axes.spines.top':False,'axes.spines.right':False,'axes.linewidth':.65})
-    fig = plt.figure(figsize=(7.16,3.15),facecolor='white')
-    a = fig.add_axes([.155,.17,.315,.65])
-    b = fig.add_axes([.615,.17,.37,.65])
-    fig.text(.012,.96,'(a) Diagnostic counting rules',fontsize=9.3,va='top')
-    fig.text(.565,.96,'(b) Threshold sensitivity',fontsize=9.3,va='top')
+    fig = plt.figure(figsize=(7.16,2.65),facecolor='white')
+    a = fig.add_axes([.155,.2,.315,.6])
+    b = fig.add_axes([.615,.2,.37,.6])
+    fig.text(.012,.96,'(a) Diagnostic counting rules',fontsize=8,va='top')
+    fig.text(.565,.96,'(b) Threshold sensitivity',fontsize=8,va='top')
     bars = a.barh(np.arange(6),values,height=.61,
         color=[blue,'#e9f0fa','#fff1e1','#fff1e1',red,'#ecedef'],
         edgecolor=[blue,blue,orange,orange,red,'#555b63'],linewidth=.8)
@@ -49,7 +51,7 @@ def main():
     a.grid(axis='x',color='#e5e5e5',linewidth=.5)
     a.set_axisbelow(True)
     for rect,val in zip(bars,values):
-        a.text(val+1.7,rect.get_y()+rect.get_height()/2,f'{val:.2f}',va='center',fontsize=7.5)
+        a.text(val+1.7,rect.get_y()+rect.get_height()/2,f'{val:.2f}',va='center',fontsize=8)
     b.plot(sweep.threshold,sweep.macro*100,color=orange,linewidth=1.25,marker='o',
         markersize=3.6,markerfacecolor='white',markeredgewidth=1.0)
     b.axhline(gt,color=blue,linewidth=.9,linestyle=(0,(4,3)))
@@ -65,10 +67,10 @@ def main():
     legend = [Line2D([0],[0],color=blue,linestyle=(0,(4,3)),linewidth=.9,label=f'GT: {gt:.2f}'),
         Line2D([0],[0],color='#929292',linestyle=(0,(1.5,2.5)),linewidth=.8,label='Released τ = 0.25')]
     b.legend(handles=legend,loc='lower left',bbox_to_anchor=(-.01,1.045),ncol=2,
-        frameon=False,fontsize=7,borderaxespad=0,columnspacing=1.1,handlelength=2.1)
+        frameon=False,fontsize=8,borderaxespad=0,columnspacing=1.1,handlelength=2.1)
     last = sweep.iloc[-1]
     b.annotate(f'{last.macro*100:.2f}',(last.threshold,last.macro*100),
-        xytext=(-9,0),textcoords='offset points',ha='right',va='center',fontsize=7.4)
+        xytext=(-9,0),textcoords='offset points',ha='right',va='center',fontsize=8)
     fig.savefig(out/'fig04_attribution_sweep.pdf',facecolor='white')
     fig.savefig(out/'fig04_attribution_sweep.png',dpi=400,facecolor='white')
     plt.close(fig)

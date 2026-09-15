@@ -1,0 +1,448 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext,newtxmath}
+\usepackage[a4paper,top=2.2cm,bottom=2.2cm,left=2.3cm,right=2.3cm]{geometry}
+\usepackage{xcolor}
+\usepackage[skins]{tcolorbox}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{url}
+\usepackage{titlesec}
+
+\setlength{\emergencystretch}{1.5em}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlist{nosep,leftmargin=1.3em,topsep=2pt}
+\titleformat{\section}{\large\bfseries}{}{0pt}{}
+\titlespacing*{\section}{0pt}{12pt}{4pt}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0pt}{}
+\titlespacing*{\subsection}{0pt}{8pt}{2pt}
+
+\definecolor{cmtbg}{gray}{0.94}
+\definecolor{cmtrule}{gray}{0.55}
+\newtcolorbox{cmt}{enhanced,sharp corners,boxrule=0pt,colback=cmtbg,
+  left=6pt,right=6pt,top=3pt,bottom=3pt,before skip=4pt,after skip=4pt,
+  borderline west={2pt}{0pt}{cmtrule},fontupper=\itshape}
+\newcommand{\resp}{\textbf{Response.}\ }
+\newcommand{\changes}[1]{\par\textbf{Changes in manuscript:} #1}
+\newcommand{\pH}{p_{\mathrm{H}}}
+\newcommand{\Fall}{F_{\text{all}}}
+\newcommand{\pp}{\,pp}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries Response to Reviewers}\\[6pt]
+{\large ICIC--APTIKOM 2026, Paper ID 57}\\[4pt]
+\textit{Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector}
+\end{center}
+
+\vspace{2pt}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
+Authors & Muhammad Zainal Muttaqin, Fatma Indriani, Setyo Wahyu Saputro, Alia Rahmi,
+          Triando Hamonangan Saragih, Hartoni, Dwi Kartini, Naufal Said\\
+Corresponding author & Muhammad Zainal Muttaqin (mz.muttaqin1@gmail.com)\\
+Revised manuscript & Camera-ready version, 6 pages, certified by IEEE PDF eXpress (file ID 2026332983)\\
+\end{tabularx}
+
+\section{General Response}
+We thank the four reviewers for their careful reading and constructive comments. We
+addressed every comment in the revised manuscript. The revision keeps the original
+experimental design and the six-page limit, and adds the following analyses:
+\begin{itemize}
+\item Tree-level bootstrap 95\% confidence intervals (CIs), exact paired permutation
+  tests and Holm correction for all counter and feature comparisons
+  (Sections II-E and III-A to III-C).
+\item A second detector family (YOLO11m) trained on the official split, four YOLO26
+  checkpoints and a confidence-threshold sweep (Sections II-B and III-E, Table VI).
+\item Appearance-level matching that separates missed annotations, wrong-class
+  detections and false positives, with diagnostic counting rules
+  (Table I, Section III-D, Fig.~2).
+\item Per-class MAE, RMSE, signed bias and total-count error
+  (Section II-D, Tables III and V).
+\item Validation-based model selection, matched repeated cross-validation (CV) and
+  cross-estate counter transfer (Sections II-E, III-C and III-E).
+\item A feature-definition table (Table II), an analysis of the Random Forest (RF)
+  results (Section III-F) and a limitations subsection (Section III-G).
+\end{itemize}
+During the re-analysis we also found and corrected three errors in the submitted
+version; they are listed in Response 3.10.
+
+Section, table and figure numbers below refer to the revised manuscript. The submitted
+Tables II and III are merged into the revised Table III, the submitted Table V is now
+Table IV, and the submitted Table VI is now Table V. Code, cached predictions and the
+outputs of all added analyses are available at
+\url{https://github.com/ULM-SawitMVC/Baseline-SawitMVC} (folders
+\texttt{experiments/revision} and \texttt{results/revision}).
+The abbreviation pp denotes percentage points, and $\pH$ denotes a Holm-adjusted
+$p$-value.
+
+%======================================================================
+\section{Reviewer 1}
+
+\begin{cmt}
+CONCLUSION: Include further implications for the field. Discuss benefits or
+shortcomings of your work and suggest future areas for research.
+\end{cmt}
+\resp We thank the reviewer for the positive assessment. We rewrote Section IV to cover
+the three requested points.
+\begin{itemize}
+\item \emph{Implications.} Evaluating the same counter under ground-truth (GT) and
+  detector inputs lets practitioners separate the effect of input quality from the
+  effect of aggregation. For the Black Bunch Census, the results support improving B3
+  and B4 detection and B2-to-B3 classification together with aggregation. Class-level
+  and total-count metrics should both be reported, because a plausible total count can
+  hide class errors that change the harvest schedule.
+\item \emph{Benefits.} Cached predictions, fixed splits and released code allow new
+  counters to be compared without repeating detector inference.
+\item \emph{Shortcomings.} The evidence covers one dataset from two estates of unequal
+  size, and acquisition changes are untested. The results do not give an
+  association-error budget or a limit on what future counters can achieve.
+  Section III-G lists the remaining limitations.
+\item \emph{Future research.} Comparison of explicit multi-view association with learned
+  aggregation under matched inputs, broader detector evaluation, repeated detector
+  training, and tests on an independent plantation and at measured camera-pitch angles.
+\end{itemize}
+\changes{Section IV (Conclusion); Section III-G (Limitations).}
+
+%======================================================================
+\section{Reviewer 2}
+
+\begin{cmt}
+However, the current manuscript does not yet provide sufficient evidence to support some
+of its broader conclusions. The use of a single detector, limited test set, absence of
+statistical significance analysis, and limited error decomposition are the main
+weaknesses. I would recommend acceptance after minor revision, provided that the authors
+strengthen the statistical analysis, clarify the scope of their conclusions, and provide
+a more rigorous decomposition of detector and counting errors.
+\end{cmt}
+\resp We thank the reviewer for recognising the value of the controlled comparison. We
+addressed the four weaknesses as follows. The responses to Reviewer~3 give further
+details.
+\begin{enumerate}[label=(\alph*)]
+\item \emph{Single detector.} We trained a second detector family, YOLO11m, on the
+  official 716/96/141 split with the same training settings. With the same Ridge$+F_0$
+  counter on the 141 test trees, Class $\pm$1 accuracy is 73.76\% for YOLO11m, 76.06\%
+  for YOLO26m and 97.70\% for GT inputs. GT inputs remain 23.94\pp{} better than YOLO11m
+  (95\% CI 20.57--27.30; $p<0.001$), while the two detectors do not differ significantly
+  ($-2.30$\pp; CI $-4.96$ to $+0.35$; $p=0.118$). Four YOLO26 checkpoints span 3.13\pp,
+  compared with a 23.44\pp{} gap to GT inputs (Response 3.2).
+\item \emph{Limited test set.} Matched repeated CV uses identical folds under both input
+  conditions. On 237 trees outside detector gradient training, Class $\pm$1 is
+  $97.72\pm1.02$\% (GT) versus $72.70\pm2.35$\% (fixed detector); on the 141 original
+  test trees it is $97.16\pm1.23$\% versus $74.08\pm2.96$\%. A validation-only model
+  selection gives a gap of 23.58\pp{} (Responses 3.1 and 3.5).
+\item \emph{Significance analysis.} The class-level gap between the best configurations
+  is 20.57\pp{} (CI 17.20--23.94; $p<0.001$). With the same Ridge$+F_0$ counter in both
+  conditions, it is 21.63\pp{} (CI 18.44--25.00; $p<0.001$), so the gap is not caused
+  by comparing different counter families. No pair of counters differs significantly
+  under the fixed detector after Holm correction (Response 3.1).
+\item \emph{Error decomposition.} Appearance-level matching reports missed, wrong-class
+  and false-positive counts for each class, and 22.7\% of test bunches are not detected
+  in any view. Diagnostic counting rules show the effect of each error type
+  (Responses 3.3 and 3.9).
+\end{enumerate}
+We also narrowed the conclusions to the tested configurations on SawitMVC
+(Response 3.8).
+\changes{Abstract; Sections II-B, II-E, III-A to III-E and IV; Tables I and VI; Fig.~2.}
+
+%======================================================================
+\section{Reviewer 3}
+
+\subsection{Comment 3.1}
+\begin{cmt}
+Add statistical uncertainty/significance analysis for the reported model differences.
+\end{cmt}
+\resp Section II-E defines the protocol. Percentile bootstrap CIs resample trees 10,000
+times (seed 42), keep the four class counts of each tree together, and reuse the same
+resamples for paired comparisons. Exact paired permutation tests exchange the outcomes of
+two models within each tree. Holm correction covers the ten counter pairs within each
+input condition and, as a separate family, the seven feature sets compared with $F_0$.
+Wilcoxon tests on per-tree macro absolute error and exact McNemar tests on Tree $\pm$1
+cover the other endpoints. The main results are:
+\begin{itemize}
+\item GT inputs: the four counters other than RF do not differ significantly ($\pH=1$).
+  ElasticNet exceeds RF by 2.13\pp{} (CI 0.89--3.55; $p=0.0042$, $\pH=0.0376$), and SVM
+  also exceeds RF ($\pH=0.0342$).
+\item Fixed detector: none of the ten counter pairs differs significantly. The largest
+  difference, ElasticNet versus RF, is 3.19\pp{} ($p=0.0628$, $\pH=0.628$).
+\item Input conditions: 20.57\pp{} (CI 17.20--23.94) between the best configurations and
+  21.63\pp{} (CI 18.44--25.00) for the same counter; both $p<0.001$.
+\end{itemize}
+The manuscript states that a nonsignificant difference does not establish equivalence.
+Because the submitted version highlighted the configuration with the best test score,
+we added a validation-only selection over 40 model and feature candidates per condition.
+The selected configurations, Ridge$+F_0$ (GT) and SVM$+(F_0+\text{conf})$ (fixed),
+reach 97.70\% and 74.11\% on the test trees, a gap of 23.58\pp{} (CI 20.21--27.13;
+$p<0.001$).
+\changes{Sections II-E, III-A, III-B and III-C.}
+
+\subsection{Comment 3.2}
+\begin{cmt}
+Clarify the scope of the detector-related conclusion, because only one detector
+checkpoint is evaluated.
+\end{cmt}
+\resp We agree that one checkpoint cannot support a general statement. We added three
+analyses (Table VI) and restricted the conclusion accordingly.
+\begin{itemize}
+\item \emph{Detector family.} YOLO11m was trained on the official split with 60 epochs,
+  batch 32, image size 640, patience 60 and seed 42; its checkpoint was selected on the
+  validation trees. The results are given in Response 2(a). YOLO11m misses 976 and
+  misclassifies 399 of the 2,612 GT appearances.
+\item \emph{Checkpoints.} YOLO26n, YOLO26s and YOLO26m from an earlier split, and YOLO26m
+  from the official split, reach 70.70--73.83\% Class $\pm$1 on 64 trees outside the
+  gradient training of all checkpoints, compared with 97.27\% for GT inputs.
+\item \emph{Operating point.} Over eleven confidence thresholds from 0.05 to 0.70, with
+  the counter refitted at each threshold, no threshold exceeds 77.48\% Class $\pm$1.
+  Threshold 0.10 raises Tree $\pm$1 from 32.62\% to 38.30\%.
+\end{itemize}
+Section III-G states the remaining limits: one training run per detector, different
+Ultralytics versions and defaults (8.4.49 and 8.4.140), and confounding of model
+capacity with training split in the checkpoint analysis. The manuscript therefore
+describes the finding as applying to the tested detectors on SawitMVC, not as a general
+ranking of architectures.
+\changes{Sections II-B, III-E and III-G; Table VI.}
+
+\subsection{Comment 3.3}
+\begin{cmt}
+Provide more detailed error decomposition for missed detections, false positives, and
+maturity-class confusion.
+\end{cmt}
+\resp Section III-D matches every detection on the test trees to the annotations. The
+matching is greedy in order of confidence, class-agnostic, and accepts a pair at
+IoU $\geq 0.5$. Table I reports, for each class, annotations with no matched detection
+(Missed), matched boxes with an incorrect class (Wrong) and detections with no matched
+annotation (FP).
+\begin{itemize}
+\item Of 2,612 annotated appearances, 964 (36.9\%) are missed, 396 (15.2\%) have an
+  incorrect class and 1,252 (47.9\%) are correct.
+\item Of 2,354 detections, 706 (30.0\%) are false positives. Their mean confidence is
+  0.337, compared with 0.487 for matched detections.
+\item B2 errors are mainly class confusion (209 appearances, of which 158 are predicted
+  as B3, versus 161 missed). B4 errors are mainly missed detections (262 of 455).
+\item Of 1,397 physical test bunches, 317 (22.7\%) are not detected in any view, from
+  8.5\% for B1 to 42.3\% for B4.
+\end{itemize}
+The manuscript notes that an unmatched annotation can also result from an IoU below the
+threshold or from matching competition.
+\changes{Table I; Section III-D.}
+
+\subsection{Comment 3.4}
+\begin{cmt}
+Add additional counting metrics, especially per-class MAE/RMSE and total bunch-count
+error.
+\end{cmt}
+\resp Section II-D defines macro MAE, macro RMSE, signed class bias, total-count MAE and
+total $\pm$1 accuracy. Table III reports macro MAE for all counters under both input
+conditions, and Table V gives per-class accuracy, MAE, RMSE and bias for the best
+configuration in each condition. From GT to fixed-detector inputs, macro RMSE rises
+from 0.522 to 1.418, total-count MAE rises from 0.979 to 1.787, and total $\pm$1
+accuracy falls from 78.01\% to 48.94\% (Section III-C). The manuscript distinguishes
+total $\pm$1, in which class errors can cancel, from Tree $\pm$1, which requires all
+four class counts to be within one bunch.
+\changes{Sections II-D and III-C; Tables III and V.}
+
+\subsection{Comment 3.5}
+\begin{cmt}
+Strengthen validation using repeated splits, cross-validation, or an independent
+plantation if available.
+\end{cmt}
+\resp No independent plantation was available for this revision. We therefore added
+three resampling analyses and state the missing independent test as a limitation.
+\begin{itemize}
+\item \emph{Matched repeated CV.} Five folds with five repeats, stratified by estate and
+  dominant class, use identical folds for GT and fixed-detector inputs with the
+  detector frozen. Class $\pm$1 is $97.72\pm1.02$\% versus $72.70\pm2.35$\% on 237 trees
+  outside detector gradient training (gap 25.03\pp), and $97.16\pm1.23$\% versus
+  $74.08\pm2.96$\% on the 141 original test trees (gap 23.08\pp).
+\item \emph{Validation-based selection.} Model and features are selected on the
+  validation trees only; the test gap is 23.58\pp{} (Response 3.1).
+\item \emph{Cross-estate transfer.} Ridge$+\Fall$ trained on 641 DAMIMAS trees reaches
+  71.88\% on 24 LONSUM evaluation trees, compared with 72.92\% when trained on 75
+  LONSUM trees. The reverse transfer reaches 68.78\% on 213 DAMIMAS trees. Because the
+  detector was trained on both estates, this analysis evaluates the counter only.
+\end{itemize}
+\changes{Sections II-E, III-C, III-E and III-G.}
+
+\subsection{Comment 3.6}
+\begin{cmt}
+Expand the feature-definition table to improve reproducibility.
+\end{cmt}
+\resp Table II now defines all 67 dimensions: $F_0$ (13), confidence (20), spatial (8),
+distribution (20) and composition (6). It gives the formulas, the normalisation of box
+position and area by image size, the confidence thresholds ($p\geq0.5$ and $p\geq0.6$),
+the population standard deviation over all views including empty views,
+$\varepsilon=10^{-6}$, and the default values for a class with no detection. Section II-C
+defines the notation, and the released feature extractor produces the same 67
+dimensions. We also report that the 1.42\pp{} gain of $\Fall$ over $F_0$ is not
+statistically resolved (CI $-0.53$ to $+3.37$; $p=0.201$, $\pH=1$) and that $\Fall$ does
+not lead under repeated CV (Table IV).
+\changes{Section II-C; Tables II and IV.}
+
+\subsection{Comment 3.7}
+\begin{cmt}
+Discuss the poor Random Forest performance more thoroughly.
+\end{cmt}
+\resp Section III-F explains the result. Each regression tree averages the training
+targets within a leaf, so RF cannot predict beyond the training count range and pulls
+estimates towards common counts when high counts are rare. The diagnostics agree with
+this explanation:
+\begin{itemize}
+\item Slopes of predicted on true counts are 0.754--0.888 for RF and 0.865--0.951 for
+  the linear counters, and the relative prediction standard deviation of RF is smaller
+  in every class.
+\item RF never predicts more than three B1 bunches, although the maximum is five in
+  training and six in the test set; its B1 MAE is 0.149, compared with 0.050 for Ridge.
+\item In the highest-load bin, RF trails ElasticNet by 3.07\pp{} (94.74\% versus 97.81\%).
+\end{itemize}
+Under GT inputs, RF is significantly worse than ElasticNet and SVM after Holm correction;
+under the fixed detector the difference is not resolved ($p=0.0628$, $\pH=0.628$). The
+manuscript presents these findings as diagnostics and does not exclude improvement by
+tuning.
+\changes{Section III-F.}
+
+\subsection{Comment 3.8}
+\begin{cmt}
+Moderate broad generalizations about detector quality versus counter quality.
+\end{cmt}
+\resp We revised the following statements:
+\begin{itemize}
+\item The submitted abstract stated that ``the dominant finding is that detector output
+  quality, more than the choice of counter, limits deployed accuracy.'' The revised
+  abstract states that the results ``support prioritising detector output quality on
+  this dataset'' and ``do not establish a ceiling on counter improvement.''
+\item The submitted statement that the remaining counting problem is ``simple enough for
+  compact regression models'' was removed.
+\item GT inputs are described as an empirical reference, not a mathematical upper bound
+  on future counting methods (Section II-B).
+\item Nonsignificant differences are not interpreted as equivalence (Sections II-E, III-A
+  and III-E).
+\item The conclusion is limited to the tested configurations and lists the evidence
+  needed before the claims can be extended to operational harvest forecasts
+  (Section IV).
+\end{itemize}
+\changes{Abstract; Sections II-B, II-E, III-A to III-G and IV.}
+
+\subsection{Comment 3.9}
+\begin{cmt}
+Clearly distinguish detector performance limitations from multi-view
+association/aggregation limitations.
+\end{cmt}
+\resp Section III-D and Fig.~2(a) compare six counting rules on the 141 test trees:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Counting rule & Class $\pm$1 (\%) \\
+\midrule
+GT boxes and classes, ElasticNet$+F_0$ & 98.05 \\
+Matched physical bunches counted once, GT class & 86.17 \\
+Same identities, confidence-weighted detector class vote & 71.81 \\
+Class vote, each unmatched detection counted as a separate bunch & 62.23 \\
+Deployed counter, Ridge$+\Fall$ & 77.48 \\
+Naive sum of detections & 50.71 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The three identity-based rules show the separate effects of bunches that are never
+detected, class confusion and unmatched detections. The manuscript states that these
+rules are separate estimators and that their differences do not add up to the deployed
+error. The deployed counter (77.48\%) exceeds two of the rules because learned
+aggregation compensates statistically for missed counts and class bias. A direct
+measurement of association error requires an explicit association module, which we list
+as future work.
+\changes{Section III-D; Fig.~2(a); Section IV.}
+
+\subsection{Comment 3.10}
+\begin{cmt}
+Carefully proofread the manuscript for formatting, equations, tables, and citation
+consistency.
+\end{cmt}
+\resp We proofread the full manuscript. All tables were re-typeset (Response 4.1),
+equations (1) and (2) define Class $\pm$1 and Tree $\pm$1, abbreviations are defined at
+first use, and references are numbered in order of first citation. The final PDF passed
+IEEE PDF eXpress. During the re-analysis we found and corrected the following errors in
+the submitted version:
+\begin{itemize}
+\item \emph{Global divisor (GT inputs).} Class $\pm$1 / Tree $\pm$1 / MAE were corrected
+  from 95.39\% / 85.11\% / 0.376 to 95.57\% / 86.52\% / 0.356. The divisor is fitted on
+  the 716 training trees only, separately for each input condition ($k=1.891$ for GT
+  and $1.793$ for the fixed detector). A fixed-detector row (70.21\% / 22.70\% / 1.188)
+  was added to Table III.
+\item \emph{Tree $\pm$1 gap.} The value was corrected from 59.58 to 59.57\pp.
+\item \emph{Visibility-adaptive divisor.} This row was removed because we could not
+  confirm that the trees used to develop the heuristic are disjoint from the current
+  test split.
+\item \emph{Software citation.} The unsupported version number ``26.0.0'' was removed
+  from the Ultralytics reference; the training log records Ultralytics 8.4.49.
+\end{itemize}
+\changes{All sections; Tables I to VI; references.}
+
+%======================================================================
+\section{Reviewer 4}
+
+We thank the reviewer for the positive assessment of the problem statement, dataset and
+methodology.
+
+\subsection{Comment 4.1}
+\begin{cmt}
+Fix several noticeable typesetting and column-alignment errors in Tables III and V.
+\end{cmt}
+\resp The submitted Table III (fixed-detector counting) is now merged with the submitted
+Table II into the revised Table III, which places GT and fixed-detector results side by
+side. The submitted Table V (feature ablation) is now Table IV. All six tables were
+re-typeset with 8-point text, horizontal rules only, the same number of decimal places
+in each column, and widths within the column. Captions were shortened, and units and
+definitions were moved to table notes.
+\changes{Tables I to VI.}
+
+\subsection{Comment 4.2}
+\begin{cmt}
+Briefly evaluate an additional detector architecture to strengthen the generalizability
+of the findings.
+\end{cmt}
+\resp We trained YOLO11m on the official 716/96/141 split with the same epochs, batch
+size, image size, patience and seed as the YOLO26m detector, and selected its checkpoint
+on the validation trees. With the same Ridge$+F_0$ counter on the 141 test trees:
+
+\begin{center}
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Input & Detections & Class $\pm$1 (\%) & Tree $\pm$1 (\%) \\
+\midrule
+YOLO11m & 2,099 & 73.76 & 26.24 \\
+YOLO26m & 2,354 & 76.06 & 28.37 \\
+GT detections & 2,612 & 97.70 & 90.78 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The two detectors do not differ significantly in Class $\pm$1 ($-2.30$\pp; CI $-4.96$ to
+$+0.35$; $p=0.118$), and GT inputs remain 23.94\pp{} better than YOLO11m (CI
+20.57--27.30; $p<0.001$). The manuscript notes that one training run per detector and
+different software versions limit wider generalisation.
+\changes{Sections II-B, III-E and III-G; Table VI.}
+
+\subsection{Comment 4.3}
+\begin{cmt}
+Clarify how robust the vertical spatial features are to real-world camera pitch
+variations.
+\end{cmt}
+\resp The dataset has no calibrated pitch measurements and no repeated captures at known
+angles, so physical pitch robustness could not be tested. We added a sensitivity analysis
+of the vertical feature. The mean vertical position of the test features was transformed
+as $\overline{cy}\mapsto\operatorname{clip}(a\,\overline{cy}+b,0,1)$ over 35 settings of
+$a\in[0.90,1.10]$ and $b\in[-0.10,0.10]$, with training data unchanged and missing-class
+values kept at 0.5. Ridge$+\Fall$ loses at most 1.42\pp{} Class $\pm$1, and Gaussian noise
+with $\sigma=0.05$ costs 0.53\pp. This analysis tests feature shifts only. A real pitch
+change also affects perspective, box area, visibility and detector output. The manuscript
+therefore states that robustness to camera rotation remains unverified
+(Sections III-E and III-G) and proposes repeated captures at measured pitch angles as
+future work (Section IV).
+\changes{Sections III-E, III-G and IV.}
+
+\end{document}
