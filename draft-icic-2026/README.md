@@ -32,6 +32,7 @@ draft-icic-2026/
 |---|---|
 | `057_MUTTAQIN.pptx` | Slide deck presentasi (7 slide, 4 bagian: introduction, background, results, conclusion); naskah tersimpan juga pada catatan pembicara. |
 | `Script.md` | Naskah presentasi (635 kata, sekitar 4,5 sampai 5 menit) dan Q&A cheat sheet. |
+| `ICIC_057_MUTTAQIN.mp4` | Rekaman video presentasi resmi (66 MB), direkam dengan slide deck versi pertama. |
 
 ### 2. `camera-ready/` — Berkas Final Submission
 | Berkas | Deskripsi |
@@ -59,7 +60,7 @@ draft-icic-2026/
 | `main.tex` / `main.pdf` | Draft awal naskah sebelum proses peer-review. |
 | `main-blind.tex` / `main-blind.pdf` | Naskah yang disubmit untuk tahap blind review. |
 | `main-blind-old.pdf` | Versi kompilasi lama naskah blind review. |
-| `presentation-v1/` | Materi presentasi versi pertama: slide deck 13 slide, `Script.md`, naskah Word dan PDF, `make_docx.py`, dan rekaman video `ICIC_057_MUTTAQIN.mp4` (66 MB). |
+| `presentation-v1/` | Materi presentasi versi pertama: slide deck 13 slide, `Script.md`, naskah Word dan PDF, dan `make_docx.py`. |
 
 ### 5. `Accepted-Revise/` — Catatan Revisi & Audit Reviewer
 Berisi file Markdown dan notebook yang mendokumentasikan tindak lanjut atas masukan reviewer (termasuk validasi GPU Reviewer 4, closure matrix, dan audit 6 halaman).
