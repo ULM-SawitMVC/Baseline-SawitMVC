@@ -2,7 +2,7 @@
 
 **Paper Title:** Benchmarking Multi-View Tree-Level Oil Palm Bunch Counting Under a Fixed Detector
 **Presenter:** Muhammad Zainal Muttaqin
-**Target Duration:** about 4 minutes (635 words)
+**Target Duration:** about 4.5 minutes (661 words)
 **Slide Deck:** `057_MUTTAQIN.pptx` (7 slides, 4 sections)
 **How to read:** The slides carry the numbers. The script explains each idea in plain words and introduces every term before it is used. *[Brackets]* mark an action, not speech.
 
@@ -26,17 +26,17 @@ A system for this has two parts. A detector finds the bunches in each photo and 
 
 ### Slide 3: Related work and research gap (Section 2, Background)
 
-Other researchers have solved this for mango and apple, but their methods need a camera that moves along the row or many overlapping images. We only have four separate smartphone photos per tree.
+Other researchers have studied multi-view counting for mango and apple, but their methods rely on a moving sensor, many overlapping images or calibrated cameras. We only have four separate photos per tree.
 
-For oil palm, earlier work stops at detecting bunches in a single image. And when a counting system is tested, it is tested as a whole, so nobody can tell which of the two parts made the mistake.
+For oil palm, detecting the bunches is still difficult, and the public dataset does not give a count per tree. Also, when a counting system is tested only on the boxes from a detector, the mistakes of the detector and the mistakes of the counter are mixed together.
 
 ---
 
 ### Slide 4: Experimental design (Section 2, Background)
 
-To separate the two parts, we test every counter twice. The first time, we give it the boxes that experts drew by hand, so the input has no mistakes. *[point: top image]* The second time, we give it the boxes from a YOLO detector, which misses some bunches and gives some of them the wrong class. *[point: bottom image]*
+To separate the two parts, we test every counting method twice. The first time, we give it the boxes that experts drew by hand, which we treat as correct. *[point: top image]* The second time, we give it the boxes from a YOLO detector, which misses some bunches and gives some of them the wrong class. *[point: bottom image]*
 
-We use one detector model for the whole study and we never retrain it, so every counter receives exactly the same boxes. Because the counter is also the same in both tests, any drop in accuracy comes from the mistakes of the detector.
+In the main experiments we use one detector model and we keep it fixed, so every counter receives exactly the same boxes. Because the counting method is also the same in both tests, the drop in accuracy shows the effect of the detector's mistakes.
 
 As counters, we compare two simple rules, such as dividing the total by the average number of repeats, and five regression models. We count a prediction as correct when it is within one bunch of the true number.
 
@@ -44,23 +44,23 @@ As counters, we compare two simple rules, such as dividing the total by the aver
 
 ### Slide 5: Results on the 141 test trees (Section 3, Results)
 
-This slide has all our results, so let me point to the main numbers. With the expert boxes, the best counter is correct in 98 percent of the cases. With the detector boxes, it drops to 77 percent. That is a loss of about 21 points. *[point: top tiles]*
+This slide has all our results, so let me point to the main numbers. With the expert boxes, the best result is 98 percent. With the detector boxes, the best result is 77 percent. That is a gap of about 21 points. *[point: top tiles]*
 
-In contrast, when we compare the five counters with each other, they differ by only 3 points, and that difference is not statistically significant.
+In contrast, when we compare the five regression counters with each other on the detector boxes, they differ by only 3 points, and that difference is not statistically significant.
 
-Why is the loss so large? Because 23 percent of the bunches are not detected in any of the photos, and the counter cannot count a bunch that it never receives. The detector also often labels B2 bunches as B3. *[point: panels C and D]*
+Where does the gap come from? 23 percent of the bunches are not detected in any of the photos, and the counter has no information about a bunch that is never detected. The detector also often labels B2 bunches as B3. *[point: panels C and D]*
 
-Giving the counter more information improved it by only about one point. And when we repeated the comparison with another detector and with cross-validation, the gap stayed between 23 and 25 points.
+Giving the counter more information improved it by only 1.4 points, which is not significant. And when we repeated the comparison with another detector and with cross-validation, the gap was still 23 to 25 points.
 
 ---
 
 ### Slide 6: Conclusions (Section 4, Conclusion)
 
-So, to answer our question: on this dataset, the count depends much more on the detector than on the choice of counter. The next improvement should therefore be in the detector, especially for the unripe classes B3 and B4.
+So, to answer our question: on this dataset, the quality of the boxes changed the accuracy much more than the choice of counter. Our results therefore support improving the detector first, especially for the unripe classes B3 and B4.
 
-We also suggest that counting methods be reported with both expert boxes and detector boxes, so that the two sources of error stay visible.
+We also suggest that counting methods be reported with both expert boxes and detector boxes, so that the effect of the detector stays visible.
 
-Our data come from only two estates, so we still need to test this on an independent plantation.
+Our data come from only two estates, so we still need to test this on an independent plantation. We also do not claim that the counter cannot be improved.
 
 ---
 
@@ -81,7 +81,7 @@ Thank you for listening. Our code and results are on GitHub, and I am happy to t
 **A:** No, not only that. The daily harvest is decided by the harvesters in the field, who check the ripe bunches and the loose fruit on each round, typically every 7 to 10 days. The Black Bunch Census is a periodic survey, usually every three or four months, and it is mainly used to forecast the crop one to four months ahead and to plan labor and transport. Our work is aimed at automating that census.
 
 **Q: Why not use 3D reconstruction or tracking to match bunches across views?**  
-**A:** That is a good question. Those methods usually need a lot of overlap between images, a moving sensor, or calibrated cameras. In our case we only have four to eight smartphone photos per tree, taken from different sides. So we started with a simpler approach, which is regression on summary features. Comparing it with explicit matching on the same inputs is the next thing we want to do.
+**A:** That is a good question. Those methods usually need a lot of overlap between images, a moving sensor, or calibrated cameras. In our case we only have four to eight photos per tree, taken from different sides. So we started with a simpler approach, which is regression on summary features. Comparing it with explicit matching on the same inputs is the next thing we want to do.
 
 **Q: Is ground truth an upper bound for counting accuracy?**  
 **A:** Not really. We treat it as an empirical reference. It shows what these counters can reach when the boxes and classes are all correct. A different counter in the future could use information that ours do not use, so we do not want to call it an upper bound.

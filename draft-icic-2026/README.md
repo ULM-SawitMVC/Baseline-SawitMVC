@@ -31,7 +31,7 @@ draft-icic-2026/
 | Berkas | Deskripsi |
 |---|---|
 | `057_MUTTAQIN.pptx` | Slide deck presentasi (7 slide, 4 bagian: introduction, background, results, conclusion); naskah tersimpan juga pada catatan pembicara. |
-| `Script.md` | Naskah presentasi (635 kata, sekitar 4,5 sampai 5 menit) dan Q&A cheat sheet. |
+| `Script.md` | Naskah presentasi (661 kata, sekitar 4,5 sampai 5 menit) dan Q&A cheat sheet. |
 | `ICIC_057_MUTTAQIN.mp4` | Rekaman video presentasi resmi (66 MB), direkam dengan slide deck versi pertama. |
 
 ### 2. `camera-ready/` — Berkas Final Submission
